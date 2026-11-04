@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Transfer simulator</title>
+<script src="../vendor/react.js"></script>
+<script src="../vendor/react-dom.js"></script>
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Open+Sans:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}
+@keyframes simPulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sim-pulse{animation:simPulse 1.6s ease-in-out infinite}
+.sim-wrap{container-type:inline-size;container-name:sim}
+.sim-list,.sim-badge{display:none}
+.sim-seg::-webkit-scrollbar{display:none}
+.sim-seg button:hover{color:#14171c}
+.sim-m+.sim-m::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:1px;background:#dfe2e7}
+.sim-seg button:focus-visible{outline:2px solid #2350d8;outline-offset:1px}
+.sim-cta:hover{background:#1a3fae!important}
+@container sim (max-width: 640px){
+.sim-card{border-radius:24px!important}
+.sim-pad{padding-left:16px!important;padding-right:16px!important}
+.sim-stage{margin:0 16px!important}
+.sim-prog{display:none!important}
+.sim-head{flex-direction:column!important;align-items:flex-start!important}
+.sim-controls{grid-template-columns:1fr!important;gap:10px!important}
+.sim-seg{overflow-x:auto;scrollbar-width:none}
+.sim-seg button{flex:1 0 auto!important;min-height:38px!important}
+.sim-osel{display:none!important}
+.sim-badge{display:grid}
+.sim-list{display:grid}
+.sim-time{display:none!important}
+.sim-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.sim-m{padding:14px 16px!important}
+.sim-m+.sim-m::before{display:none}
+.sim-m:nth-child(2n){box-shadow:inset 1px 0 0 #dfe2e7}
+.sim-m:nth-child(n+3){border-top:1px solid #dfe2e7}
+.sim-val{font-size:22px!important;line-height:28px!important}
+.sim-foot{flex-direction:column!important;align-items:stretch!important}
+.sim-cta{text-align:center}
+}
+@media (prefers-reduced-motion: reduce){.sim-pulse{animation:none}}</style>
+</helmet>
+<div class="sim-wrap" style="width: 100%;">
+<div class="sim-card" style="box-sizing: border-box; width: 100%; background: #ffffff; border: 1px solid #e3e6ea; border-radius: 28px; box-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(20,23,28,0.06), 0 30px 60px -24px rgba(20,23,28,0.35); padding: 0; display: flex; flex-direction: column; overflow: hidden; color: #14171c; font-family: 'Open Sans', Arial, sans-serif;">
+
+  <div class="sim-head sim-pad" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px 24px; flex-wrap: wrap; padding: 18px 20px 0;">
+    <span style="display: flex; flex-direction: column; gap: 2px;"><b style="font: 600 16px/22px 'Open Sans', Arial, sans-serif; letter-spacing: -0.01em;">Estimez un transfert</b><span style="font: 400 12px/17px 'Open Sans', Arial, sans-serif; color: #6e7480;">Choisissez une source, un volume et jusqu’à quatre destinations.</span></span>
+    <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 3px;">
+      <span role="status" aria-live="polite" style="display: inline-flex; align-items: center; gap: 8px; font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #5b6270; white-space: nowrap;"><span class="sim-pulse" style="width: 7px; height: 7px; border-radius: 999px; background: #2350d8; box-shadow: 0 0 0 3px rgba(35,80,216,0.15);" aria-hidden="true"></span>{{status}}</span>
+      <span class="sim-prog" aria-hidden="true" style="width: 140px; height: 3px; border-radius: 999px; background: #e6e8ec; overflow: hidden;"><span style="{{progStyle}}"></span></span>
+    </span>
+  </div>
+
+  <div class="sim-controls sim-pad" style="display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1.2fr) minmax(0, 0.85fr); gap: 16px 20px; padding: 16px 20px;">
+    <div class="sim-ctl" style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #5b6270;">Source</span>
+      <div class="sim-seg" role="group" aria-label="Source" style="display: flex; padding: 2px; border-radius: 999px; background: #eceef2; min-width: 0;">
+        <sc-for list="{{srcOpts}}" as="o" hint-placeholder-count="4"><button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+      </div>
+    </div>
+    <div class="sim-ctl" style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #5b6270;">Volume</span>
+      <div class="sim-seg" role="group" aria-label="Volume" style="display: flex; padding: 2px; border-radius: 999px; background: #eceef2; min-width: 0;">
+        <sc-for list="{{volOpts}}" as="o" hint-placeholder-count="4"><button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+      </div>
+    </div>
+    <div class="sim-ctl" style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #5b6270;">Destinations</span>
+      <div class="sim-seg" role="group" aria-label="Destinations" style="display: flex; padding: 2px; border-radius: 999px; background: #eceef2; min-width: 0;">
+        <sc-for list="{{nOpts}}" as="o" hint-placeholder-count="4"><button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div class="sim-stage" style="position: relative; aspect-ratio: 2 / 1; margin: 0 20px; border-radius: 16px; overflow: hidden; background: #f3f5f9; box-shadow: inset 0 0 0 1px rgba(20,23,28,0.06);">
+    <img src="../assets/7b030f3204528783c58d4e0cc4eddbac.webp" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+    <video class="sim-video" src="{{vidSrc}}" autoplay="autoplay" muted="muted" loop="loop" playsinline="playsinline" preload="auto" aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; pointer-events: none;"></video>
+    <span style="position: absolute; left: 14px; top: 12px; font: 500 11px/16px 'IBM Plex Mono', ui-monospace, Menlo, monospace; letter-spacing: 0.02em; color: #14171c; background: rgba(255,255,255,0.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(20,23,28,0.08); border-radius: 999px; padding: 5px 11px;">{{meta}}</span>
+    <span class="sim-time" style="position: absolute; right: 14px; top: 12px; font: 500 11px/16px 'IBM Plex Mono', ui-monospace, Menlo, monospace; color: #14171c; background: rgba(255,255,255,0.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(20,23,28,0.08); border-radius: 999px; padding: 5px 11px;">{{speed}}</span>
+    <span style="position: absolute; left: 27.9%; top: 79.8%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; font: 600 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; background: #ffffff; border: 1px solid rgba(20,23,28,0.12); border-radius: 999px; padding: 6px 12px; white-space: nowrap; box-shadow: 0 1px 2px rgba(20,23,28,0.08), 0 6px 14px -8px rgba(20,23,28,0.25);"><span style="width: 7px; height: 7px; border-radius: 999px; background: #14171c;" aria-hidden="true"></span>{{srcName}}</span>
+    <sc-for list="{{dests}}" as="d" hint-placeholder-count="4">
+      <div style="{{d.pos}}">
+        <select class="sim-osel" value="{{d.prov}}" onChange="{{d.change}}" aria-label="Destination {{d.num}}" style="font: 600 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; background: #ffffff; border: 1px solid rgba(20,23,28,0.12); border-radius: 999px; padding: 5px 10px; height: 30px; max-width: 140px; box-shadow: 0 1px 2px rgba(20,23,28,0.08), 0 6px 14px -8px rgba(20,23,28,0.25); cursor: pointer;"><option value="s3">Amazon S3</option><option value="r2">Cloudflare R2</option><option value="hippius">Hippius</option><option value="wasabi">Wasabi</option><option value="b2">Backblaze B2</option><option value="minio">MinIO</option><option value="hf">Hugging Face</option><option value="https">Serveur HTTPS</option><option value="gpu">Cluster GPU</option></select>
+        <span class="sim-badge" style="width: 22px; height: 22px; border-radius: 999px; background: #ffffff; color: #2350d8; border: 1px solid rgba(35,80,216,0.35); place-items: center; font: 600 11px/1 'Open Sans', Arial, sans-serif; box-shadow: 0 4px 10px -4px rgba(20,23,28,0.3);">{{d.num}}</span>
+        <span style="{{d.okStyle}}">✓ Vérifié</span>
+      </div>
+    </sc-for>
+    <div aria-hidden="true" style="display: none;"><video src="../assets/a53cc276757909afa21cc36ff5126b17.mp4" preload="auto" muted="muted" playsinline="playsinline"></video><video src="../assets/8d32ab60a9e3fba7a838961391adea67.mp4" preload="auto" muted="muted" playsinline="playsinline"></video><video src="../assets/357b3dd1235ef3567ccbf78c41ec8efc.mp4" preload="auto" muted="muted" playsinline="playsinline"></video></div>
+  </div>
+
+  <div class="sim-list sim-pad" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px 20px 0;">
+    <sc-for list="{{dests}}" as="d" hint-placeholder-count="4">
+      <label style="display: flex; align-items: center; gap: 8px; min-width: 0;"><span style="flex: none; width: 22px; height: 22px; border-radius: 999px; background: #ffffff; color: #2350d8; border: 1px solid rgba(35,80,216,0.35); display: grid; place-items: center; font: 600 11px/1 'Open Sans', Arial, sans-serif;">{{d.num}}</span><select value="{{d.prov}}" onChange="{{d.change}}" aria-label="Destination {{d.num}}" style="font: 600 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; background: #ffffff; border: 1px solid rgba(20,23,28,0.12); border-radius: 999px; padding: 5px 10px; height: 30px; max-width: 140px; box-shadow: 0 1px 2px rgba(20,23,28,0.08), 0 6px 14px -8px rgba(20,23,28,0.25); cursor: pointer; flex: 1; min-width: 0; max-width: none; height: 40px;"><option value="s3">Amazon S3</option><option value="r2">Cloudflare R2</option><option value="hippius">Hippius</option><option value="wasabi">Wasabi</option><option value="b2">Backblaze B2</option><option value="minio">MinIO</option><option value="hf">Hugging Face</option><option value="https">Serveur HTTPS</option><option value="gpu">Cluster GPU</option></select></label>
+    </sc-for>
+  </div>
+
+  <div class="sim-metrics" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 16px; background: #f5f6f8; border-top: 1px solid #e8eaee; border-bottom: 1px solid #e8eaee;">
+    <div class="sim-m" style="position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; white-space: nowrap;">Egress facturé</span>
+      <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;"><span class="sim-val" style="font: 600 24px/30px 'Open Sans', Arial, sans-serif; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #14171c; white-space: nowrap;">{{egBeam}}</span></span>
+      <span class="sim-sub" style="font: 400 12px/17px 'Open Sans', Arial, sans-serif; color: #6e7480; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{egSub}}</span>
+    </div>
+    <div class="sim-m" style="position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; white-space: nowrap;">Frais BEAM</span>
+      <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;"><span class="sim-val" style="font: 600 24px/30px 'Open Sans', Arial, sans-serif; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #14171c; white-space: nowrap;">{{fee}}</span></span>
+      <span class="sim-sub" style="font: 400 12px/17px 'Open Sans', Arial, sans-serif; color: #6e7480; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{feeSub}}</span>
+    </div>
+    <div class="sim-m" style="position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; white-space: nowrap;">Durée estimée</span>
+      <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;"><span class="sim-val" style="font: 600 24px/30px 'Open Sans', Arial, sans-serif; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: #14171c; white-space: nowrap;">{{tB}}</span></span>
+      <span class="sim-sub" style="font: 400 12px/17px 'Open Sans', Arial, sans-serif; color: #6e7480; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{tSub}}</span>
+    </div>
+    <div class="sim-m" style="position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; min-width: 0;">
+      <span style="font: 500 12px/16px 'Open Sans', Arial, sans-serif; color: #14171c; white-space: nowrap;">{{saveLabel}}</span>
+      <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;"><span class="sim-val" style="font: 600 24px/30px 'Open Sans', Arial, sans-serif; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: {{saveColor}}; white-space: nowrap;">{{saveVal}}</span><span style="{{saveBadgeStyle}}">{{saveBadge}}</span></span>
+      <span class="sim-sub" style="font: 400 12px/17px 'Open Sans', Arial, sans-serif; color: #6e7480; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{saveSub}}</span>
+    </div>
+  </div>
+
+  <div class="sim-foot sim-pad" style="display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; padding: 12px 20px 14px;">
+    <span style="display: flex; align-items: flex-start; gap: 8px; font: 400 12px/18px 'Open Sans', Arial, sans-serif; color: #6e7480; max-width: 62ch;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a93a3" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5h.01"></path></svg><span>Estimation uniquement. Durées calculées à 11 Gb/s, le bas de la fourchette de la télémétrie publique ; egress Amazon S3 à 0,09 $/Go.</span></span>
+    <a class="sim-cta" href="#contact" style="flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font: 600 13px/18px 'Open Sans', Arial, sans-serif; color: #ffffff; background: #2350d8; border-radius: 999px; padding: 8px 12px 8px 16px; text-decoration: none; white-space: nowrap; box-shadow: 0 1px 2px rgba(35,80,216,0.3);">Parler de ce transfert<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"></path></svg></a>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":748,"height":600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { src: 's3', sv: 1, n: 4, dl: ['r2', 'hippius', 'gpu', 'wasabi'], vt: 0 };
+  }
+  componentDidMount() {
+    var reduce = false;
+    try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (reduce) {
+      try { document.querySelectorAll('.sim-video').forEach(function (v) { v.pause(); v.removeAttribute('autoplay'); }); } catch (e) {}
+      this.setState({ vt: 6 }); return;
+    }
+    var start = Date.now();
+    this.timer = setInterval(() => {
+      var t = ((Date.now() - start) / 1000) % 8.04;
+      try { var v = document.querySelector('.sim-video'); if (v && v.readyState >= 2) { if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } t = v.currentTime; } } catch (e) {}
+      this.setState({ vt: t });
+    }, 100);
+  }
+  componentWillUnmount() { if (this.timer) clearInterval(this.timer); }
+  renderVals() {
+    var s = this.state, self = this;
+    var money = function (x) { return (x < 0 ? '−$' : '$') + (function (a) { return a.toLocaleString('en-US', { minimumFractionDigits: a < 1000 ? 2 : 0, maximumFractionDigits: a < 1000 ? 2 : 0 }); })(Math.abs(Math.round(x * 100) / 100)); };
+    var dur = function (h) {
+      if (h < 1 / 60) return '< 1 min';
+      if (h < 1) return '≈ ' + Math.round(h * 60) + ' min';
+      if (h < 48) return '≈ ' + (Math.round(h * 10) / 10).toLocaleString('en-US') + ' h';
+      return '≈ ' + Math.round(h / 24) + ' days';
+    };
+    var SN = {"s3": "Amazon S3", "r2": "Cloudflare R2", "hippius": "Hippius", "wasabi": "Wasabi", "b2": "Backblaze B2", "minio": "MinIO", "hf": "Hugging Face", "https": "HTTPS server", "gpu": "GPU cluster"};
+    var SHORT = { s3: 'S3', r2: 'R2', hippius: 'Hippius', wasabi: 'Wasabi', https: 'HTTPS' };
+    var VOLS = [[0.1, '100 GB'], [1, '1 TB'], [10, '10 TB'], [100, '100 TB']];
+    var SRCS = ['s3', 'r2', 'hippius', 'wasabi', 'https'];
+    var VIDS = {"1": "../assets/a53cc276757909afa21cc36ff5126b17.mp4", "2": "../assets/8d32ab60a9e3fba7a838961391adea67.mp4", "3": "../assets/357b3dd1235ef3567ccbf78c41ec8efc.mp4", "4": "../assets/8a56bea2b632c2b2dd8a3fa030d6a99d.mp4"};
+    var POS = {"1": [[75.6, 62.7]], "2": [[75.7, 37.9], [75.7, 81.7]], "3": [[75.7, 37.4], [66.6, 79.7], [85.0, 79.7]], "4": [[68.7, 41.0], [85.5, 41.0], [68.7, 79.2], [85.5, 79.2]]};
+    var EG = { s3: 90, r2: 0, hippius: 0, wasabi: 0, https: 0 };
+    var sv = s.sv, src = s.src, n = s.n, dlAll = s.dl, vt = s.vt || 0;
+    var dl = dlAll.slice(0, n), egr = EG[src] || 0;
+    var opt = function (on, i, prevOn) { var sep = (i > 0 && !on && !prevOn) ? 'background: linear-gradient(#d3d7de, #d3d7de) left center / 1px 14px no-repeat; ' : 'background: transparent; '; return 'flex: 1 1 0; min-width: 0; cursor: pointer; border: 0; border-radius: 999px; padding: 6px 10px; min-height: 28px; white-space: nowrap; font: 500 12px/16px \'Open Sans\', Arial, sans-serif; color: #1d1f24; transition: box-shadow .2s, background-color .2s; ' + (on ? 'background: #ffffff; font-weight: 600; box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.04);' : sep); };
+    var formed = vt >= 4.6, arrived = vt >= 5.0 && vt < 7.44;
+    var dests = dl.map(function (k, i) {
+      var p = POS[String(n)][i];
+      return {
+        num: i + 1, prov: k,
+        pos: 'position: absolute; left: ' + p[0] + '%; top: ' + p[1] + '%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; transition: opacity .3s; opacity: ' + (formed ? '1' : '0.65') + ';',
+        okStyle: 'font: 600 10px/14px \'Open Sans\', Arial, sans-serif; color: #1a7f4b; background: #e7f4ec; border-radius: 999px; padding: 1px 7px; transition: opacity .25s; opacity: ' + (arrived ? '1' : '0') + ';',
+        change: function (e) { var v = e.target.value; var c = dlAll.slice(); c[i] = v; self.setState({ dl: c }); }
+      };
+    });
+    var vLabel = (VOLS.filter(function (v) { return v[0] === sv; })[0] || VOLS[1])[1];
+    var tTodayH = sv * n * 8000 / 1 / 3600, tBeamH = sv * n * 8000 / 11 / 3600;
+    var today = sv * egr * n, beam = sv * egr + sv * n * 10 + 0.1, sav = today - beam;
+    var plural = n > 1 ? 's' : '';
+    var phase = vt < 1.8 ? 'Chunking into 40 MiB parts' : vt < 4.4 ? ((vt >= 2.6 && vt < 3.9) ? 'Slow chunk reassigned' : 'Parallel transfer') : vt < 5.0 ? 'Delivering to ' + n + ' destination' + plural : vt < 7.44 ? 'Integrity verified ' + n + '/' + n : 'Ready for the next transfer';
+    var saves = sav > 0.5;
+    return {
+      srcOpts: SRCS.map(function (k, i) { return { label: SHORT[k], on: k === src, style: opt(k === src, i, i > 0 && SRCS[i - 1] === src), pick: function () { self.setState({ src: k }); } }; }),
+      volOpts: VOLS.map(function (v, i) { return { label: v[1], on: v[0] === sv, style: opt(v[0] === sv, i, i > 0 && VOLS[i - 1][0] === sv), pick: function () { self.setState({ sv: v[0] }); } }; }),
+      nOpts: [1, 2, 3, 4].map(function (k, i) { return { label: String(k), on: k === n, aria: k + ' destination' + (k > 1 ? 's' : ''), style: opt(k === n, i, k - 1 === n), pick: function () { self.setState({ n: k, vt: 0 }); } }; }),
+      vidSrc: VIDS[String(n)], dests: dests, srcName: SN[src],
+      meta: vLabel + ' · ' + SHORT[src] + ' → ' + n + ' destination' + plural,
+      speed: '≈ ' + Math.round(tTodayH / tBeamH) + '× plus rapide qu’en séquentiel',
+      status: phase,
+      progStyle: 'display: block; height: 100%; border-radius: 999px; background: #2350d8; width: ' + Math.min(100, Math.round(vt / 8.04 * 100)) + '%; transition: width .1s linear;',
+      egBeam: money(sv * egr),
+      egSub: egr ? (n > 1 ? 'une lecture · au lieu de ' + money(today) : 'une destination') : 'source sans egress',
+      fee: money(beam - sv * egr),
+      feeSub: n + ' × ' + vLabel + ' à 10 $/To + 0,10 $',
+      tB: dur(tBeamH),
+      tSub: 'contre ' + dur(tTodayH) + ' en séquentiel',
+      saveLabel: saves ? 'Économie' : (egr ? 'Surcoût' : 'Coût total'),
+      saveVal: saves ? money(sav) : (egr ? money(-sav) : money(beam)),
+      saveSub: saves ? 'sur ce transfert' : (egr ? 'pour un transfert ≈ 11× plus rapide' : 'sans egress · ≈ 11× plus rapide'),
+      saveColor: saves ? '#2350d8' : '#14171c',
+      saveBadge: saves ? '−' + Math.round(sav / today * 100) + ' %' : '',
+      saveBadgeStyle: saves ? 'font: 600 12px/16px \'Open Sans\', Arial, sans-serif; font-variant-numeric: tabular-nums; color: #157347; background: #dff3e6; border-radius: 6px; padding: 3px 7px;' : 'display: none;'
+    };
+  }
+}
+</script>
+</body>
+</html>
