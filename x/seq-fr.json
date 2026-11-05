@@ -1,0 +1,52 @@
+{
+  "version": "2026-11-05-provisoire",
+  "accroche": {
+    "Salon": "Bonjour {prenom},\n\nRavi d'avoir échangé avec vous sur {salon}. Vous m'aviez parlé de {sujet}, je vous avais promis un suivi concret.",
+    "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de {sujet}, voici le point concret promis.",
+    "Recommandation": "Bonjour {prenom},\n\n{reco} m'a suggéré de vous écrire : chez {entreprise}, vous travaillez sur {sujet}, et c'est exactement ce que BEAM simplifie.",
+    "Réseau personnel": "Bonjour {prenom},\n\nComme évoqué de vive voix au sujet de {sujet}, je reviens vers vous avec du concret.",
+    "Facebook / Instagram": "Bonjour {prenom},\n\nMerci pour votre intérêt pour BEAM. Vous avez mentionné {sujet}, voici le point concret.",
+    "Site web": "Bonjour {prenom},\n\nMerci pour votre demande sur notre site au sujet de {sujet}.",
+    "Autre": "Bonjour {prenom},\n\nJe reviens vers vous au sujet de {sujet}."
+  },
+  "besoin": {
+    "Transfert / migration": {
+      "objet": "{entreprise} : vos transferts de données, plus vite et moins cher",
+      "valeur": "BEAM déplace vos données entre stockages (S3, R2, GCS, serveurs…) sans repasser par vos machines : 10 $/To + 0,10 $ par transfert, et jusqu'à -50 % sur les frais de sortie.",
+      "lien_docs": "https://docs.b1m.ai/docs/transfers",
+      "j3": "Voici la doc des transferts, 3 minutes de lecture : {lien_docs}"
+    },
+    "Rooms — entraînement IA": {
+      "objet": "{entreprise} : diffuser vos datasets sur tous vos GPU en une fois",
+      "valeur": "Avec les Rooms BEAM, un dataset ou un checkpoint part une fois et arrive sur tous vos nœuds GPU en parallèle (multicast), au lieu de N copies séquentielles. Room à 0,50 $.",
+      "lien_docs": "https://docs.b1m.ai",
+      "j3": "Voici le guide des Rooms, avec un exemple d'entraînement distribué : {lien_docs}"
+    },
+    "Rooms — agents IA": {
+      "objet": "{entreprise} : un réseau privé pour vos agents IA",
+      "valeur": "Les Rooms BEAM relient vos machines, vos buckets et vos agents IA dans un même réseau privé : vos agents lisent et écrivent les données directement, sans tuyauterie à maintenir.",
+      "lien_docs": "https://getbeam-consulting.com/agents",
+      "j3": "Voici la doc dédiée aux agents, prête à brancher : {lien_docs}"
+    },
+    "Flux et médias temps réel": {
+      "objet": "{entreprise} : vos flux médias vers toutes vos destinations",
+      "valeur": "BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps (fan-out), avec une facturation simple à l'usage.",
+      "lien_docs": "https://docs.b1m.ai/docs/transfers",
+      "j3": "Voici comment fonctionne la diffusion multi-destinations : {lien_docs}"
+    },
+    "Pas encore clair": {
+      "objet": "{entreprise} × BEAM : le point promis",
+      "valeur": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.",
+      "lien_docs": "https://docs.b1m.ai",
+      "j3": "Pour vous faire une idée en 3 minutes, voici la doc : {lien_docs}"
+    }
+  },
+  "cta_j0": "Le plus simple : 15 minutes pour voir si ça colle à votre cas ? Choisissez un créneau ici : https://getbeam-consulting.com/rdv",
+  "suite": {
+    "j3": "Bonjour {prenom},\n\n{j3}\n\nBonne journée,",
+    "j7": "Bonjour {prenom},\n\nPour tester par vous-même : ouvrez votre console BEAM, 50 € de crédits sont offerts au démarrage.\nhttps://getbeam-consulting.com/console\n\nBonne journée,",
+    "j11": "Bonjour {prenom},\n\nJe vous propose 15 minutes cette semaine pour regarder votre cas ensemble. Choisissez le créneau qui vous arrange :\nhttps://getbeam-consulting.com/rdv\n\nBonne journée,",
+    "j16": "Bonjour {prenom},\n\nJe ne veux pas encombrer votre boîte : c'est mon dernier message. Si le sujet revient, il suffit de répondre à cet e-mail.\n\nBonne continuation,"
+  },
+  "signature": "\n\n{signature}"
+}
