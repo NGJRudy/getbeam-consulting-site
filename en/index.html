@@ -443,7 +443,7 @@ class Component extends DCLogic {
     <button class="cm-x" type="button" data-close aria-label="Close">×</button>
     <p class="cm-eyebrow">BEAM</p>
     <h2 id="cm-title">Let’s talk about your data transfers</h2>
-    <p class="cm-sub">An expert gets back to you within one business day for a 30-minute demo and a test on your own data.</p>
+    <p class="cm-sub">Leave your details, then pick a 15-minute slot with a BEAM expert right away.</p>
     <div id="hs-form"></div>
     <p class="cm-note">Form not showing? Email us at <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a></p>
     <p class="cm-note">Your details are only used to contact you about BEAM. <a href="legal.html#confidentialite">Privacy policy</a></p>
@@ -484,6 +484,23 @@ class Component extends DCLogic {
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) close(); });
   if(location.hash==='#contact') open();
   window.addEventListener('hashchange',function(){ if(location.hash==='#contact') open(); });
+  var T_DONE="Thanks! Pick your time slot", T_SUB="15 minutes with a BEAM expert: your use case, what BEAM changes, and next steps.";
+
+  // Après envoi du formulaire : proposer tout de suite un créneau (réservation immédiate = meilleur taux de rendez-vous honorés)
+  var MEET="https://meetings.hubspot.com/rudy-savy?embed=true", shown=false;
+  function showMeeting(email,first,last){
+    if(shown) return; shown=true;
+    var box=document.getElementById('hs-form'), sub=document.querySelector('#contact-modal .cm-sub'), t=document.getElementById('cm-title');
+    if(t) t.textContent=T_DONE; if(sub) sub.textContent=T_SUB;
+    var q=''; try{ if(email) q+='&email='+encodeURIComponent(email); if(first) q+='&firstName='+encodeURIComponent(first); if(last) q+='&lastName='+encodeURIComponent(last); }catch(e){}
+    box.innerHTML='<div class="meetings-iframe-container" data-src="'+MEET+q+'"></div>';
+    var s=document.createElement('script'); s.src='https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js'; s.async=true; document.body.appendChild(s);
+  }
+  window.addEventListener('hs-form-event:on-submission:success',function(ev){
+    var em,fn,ln; try{ var f=window.HubSpotFormsV4&&HubSpotFormsV4.getFormFromEvent(ev); if(f){ f.getFormFieldValues().then(function(v){ v.forEach(function(x){ var n=(x.name||'').split('/').pop(); if(n==='email')em=x.value; if(n==='firstname')fn=x.value; if(n==='lastname')ln=x.value; }); showMeeting(em,fn,ln); }).catch(function(){showMeeting();}); return; } }catch(e){}
+    showMeeting();
+  });
+  window.addEventListener('message',function(e){ if(e.data&&e.data.type==='hsFormCallback'&&e.data.eventName==='onFormSubmitted'){ showMeeting(); } });
   try{ localStorage.setItem('lang',LANG); }catch(e){}
 })();
 </script>

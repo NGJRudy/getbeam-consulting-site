@@ -443,7 +443,7 @@ class Component extends DCLogic {
     <button class="cm-x" type="button" data-close aria-label="Fermer">×</button>
     <p class="cm-eyebrow">BEAM</p>
     <h2 id="cm-title">Parlons de vos transferts de données</h2>
-    <p class="cm-sub">Un expert vous rappelle sous 24 h ouvrées pour une démo de 30 minutes et un test sur vos propres données.</p>
+    <p class="cm-sub">Laissez vos coordonnées, puis choisissez directement un créneau de 15 minutes avec un expert BEAM.</p>
     <div id="hs-form"></div>
     <p class="cm-note">Le formulaire ne s’affiche pas ? Écrivez-nous à <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a></p>
     <p class="cm-note">Vos informations servent uniquement à vous recontacter au sujet de BEAM. <a href="mentions-legales.html#confidentialite">Politique de confidentialité</a></p>
@@ -484,6 +484,23 @@ class Component extends DCLogic {
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!modal.hidden) close(); });
   if(location.hash==='#contact') open();
   window.addEventListener('hashchange',function(){ if(location.hash==='#contact') open(); });
+  var T_DONE="Merci ! Choisissez votre créneau", T_SUB="15 minutes avec un expert BEAM : votre cas, ce que BEAM change, et la suite.";
+
+  // Après envoi du formulaire : proposer tout de suite un créneau (réservation immédiate = meilleur taux de rendez-vous honorés)
+  var MEET="https://meetings.hubspot.com/rudy-savy?embed=true", shown=false;
+  function showMeeting(email,first,last){
+    if(shown) return; shown=true;
+    var box=document.getElementById('hs-form'), sub=document.querySelector('#contact-modal .cm-sub'), t=document.getElementById('cm-title');
+    if(t) t.textContent=T_DONE; if(sub) sub.textContent=T_SUB;
+    var q=''; try{ if(email) q+='&email='+encodeURIComponent(email); if(first) q+='&firstName='+encodeURIComponent(first); if(last) q+='&lastName='+encodeURIComponent(last); }catch(e){}
+    box.innerHTML='<div class="meetings-iframe-container" data-src="'+MEET+q+'"></div>';
+    var s=document.createElement('script'); s.src='https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js'; s.async=true; document.body.appendChild(s);
+  }
+  window.addEventListener('hs-form-event:on-submission:success',function(ev){
+    var em,fn,ln; try{ var f=window.HubSpotFormsV4&&HubSpotFormsV4.getFormFromEvent(ev); if(f){ f.getFormFieldValues().then(function(v){ v.forEach(function(x){ var n=(x.name||'').split('/').pop(); if(n==='email')em=x.value; if(n==='firstname')fn=x.value; if(n==='lastname')ln=x.value; }); showMeeting(em,fn,ln); }).catch(function(){showMeeting();}); return; } }catch(e){}
+    showMeeting();
+  });
+  window.addEventListener('message',function(e){ if(e.data&&e.data.type==='hsFormCallback'&&e.data.eventName==='onFormSubmitted'){ showMeeting(); } });
   try{ localStorage.setItem('lang',LANG); }catch(e){}
 })();
 </script>
