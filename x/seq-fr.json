@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-05-doc-en-J0",
+  "version": "2026-11-05-1-lien",
   "accroche": {
     "Salon": "Bonjour {prenom},\n\nRavi d'avoir échangé avec vous lors de {salon}. Vous m'aviez parlé de {sujet}, je vous avais promis un suivi concret.",
     "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de {sujet}, voici le point concret promis.",
@@ -12,14 +12,14 @@
   "besoin": {
     "Transfert / migration": {
       "objet": "{entreprise} : vos transferts de données, plus vite et moins cher",
-      "valeur": "BEAM déplace vos données entre stockages (S3, R2, GCS, serveurs…) sans repasser par vos machines : 10 $/To + 0,10 $ par transfert, et jusqu'à -50 % sur les frais de sortie.\n\nComme promis, la documentation : https://docs.b1m.ai/docs/transfers",
-      "lien_docs": "https://docs.b1m.ai/docs/transfers",
+      "valeur": "BEAM déplace vos données entre stockages (S3, R2, GCS, serveurs…) sans repasser par vos machines : 10 $/To + 0,10 $ par transfert, et jusqu'à -50 % sur les frais de sortie.\n\nComme promis, la documentation : https://getbeam-consulting.com/doc/transferts",
+      "lien_docs": "https://getbeam-consulting.com/doc/transferts",
       "j3": "Question rapide : vos transferts sont-ils ponctuels (une migration) ou réguliers (une synchronisation) ? Selon votre réponse, je vous indique le réglage le plus économique."
     },
     "Rooms — entraînement IA": {
       "objet": "{entreprise} : diffuser vos datasets sur tous vos GPU en une fois",
-      "valeur": "Avec les Rooms BEAM, un dataset ou un checkpoint part une fois et arrive sur tous vos nœuds GPU en parallèle (multicast), au lieu de N copies séquentielles. Room à 0,50 $.\n\nComme promis, la documentation : https://docs.b1m.ai",
-      "lien_docs": "https://docs.b1m.ai",
+      "valeur": "Avec les Rooms BEAM, un dataset ou un checkpoint part une fois et arrive sur tous vos nœuds GPU en parallèle (multicast), au lieu de N copies séquentielles. Room à 0,50 $.\n\nComme promis, la documentation : https://getbeam-consulting.com/doc/rooms",
+      "lien_docs": "https://getbeam-consulting.com/doc/rooms",
       "j3": "Question rapide : combien de nœuds GPU reçoivent vos datasets aujourd'hui, et comment les copiez-vous ? Je vous dis en une réponse ce que les Rooms changeraient."
     },
     "Rooms — agents IA": {
@@ -30,18 +30,18 @@
     },
     "Flux et médias temps réel": {
       "objet": "{entreprise} : vos flux médias vers toutes vos destinations",
-      "valeur": "BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps (fan-out), avec une facturation simple à l'usage.\n\nComme promis, la documentation : https://docs.b1m.ai/docs/transfers",
-      "lien_docs": "https://docs.b1m.ai/docs/transfers",
+      "valeur": "BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps (fan-out), avec une facturation simple à l'usage.\n\nComme promis, la documentation : https://getbeam-consulting.com/doc/transferts",
+      "lien_docs": "https://getbeam-consulting.com/doc/transferts",
       "j3": "Question rapide : combien de destinations reçoivent vos flux aujourd'hui ? Je vous montre comment n'envoyer qu'une seule fois."
     },
     "Pas encore clair": {
       "objet": "{entreprise} × BEAM : le point promis",
-      "valeur": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.\n\nComme promis, la documentation : https://docs.b1m.ai",
-      "lien_docs": "https://docs.b1m.ai",
+      "valeur": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.\n\nComme promis, la documentation : https://getbeam-consulting.com/doc",
+      "lien_docs": "https://getbeam-consulting.com/doc",
       "j3": "Question rapide : quel est aujourd'hui votre plus gros casse-tête côté données (déplacement, diffusion ou coûts) ? Je vous oriente en une réponse."
     }
   },
-  "cta_j0": "Si c'est pertinent, 15 minutes suffisent pour regarder votre cas : https://getbeam-consulting.com/rdv",
+  "cta_j0": "Est-ce que ça vaut 15 minutes d'échange dans les prochains jours ? Un simple oui en réponse suffit, je m'occupe du reste.",
   "suite": {
     "j3": "Bonjour {prenom},\n\n{j3}\n\nBonne journée,",
     "j7": "Bonjour {prenom},\n\nPour tester par vous-même : créez votre organisation BEAM en 2 minutes, sans engagement.\nhttps://getbeam-consulting.com/console\n\nBonne journée,",
