@@ -1,0 +1,11 @@
+{
+  "_note": "Registre des pages « doc + agenda » envoyées dans l'e-mail J0. Ajouter un besoin = ajouter une entrée, puis lancer tools/gen_doc_pages.py.",
+  "meeting": "https://meetings.hubspot.com/rudy-savy?embed=true",
+  "pages": {
+    "doc": {"titre": "BEAM en bref", "intro": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.", "points": ["Transferts entre S3, R2, GCS et vos serveurs, sans repasser par vos machines", "Rooms : un réseau privé pour vos machines, buckets et agents IA", "Facturation simple à l'usage"], "doc": "https://docs.b1m.ai"},
+    "doc/transferts": {"titre": "Transferts de données avec BEAM", "intro": "BEAM déplace vos données entre stockages (S3, R2, GCS, serveurs…) sans repasser par vos machines.", "points": ["10 $ par To + 0,10 $ par transfert", "Jusqu'à -50 % sur les frais de sortie (egress)", "Migrations ponctuelles ou synchronisations régulières"], "doc": "https://docs.b1m.ai/docs/transfers"},
+    "doc/rooms": {"titre": "Rooms BEAM pour l'entraînement IA", "intro": "Un dataset ou un checkpoint part une fois et arrive sur tous vos nœuds GPU en parallèle, au lieu de N copies successives.", "points": ["Diffusion multicast vers tous vos nœuds", "Room à 0,50 $", "Compatible avec vos stockages existants"], "doc": "https://docs.b1m.ai"},
+    "doc/agents": {"titre": "Rooms BEAM pour vos agents IA", "intro": "Reliez vos machines, vos buckets et vos agents IA dans un même réseau privé : vos agents lisent et écrivent les données directement.", "points": ["Un réseau privé, sans tuyauterie à maintenir", "Vos agents accèdent aux données là où elles sont", "Documentation prête à brancher"], "doc": "https://docs.b1m.ai"},
+    "doc/flux": {"titre": "Diffusion multi-destinations avec BEAM", "intro": "Envoyez vos flux et fichiers médias une seule fois : BEAM les diffuse vers toutes vos destinations en parallèle.", "points": ["Fan-out vers toutes vos destinations", "Facturation simple à l'usage", "Pas d'infrastructure à gérer"], "doc": "https://docs.b1m.ai/docs/transfers"}
+  }
+}
