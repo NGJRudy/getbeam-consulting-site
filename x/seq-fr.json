@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-05-page-doc-agenda",
+  "version": "2026-11-05-cta-par-besoin",
   "accroche": {
     "Salon": "Bonjour {prenom},\n\nRavi d'avoir échangé avec vous lors de {salon}. Vous m'aviez parlé de {sujet}, je vous avais promis un suivi concret.",
     "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de {sujet}, voici le point concret promis.",
@@ -38,7 +38,8 @@
       "objet": "{entreprise} × BEAM : le point promis",
       "valeur": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc",
       "lien_docs": "https://getbeam-consulting.com/doc",
-      "j3": "Question rapide : quel est aujourd'hui votre plus gros casse-tête côté données (déplacement, diffusion ou coûts) ? Je vous oriente en une réponse."
+      "j3": "Si c'est plus simple d'en parler de vive voix, 15 minutes suffisent pour cadrer votre besoin. Répondez « oui » et je vous propose deux horaires.",
+      "cta": "Une question pour bien vous orienter : aujourd'hui, ce qui vous coûte le plus, c'est plutôt de déplacer des données entre clouds, ou de les diffuser vers plusieurs machines (GPU, agents) ?"
     }
   },
   "cta_j0": "Le plus simple : choisissez un créneau de 15 minutes sur cette page, ou répondez « oui » et je vous propose deux horaires.",
