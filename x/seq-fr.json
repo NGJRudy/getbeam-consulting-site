@@ -44,7 +44,7 @@
   "cta_j0": "Le plus simple : 15 minutes pour voir si ça colle à votre cas ? Choisissez un créneau ici : https://getbeam-consulting.com/rdv",
   "suite": {
     "j3": "Bonjour {prenom},\n\n{j3}\n\nBonne journée,",
-    "j7": "Bonjour {prenom},\n\nPour tester par vous-même : ouvrez votre console BEAM, 50 € de crédits sont offerts au démarrage.\nhttps://getbeam-consulting.com/console\n\nBonne journée,",
+    "j7": "Bonjour {prenom},\n\nPour tester par vous-même : créez votre organisation BEAM en 2 minutes, sans engagement.\nhttps://getbeam-consulting.com/console\n\nBonne journée,",
     "j11": "Bonjour {prenom},\n\nJe vous propose 15 minutes cette semaine pour regarder votre cas ensemble. Choisissez le créneau qui vous arrange :\nhttps://getbeam-consulting.com/rdv\n\nBonne journée,",
     "j16": "Bonjour {prenom},\n\nJe ne veux pas encombrer votre boîte : c'est mon dernier message. Si le sujet revient, il suffit de répondre à cet e-mail.\n\nBonne continuation,"
   },
