@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-05-cta-par-besoin",
+  "version": "2026-11-05-rdv",
   "accroche": {
     "Salon": "Bonjour {prenom},\n\nRavi d'avoir échangé avec vous lors de {salon}. Vous m'aviez parlé de {sujet}, je vous avais promis un suivi concret.",
     "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de {sujet}, voici le point concret promis.",
@@ -14,32 +14,62 @@
       "objet": "{entreprise} : vos transferts de données, plus vite et moins cher",
       "valeur": "BEAM déplace vos données entre stockages (S3, R2, GCS, serveurs…) sans repasser par vos machines : 10 $/To + 0,10 $ par transfert, et jusqu'à -50 % sur les frais de sortie.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc/transferts",
       "lien_docs": "https://getbeam-consulting.com/doc/transferts",
-      "j3": "Question rapide : vos transferts sont-ils ponctuels (une migration) ou réguliers (une synchronisation) ? Selon votre réponse, je vous indique le réglage le plus économique."
+      "j3": "Question rapide : vos transferts sont-ils ponctuels (une migration) ou réguliers (une synchronisation) ? Selon votre réponse, je vous indique le réglage le plus économique.",
+      "question_rdv": "Pour en tirer le maximum : quel volume de données est concerné, et entre quels stockages ?",
+      "questions_closer": [
+        "Quel volume, à quelle fréquence (migration ponctuelle ou synchronisation) ?",
+        "Entre quels stockages (S3, R2, GCS, serveurs) et combien coûtent les frais de sortie aujourd'hui ?",
+        "Qui décide, et pour quand ?"
+      ]
     },
     "Rooms — entraînement IA": {
       "objet": "{entreprise} : diffuser vos datasets sur tous vos GPU en une fois",
       "valeur": "Avec les Rooms BEAM, un dataset ou un checkpoint part une fois et arrive sur tous vos nœuds GPU en parallèle (multicast), au lieu de N copies séquentielles. Room à 0,50 $.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc/rooms",
       "lien_docs": "https://getbeam-consulting.com/doc/rooms",
-      "j3": "Question rapide : combien de nœuds GPU reçoivent vos datasets aujourd'hui, et comment les copiez-vous ? Je vous dis en une réponse ce que les Rooms changeraient."
+      "j3": "Question rapide : combien de nœuds GPU reçoivent vos datasets aujourd'hui, et comment les copiez-vous ? Je vous dis en une réponse ce que les Rooms changeraient.",
+      "question_rdv": "Pour en tirer le maximum : combien de nœuds GPU reçoivent vos datasets, et comment les copiez-vous aujourd'hui ?",
+      "questions_closer": [
+        "Combien de nœuds GPU, quelle taille de datasets et de checkpoints ?",
+        "Comment sont-ils copiés aujourd'hui, et combien de temps ça prend ?",
+        "Qui décide, et pour quand ?"
+      ]
     },
     "Rooms — agents IA": {
       "objet": "{entreprise} : un réseau privé pour vos agents IA",
       "valeur": "Les Rooms BEAM relient vos machines, vos buckets et vos agents IA dans un même réseau privé : vos agents lisent et écrivent les données directement, sans tuyauterie à maintenir.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc/agents",
       "lien_docs": "https://getbeam-consulting.com/doc/agents",
-      "j3": "Question rapide : vos agents tournent-ils sur vos machines, dans le cloud, ou les deux ? Je vous montre comment les relier dans une seule Room."
+      "j3": "Question rapide : vos agents tournent-ils sur vos machines, dans le cloud, ou les deux ? Je vous montre comment les relier dans une seule Room.",
+      "question_rdv": "Pour en tirer le maximum : où tournent vos agents aujourd'hui, et à quelles données doivent-ils accéder ?",
+      "questions_closer": [
+        "Où tournent les agents (machines, cloud, les deux) ?",
+        "À quelles données doivent-ils accéder, et comment c'est relié aujourd'hui ?",
+        "Qui décide, et pour quand ?"
+      ]
     },
     "Flux et médias temps réel": {
       "objet": "{entreprise} : vos flux médias vers toutes vos destinations",
       "valeur": "BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps (fan-out), avec une facturation simple à l'usage.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc/flux",
       "lien_docs": "https://getbeam-consulting.com/doc/flux",
-      "j3": "Question rapide : combien de destinations reçoivent vos flux aujourd'hui ? Je vous montre comment n'envoyer qu'une seule fois."
+      "j3": "Question rapide : combien de destinations reçoivent vos flux aujourd'hui ? Je vous montre comment n'envoyer qu'une seule fois.",
+      "question_rdv": "Pour en tirer le maximum : combien de destinations reçoivent vos flux, et avec quel volume ?",
+      "questions_closer": [
+        "Combien de destinations, quel volume et quelle fréquence ?",
+        "Comment est fait l'envoi aujourd'hui, et qu'est-ce qui coince ?",
+        "Qui décide, et pour quand ?"
+      ]
     },
     "Pas encore clair": {
       "objet": "{entreprise} × BEAM : le point promis",
       "valeur": "BEAM déplace et diffuse vos données entre stockages, serveurs GPU et agents IA, plus vite et moins cher, sans infrastructure à gérer.\n\nComme promis, la documentation et mon agenda sont ici : https://getbeam-consulting.com/doc",
       "lien_docs": "https://getbeam-consulting.com/doc",
       "j3": "Si c'est plus simple d'en parler de vive voix, 15 minutes suffisent pour cadrer votre besoin. Répondez « oui » et je vous propose deux horaires.",
-      "cta": "Une question pour bien vous orienter : aujourd'hui, ce qui vous coûte le plus, c'est plutôt de déplacer des données entre clouds, ou de les diffuser vers plusieurs machines (GPU, agents) ?"
+      "cta": "Une question pour bien vous orienter : aujourd'hui, ce qui vous coûte le plus, c'est plutôt de déplacer des données entre clouds, ou de les diffuser vers plusieurs machines (GPU, agents) ?",
+      "question_rdv": "Pour en tirer le maximum : quel est aujourd'hui votre principal sujet côté données (déplacer, diffuser, réduire les coûts) ?",
+      "questions_closer": [
+        "Quel est le problème n°1 côté données aujourd'hui ?",
+        "Quels stockages, machines ou agents sont concernés ?",
+        "Qui décide, et pour quand ?"
+      ]
     }
   },
   "cta_j0": "Le plus simple : choisissez un créneau de 15 minutes sur cette page, ou répondez « oui » et je vous propose deux horaires.",
