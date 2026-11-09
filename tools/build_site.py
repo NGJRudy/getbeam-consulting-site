@@ -18,6 +18,10 @@ DOMAIN = 'getbeam-consulting.com'
 CONTACT_EMAIL = 'team@getbeam-consulting.com'
 CONSOLE = 'https://console.b1m.ai'
 DOCS = 'https://docs.b1m.ai'
+# Liens externes (console, docs, GitHub, X) : nouvel onglet, le site reste ouvert.
+_EXT_LINK = re.compile(r'<a (?![^>]*\btarget=)([^>]*\bhref="https?://(?!(?:www\.)?getbeam-consulting\.com)[^"]*"[^>]*)>')
+def ext_new_tab(s):
+    return _EXT_LINK.sub(r'<a target="_blank" rel="noopener" \1>', s)
 # HubSpot form (portal 52267765). FORM_ID filled once the site form exists.
 HS_PORTAL = '52267765'
 HS_FORM_ID = os.environ.get('HS_FORM_ID', '6a12c0b5-ef91-4ec9-99cc-84fe26383859')  # form FR (new editor)
@@ -399,7 +403,7 @@ def main():
     open(os.path.join(OUT, 'favicon.svg'), 'w').write(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 661"><path fill="#14171c" d="{path_d}"/></svg>')
     for lang in ('fr', 'en'):
         d = os.path.join(OUT, lang); os.makedirs(d)
-        page = build_main(lang)
+        page = ext_new_tab(build_main(lang))
         open(os.path.join(d, 'Main.dc.html'), 'w', encoding='utf-8').write(page)
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         open(os.path.join(d, 'ProductFrame.dc.html'), 'w', encoding='utf-8').write(build_frame(lang))
