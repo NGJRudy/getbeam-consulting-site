@@ -1,5 +1,5 @@
 {
- "version": "2026-11-10-objectif",
+ "version": "2026-11-10-propre",
  "accroche": {
   "Salon": "Bonjour {prenom},\n\nMerci pour notre échange lors de {salon}. Vous nous aviez présenté votre objectif : {sujet}. Voici le suivi promis.",
   "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de votre objectif ({sujet}), voici le point promis.",
@@ -91,7 +91,6 @@
   "j16": "Bonjour {prenom},\n\nJe ne veux pas encombrer votre boîte : c'est mon dernier message. Si le sujet revient, il suffit de répondre à cet e-mail.\n\nBonne continuation,"
  },
  "signature": "\n\n{signature}",
- "objet_presente_prefixe": "De la part de {apporteur} · ",
  "relances": {
   "j3": {
    "delai_jours": 3,
