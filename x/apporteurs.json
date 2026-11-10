@@ -1,10 +1,40 @@
 {
   "_aide": "Registre des apporteurs. Ajouter un apporteur = ajouter une entrée, puis lancer tools/build_go.py. 'valeur' doit exister dans la propriété HubSpot commercial_apporteur.",
-  "formulaire": { "portal": "52267765", "form_id": "a249da69-907f-4651-acaa-b61f8349b375", "region": "na1" },
+  "formulaire": {
+    "portal": "52267765",
+    "form_id": "a249da69-907f-4651-acaa-b61f8349b375",
+    "region": "na1"
+  },
   "apporteurs": [
-    { "slug": "rudy",  "valeur": "Rudy",          "nom": "Rudy Savy" },
-    { "slug": "harry", "valeur": "Harry Filla",   "nom": "Harry Filla" },
-    { "slug": "astrid", "valeur": "Astrid",       "nom": "Astrid Rilcy" },
-    { "slug": "jimmy", "valeur": "Jimmy Baltase", "nom": "Jimmy Baltase" }
+    {
+      "slug": "rudy",
+      "valeur": "Rudy",
+      "nom": "Rudy Savy"
+    },
+    {
+      "slug": "harry",
+      "valeur": "Harry Filla",
+      "nom": "Harry Filla"
+    },
+    {
+      "slug": "astrid",
+      "valeur": "Astrid",
+      "nom": "Astrid Rilcy"
+    },
+    {
+      "slug": "jimmy",
+      "valeur": "Jimmy Baltase",
+      "nom": "Jimmy Baltase"
+    },
+    {
+      "slug": "anderson",
+      "valeur": "Anderson Kouassi",
+      "nom": "Anderson Kouassi"
+    },
+    {
+      "slug": "marienoelle",
+      "valeur": "Diby Marie Noelle Koffi",
+      "nom": "Diby Marie Noëlle Koffi"
+    }
   ]
 }
