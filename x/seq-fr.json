@@ -1,14 +1,14 @@
 {
- "version": "2026-11-10-assurance",
+ "version": "2026-11-10-objectif",
  "accroche": {
-  "Salon": "Bonjour {prenom},\n\nMerci pour notre échange lors de {salon}. Vous nous aviez présenté votre projet : {sujet}. Voici le suivi promis.",
-  "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de votre projet ({sujet}), voici le point promis.",
-  "Recommandation": "Bonjour {prenom},\n\n{reco} nous a présenté votre projet chez {entreprise} : {sujet}. C'est exactement le type de projet que BEAM accélère.",
-  "Réseau personnel": "Bonjour {prenom},\n\nComme convenu au sujet de votre projet ({sujet}), voici le point promis.",
-  "Facebook / Instagram": "Bonjour {prenom},\n\nMerci pour votre intérêt pour BEAM et pour votre message au sujet de votre projet ({sujet}).",
-  "Site web": "Bonjour {prenom},\n\nMerci pour votre demande sur notre site au sujet de votre projet ({sujet}).",
-  "Autre": "Bonjour {prenom},\n\nNous revenons vers vous au sujet de votre projet ({sujet}).",
-  "Présenté": "Bonjour {prenom},\n\n{apporteur} nous a présenté votre projet chez {entreprise} : {sujet}. C'est exactement le type de projet que BEAM accélère."
+  "Salon": "Bonjour {prenom},\n\nMerci pour notre échange lors de {salon}. Vous nous aviez présenté votre objectif : {sujet}. Voici le suivi promis.",
+  "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de votre objectif ({sujet}), voici le point promis.",
+  "Recommandation": "Bonjour {prenom},\n\n{reco} nous a parlé de {entreprise} et de votre objectif : {sujet}. C'est exactement ce que BEAM accélère.",
+  "Réseau personnel": "Bonjour {prenom},\n\nComme convenu au sujet de votre objectif ({sujet}), voici le point promis.",
+  "Facebook / Instagram": "Bonjour {prenom},\n\nMerci pour votre intérêt pour BEAM et pour votre message au sujet de votre objectif ({sujet}).",
+  "Site web": "Bonjour {prenom},\n\nMerci pour votre demande sur notre site au sujet de votre objectif ({sujet}).",
+  "Autre": "Bonjour {prenom},\n\nNous revenons vers vous au sujet de votre objectif ({sujet}).",
+  "Présenté": "Bonjour {prenom},\n\n{apporteur} nous a parlé de {entreprise} et de votre objectif : {sujet}. C'est exactement ce que BEAM accélère."
  },
  "besoin": {
   "Transfert / migration": {
