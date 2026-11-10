@@ -386,7 +386,7 @@ ROOT_INDEX = '''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta
 (function(){{var l=null;try{{l=localStorage.getItem('lang')}}catch(e){{}}
 if(l!=='fr'&&l!=='en'){{var ls=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);
 l='en';for(var i=0;i<ls.length;i++){{var c=String(ls[i]||'').toLowerCase();if(c.indexOf('fr')===0){{l='fr';break}}if(c.indexOf('en')===0){{break}}}}}}
-location.replace(l+'/'+location.hash);}})();
+location.replace('/'+l+'/'+location.hash);}})();
 </script></head><body style="font-family:Arial,sans-serif;padding:24px">
 <noscript><a href="fr/">Français</a> · <a href="en/">English</a></noscript></body></html>'''.replace('{d}', DOMAIN).replace('{{', '{').replace('}}', '}')
 
