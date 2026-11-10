@@ -16,11 +16,11 @@ main{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}
 <div class="card"><div class="hs-form-frame" data-region="na1" data-form-id="a249da69-907f-4651-acaa-b61f8349b375" data-portal-id="52267765"></div></div>
 </main>
 <script>
-// Remplit le champ caché commercial_apporteur (pré-remplissage HubSpot par l'adresse de la page).
+// Champ caché apporteur_id = identifiant de l'apporteur (pré-remplissage HubSpot par l'adresse de la page).
 (function(){
   var p=new URLSearchParams(location.search);
-  if(p.get('commercial_apporteur')!=="Rudy"){
-    p.set('commercial_apporteur',"Rudy");
+  if(p.get('apporteur_id')!=="rudy"){
+    p.set('apporteur_id',"rudy");
     history.replaceState(null,'',location.pathname+'?'+p.toString());
   }
   var s=document.createElement('script');

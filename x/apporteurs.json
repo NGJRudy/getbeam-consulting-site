@@ -1,40 +1,12 @@
 {
-  "_aide": "Registre des apporteurs. Ajouter un apporteur = ajouter une entrée, puis lancer tools/build_go.py. 'valeur' doit exister dans la propriété HubSpot commercial_apporteur.",
-  "formulaire": {
-    "portal": "52267765",
-    "form_id": "a249da69-907f-4651-acaa-b61f8349b375",
-    "region": "na1"
-  },
+  "_aide": "LISTE UNIQUE des apporteurs. Ajouter un apporteur = ajouter une ligne ici, puis lancer tools/build_go.py (crée sa page /go/<id>/ et son QR code). Le QR transmet seulement l'identifiant ; Make retrouve le nom ici. actif=false : la page reste, mais les réservations sont signalées. Les e-mails des apporteurs ne sont PAS ici (fichier public) : ils sont dans le magasin Make privé « BEAM apporteurs ».",
+  "formulaire": { "portal": "52267765", "form_id": "a249da69-907f-4651-acaa-b61f8349b375", "region": "na1" },
   "apporteurs": [
-    {
-      "slug": "rudy",
-      "valeur": "Rudy",
-      "nom": "Rudy Savy"
-    },
-    {
-      "slug": "harry",
-      "valeur": "Harry Filla",
-      "nom": "Harry Filla"
-    },
-    {
-      "slug": "astrid",
-      "valeur": "Astrid",
-      "nom": "Astrid Rilcy"
-    },
-    {
-      "slug": "jimmy",
-      "valeur": "Jimmy Baltase",
-      "nom": "Jimmy Baltase"
-    },
-    {
-      "slug": "anderson",
-      "valeur": "Anderson Kouassi",
-      "nom": "Anderson Kouassi"
-    },
-    {
-      "slug": "marienoelle",
-      "valeur": "Diby Marie Noelle Koffi",
-      "nom": "Diby Marie Noëlle Koffi"
-    }
+    { "id": "rudy",        "nom": "Rudy Savy",               "actif": true, "ancienne_valeur": "Rudy" },
+    { "id": "harry",       "nom": "Harry Filla",             "actif": true, "ancienne_valeur": "Harry Filla" },
+    { "id": "astrid",      "nom": "Astrid Rilcy",            "actif": true, "ancienne_valeur": "Astrid" },
+    { "id": "jimmy",       "nom": "Jimmy Baltase",           "actif": true, "ancienne_valeur": "Jimmy Baltase" },
+    { "id": "anderson",    "nom": "Anderson Kouassi",        "actif": true, "ancienne_valeur": "Anderson Kouassi" },
+    { "id": "marienoelle", "nom": "Diby Marie Noëlle Koffi", "actif": true, "ancienne_valeur": "Diby Marie Noelle Koffi" }
   ]
 }

@@ -110,12 +110,18 @@
   "texte_prospect": "Bonjour {prenom}, je travaille avec BEAM, une solution qui {pitch}. Vu votre projet autour de {sujet}, je pense que ça peut vous intéresser. Êtes-vous d'accord pour que l'équipe BEAM vous contacte directement ?"
  },
  "apporteurs": {
-  "_aide": "Nom affiché au prospect dans les e-mails. Clé = valeur du champ « commercial_apporteur ». Format : « Prénom Nom » ou « Prénom Nom, de Société ».",
+  "_aide": "GÉNÉRÉ par tools/build_go.py depuis x/apporteurs.json : ne pas modifier ici.",
+  "rudy": "Rudy Savy",
   "Rudy": "Rudy Savy",
+  "harry": "Harry Filla",
   "Harry Filla": "Harry Filla",
+  "astrid": "Astrid Rilcy",
   "Astrid": "Astrid Rilcy",
+  "jimmy": "Jimmy Baltase",
   "Jimmy Baltase": "Jimmy Baltase",
+  "anderson": "Anderson Kouassi",
   "Anderson Kouassi": "Anderson Kouassi",
+  "marienoelle": "Diby Marie Noëlle Koffi",
   "Diby Marie Noelle Koffi": "Diby Marie Noëlle Koffi"
  },
  "relecture": {
