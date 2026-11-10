@@ -1,5 +1,5 @@
 {
- "version": "2026-11-10-presentation",
+ "version": "2026-11-10-relances",
  "accroche": {
   "Salon": "Bonjour {prenom},\n\nRavi d'avoir échangé avec vous lors de {salon}. Vous m'aviez parlé de {sujet}, je vous avais promis un suivi concret.",
   "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de {sujet}, voici le point concret promis.",
@@ -21,7 +21,8 @@
     "Quel volume, à quelle fréquence (migration ponctuelle ou synchronisation) ?",
     "Entre quels stockages (S3, R2, GCS, serveurs) et combien coûtent les frais de sortie aujourd'hui ?",
     "Qui décide, et pour quand ?"
-   ]
+   ],
+   "pitch": "déplace de gros volumes de données entre clouds plus vite et en réduisant fortement les frais de sortie"
   },
   "Rooms — entraînement IA": {
    "objet": "{entreprise} : diffuser vos datasets sur tous vos GPU en une fois",
@@ -33,7 +34,8 @@
     "Combien de nœuds GPU, quelle taille de datasets et de checkpoints ?",
     "Comment sont-ils copiés aujourd'hui, et combien de temps ça prend ?",
     "Qui décide, et pour quand ?"
-   ]
+   ],
+   "pitch": "envoie vos jeux de données et modèles d'IA à toutes vos machines en une seule fois"
   },
   "Rooms — agents IA": {
    "objet": "{entreprise} : un réseau privé pour vos agents IA",
@@ -45,7 +47,8 @@
     "Où tournent les agents (machines, cloud, les deux) ?",
     "À quelles données doivent-ils accéder, et comment c'est relié aujourd'hui ?",
     "Qui décide, et pour quand ?"
-   ]
+   ],
+   "pitch": "relie vos machines, vos stockages et vos agents IA dans un réseau privé"
   },
   "Flux et médias temps réel": {
    "objet": "{entreprise} : vos flux médias vers toutes vos destinations",
@@ -57,7 +60,8 @@
     "Combien de destinations, quel volume et quelle fréquence ?",
     "Comment est fait l'envoi aujourd'hui, et qu'est-ce qui coince ?",
     "Qui décide, et pour quand ?"
-   ]
+   ],
+   "pitch": "diffuse vos flux et fichiers médias vers toutes vos destinations en même temps"
   },
   "Pas encore clair": {
    "objet": "{entreprise} × BEAM : le point promis",
@@ -70,7 +74,8 @@
     "Quel est le problème n°1 côté données aujourd'hui ?",
     "Quels stockages, machines ou agents sont concernés ?",
     "Qui décide, et pour quand ?"
-   ]
+   ],
+   "pitch": "déplace et diffuse des données entre clouds, serveurs et IA, plus vite et moins cher"
   }
  },
  "cta_j0": "Le plus simple : choisissez un créneau de 15 minutes sur cette page, ou répondez « oui » et je vous propose deux horaires.",
@@ -81,5 +86,23 @@
   "j16": "Bonjour {prenom},\n\nJe ne veux pas encombrer votre boîte : c'est mon dernier message. Si le sujet revient, il suffit de répondre à cet e-mail.\n\nBonne continuation,"
  },
  "signature": "\n\n{signature}",
- "objet_presente_prefixe": "De la part de {apporteur} · "
+ "objet_presente_prefixe": "De la part de {apporteur} · ",
+ "relances": {
+  "j3": {
+   "delai_jours": 3,
+   "objet": "Re: {objet_j0}",
+   "corps": "Bonjour {prenom},\n\n{j3}\n\nBonne journée,\nL'équipe BEAM"
+  },
+  "j7": {
+   "delai_jours": 4,
+   "objet": "Re: {objet_j0}",
+   "corps": "Bonjour {prenom},\n\nDernier message de ma part pour ne pas encombrer votre boîte : si le sujet revient, répondez simplement à cet e-mail, ou choisissez un créneau ici : https://getbeam-consulting.com/rdv\n\nBonne continuation,\nL'équipe BEAM"
+  },
+  "appel_apres_jours": 2
+ },
+ "apporteur": {
+  "objet": "Réservation {entreprise} : un message à transmettre",
+  "corps": "Bonjour {apporteur},\n\nVotre réservation de {entreprise} est enregistrée pour 14 jours, jusqu'au {date_fin}.\n\nProchaine étape : demandez à {prenom} s'il est d'accord pour être contacté par BEAM. Voici un message prêt à copier-coller (WhatsApp, SMS ou e-mail) :\n\n----------\n{texte_prospect}\n----------\n\nDès qu'il est d'accord, renvoyez le formulaire de réservation avec l'adresse e-mail du prospect ({email_prospect}) et cochez « Oui : je lui ai présenté BEAM ». La réservation passe alors à 90 jours, et BEAM le contacte directement en vous citant.\n\nFormulaire : https://v4a2d.share.hsforms.com/2oknaaZB_RlGsqrYfg0mzdQ\n\nSans présentation d'ici le {date_fin}, la réservation sera libérée.\n\nMerci,\nL'équipe BEAM",
+  "texte_prospect": "Bonjour {prenom}, je travaille avec BEAM, une solution qui {pitch}. Vu votre projet autour de {sujet}, je pense que ça peut vous intéresser. Êtes-vous d'accord pour que l'équipe BEAM vous contacte directement ?"
+ }
 }
