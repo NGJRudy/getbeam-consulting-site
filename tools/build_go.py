@@ -4,7 +4,8 @@
 Une page par apporteur, générée depuis x/apporteurs.json (registre).
 La page affiche le formulaire HubSpot et remplit le champ caché
 commercial_apporteur avec la valeur de l'apporteur.
-Les QR codes (PNG) sont écrits hors du site, dans le dossier donné en argument.
+Chaque page reçoit aussi son QR code (go/<slug>/qr.png, utilisé dans l'e-mail
+d'accueil de l'apporteur) ; une copie peut être écrite dans le dossier donné en argument.
 
 Usage : python3 tools/build_go.py [dossier_qr]
 """
@@ -63,10 +64,11 @@ def main():
                            region=f['region'], form_id=f['form_id'], portal=f['portal'])
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         url = f'{DOMAIN}/go/{slug}/'
+        import qrcode
+        img = qrcode.make(url, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=12, border=3)
+        img.save(os.path.join(d, 'qr.png'))
         if qr_dir:
-            import qrcode
             os.makedirs(qr_dir, exist_ok=True)
-            img = qrcode.make(url, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=20, border=3)
             img.save(os.path.join(qr_dir, f'QR-BEAM-{slug}.png'))
         print(slug, url)
     # Retire les pages des apporteurs supprimés du registre.
