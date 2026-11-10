@@ -3,17 +3,17 @@
  "accroche": {
   "Salon": "Bonjour {prenom},\n\nMerci pour notre échange lors de {salon}. Vous nous aviez présenté votre objectif : {sujet}. Voici le suivi promis.",
   "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de votre objectif ({sujet}), voici le point promis.",
-  "Recommandation": "Bonjour {prenom},\n\n{reco} nous a parlé de {entreprise} et de votre objectif : {sujet}. C'est exactement ce que BEAM accélère.",
+  "Recommandation": "Bonjour {prenom},\n\n{reco} nous a parlé de {entreprise} et de votre objectif : {sujet}.",
   "Réseau personnel": "Bonjour {prenom},\n\nComme convenu au sujet de votre objectif ({sujet}), voici le point promis.",
   "Facebook / Instagram": "Bonjour {prenom},\n\nMerci pour votre intérêt pour BEAM et pour votre message au sujet de votre objectif ({sujet}).",
   "Site web": "Bonjour {prenom},\n\nMerci pour votre demande sur notre site au sujet de votre objectif ({sujet}).",
   "Autre": "Bonjour {prenom},\n\nNous revenons vers vous au sujet de votre objectif ({sujet}).",
-  "Présenté": "Bonjour {prenom},\n\n{apporteur} nous a parlé de {entreprise} et de votre objectif : {sujet}. C'est exactement ce que BEAM accélère."
+  "Présenté": "Bonjour {prenom},\n\n{apporteur} nous a parlé de {entreprise} et de votre objectif : {sujet}."
  },
  "besoin": {
   "Transfert / migration": {
    "objet": "{entreprise} : vos transferts de données, plus vite et moins cher",
-   "valeur": "Concrètement, BEAM transfère vos données d'un stockage à l'autre (S3, R2, GCS, serveurs) sans passer par vos machines : des transferts plus rapides et des frais de sortie nettement réduits.\n\nTout est expliqué ici : https://getbeam-consulting.com/doc/transferts",
+   "valeur": "Concrètement, BEAM transfère vos données d'un stockage à l'autre (S3, R2, GCS, serveurs) sans passer par vos machines : des transferts plus rapides et des frais de sortie nettement réduits.\n\nLe détail est dans notre documentation : https://getbeam-consulting.com/doc/transferts",
    "lien_docs": "https://getbeam-consulting.com/doc/transferts",
    "j3": "Question rapide : vos transferts sont-ils ponctuels (une migration) ou réguliers (une synchronisation) ? Selon votre réponse, nous vous indiquerons le réglage le plus économique.",
    "question_rdv": "Pour en tirer le maximum : quel volume de données est concerné, et entre quels stockages ?",
@@ -27,7 +27,7 @@
   },
   "Rooms — entraînement IA": {
    "objet": "{entreprise} : diffuser vos datasets sur tous vos GPU en une fois",
-   "valeur": "Concrètement, vos jeux de données et vos modèles sont envoyés une seule fois et arrivent en même temps sur toutes vos machines GPU, au lieu d'être copiés machine par machine.\n\nTout est expliqué ici : https://getbeam-consulting.com/doc/rooms",
+   "valeur": "Concrètement, vos jeux de données et vos modèles sont envoyés une seule fois et arrivent en même temps sur toutes vos machines GPU, au lieu d'être copiés machine par machine.\n\nLe détail est dans notre documentation : https://getbeam-consulting.com/doc/rooms",
    "lien_docs": "https://getbeam-consulting.com/doc/rooms",
    "j3": "Question rapide : combien de machines GPU reçoivent vos jeux de données aujourd'hui, et comment les copiez-vous ? Une réponse suffit pour que nous vous disions ce que BEAM changerait.",
    "question_rdv": "Pour en tirer le maximum : combien de nœuds GPU reçoivent vos datasets, et comment les copiez-vous aujourd'hui ?",
@@ -41,7 +41,7 @@
   },
   "Rooms — agents IA": {
    "objet": "{entreprise} : un réseau privé pour vos agents IA",
-   "valeur": "Concrètement, BEAM relie vos machines, vos stockages et vos agents IA dans un même réseau privé : vos agents accèdent directement aux données, sans connexions à maintenir.\n\nTout est expliqué ici : https://getbeam-consulting.com/doc/agents",
+   "valeur": "Concrètement, BEAM relie vos machines, vos stockages et vos agents IA dans un même réseau privé : vos agents accèdent directement aux données, sans connexions à maintenir.\n\nLe détail est dans notre documentation : https://getbeam-consulting.com/doc/agents",
    "lien_docs": "https://getbeam-consulting.com/doc/agents",
    "j3": "Question rapide : vos agents tournent-ils sur vos machines, dans le cloud, ou les deux ? Nous vous montrerons comment les relier dans un même réseau.",
    "question_rdv": "Pour en tirer le maximum : où tournent vos agents aujourd'hui, et à quelles données doivent-ils accéder ?",
@@ -55,7 +55,7 @@
   },
   "Flux et médias temps réel": {
    "objet": "{entreprise} : vos flux médias vers toutes vos destinations",
-   "valeur": "Concrètement, BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps : vous n'envoyez qu'une seule fois.\n\nTout est expliqué ici : https://getbeam-consulting.com/doc/flux",
+   "valeur": "Concrètement, BEAM diffuse vos flux et fichiers médias vers toutes vos destinations en même temps : vous n'envoyez qu'une seule fois.\n\nLe détail est dans notre documentation : https://getbeam-consulting.com/doc/flux",
    "lien_docs": "https://getbeam-consulting.com/doc/flux",
    "j3": "Question rapide : combien de destinations reçoivent vos flux aujourd'hui ? Nous vous montrerons comment n'envoyer qu'une seule fois.",
    "question_rdv": "Pour en tirer le maximum : combien de destinations reçoivent vos flux, et avec quel volume ?",
@@ -69,7 +69,7 @@
   },
   "Pas encore clair": {
    "objet": "{entreprise} × BEAM : le point promis",
-   "valeur": "Concrètement, BEAM accélère le transfert et la diffusion de gros volumes de données entre stockages, machines GPU et agents IA, sans infrastructure à gérer.\n\nTout est expliqué ici : https://getbeam-consulting.com/doc",
+   "valeur": "Concrètement, BEAM accélère le transfert et la diffusion de gros volumes de données entre stockages, machines GPU et agents IA, sans infrastructure à gérer.\n\nLe détail est dans notre documentation : https://getbeam-consulting.com/doc",
    "lien_docs": "https://getbeam-consulting.com/doc",
    "j3": "Si c'est plus simple d'en parler de vive voix, 15 minutes suffisent pour cadrer votre besoin. Répondez « oui » et nous vous proposerons deux horaires.",
    "cta": "Une question pour bien vous orienter : aujourd'hui, ce qui vous coûte le plus, c'est plutôt de déplacer des données entre clouds, ou de les diffuser vers plusieurs machines (GPU, agents) ?",
@@ -128,6 +128,6 @@
   "_aide": "Relecture du premier e-mail par Claude (Make 8479920, module 140). Modifier ici les consignes ou le modèle : effet immédiat, sans toucher Make.",
   "active": true,
   "modele": "claude-sonnet-5-5",
-  "consignes": "Tu es le relecteur marketing de BEAM (équipe Beam Consulting). On te donne le brouillon du PREMIER e-mail envoyé à un prospect B2B qui a donné son accord pour être contacté, et les réponses brutes de son formulaire. Ton travail : rendre l'e-mail impeccable, professionnel et naturel, sans rien inventer.\n\nRÈGLES (toutes obligatoires)\n1. Français, vouvoiement. L'expéditeur est « L'équipe BEAM » : écris avec « nous », jamais « je ».\n2. Objet : commence exactement par « Découverte BEAM : », 70 caractères maximum au total, concret, sans point d'exclamation.\n3. Corps : commence par « Bonjour <Prénom>, » (prénom avec majuscule). 60 à 120 mots. Paragraphes courts séparés par une ligne vide. Pas de signature ni de formule de politesse finale : elles sont ajoutées automatiquement.\n4. Si un apporteur est fourni, nomme-le par son prénom et son nom, comme dans le brouillon. Pas de « M. », pas de prénom seul.\n5. Reprends l'objectif du prospect en le reformulant proprement : corrige fautes, mots tronqués et majuscules (ex. « transfert  de grosse » → « transférer de gros volumes de données »). Si la saisie est incompréhensible, utilise le besoin principal. Corrige aussi le nom de l'entreprise s'il contient une faute évidente de saisie, sinon garde-le tel quel.\n6. Ton affirmé : aucune excuse ni justification du contact (interdit : « désolé », « je me permets », « avec votre accord », « n'hésitez pas »).\n7. Garde STRICTEMENT les liens (URL) du brouillon, identiques, au même endroit logique.\n8. Termine par UNE seule demande : un échange de 15 minutes, en invitant à répondre à l'e-mail.\n9. Interdits absolus : tout prix, montant, pourcentage ou chiffre de réduction ; le mot « gratuit » ; crypto, blockchain, token, Bittensor ; Guadeloupe, Martinique, Guyane, Antilles, Caraïbes ; superlatifs creux (« révolutionnaire », « leader ») ; promesse de délai.\n10. N'invente AUCUN fait (client, chiffre, fonctionnalité, rencontre) absent du brouillon ou du formulaire.\n11. Si le brouillon respecte déjà tout, change le moins possible.\n\nRÉPONSE : uniquement ces trois balises, rien avant ni après.\n<objet>l'objet final</objet>\n<corps>le corps final</corps>\n<changements>en une phrase courte, ce que tu as corrigé (ou « Aucun changement nécessaire »)</changements>"
+  "consignes": "Tu es le relecteur marketing de BEAM (équipe Beam Consulting). On te donne le brouillon du PREMIER e-mail envoyé à un prospect B2B qui a donné son accord pour être contacté, et les réponses brutes de son formulaire. Ton travail : rendre l'e-mail impeccable, professionnel et naturel, sans rien inventer.\n\nRÈGLES (toutes obligatoires)\n1. Français, vouvoiement. L'expéditeur est « L'équipe BEAM » : écris avec « nous », jamais « je ».\n2. Objet : commence exactement par « Découverte BEAM : », 70 caractères maximum au total, concret, sans point d'exclamation.\n3. Corps : commence par « Bonjour <Prénom>, » (prénom avec majuscule). 60 à 85 mots (un premier e-mail court obtient plus de réponses). Paragraphes courts séparés par une ligne vide. Pas de signature ni de formule de politesse finale : elles sont ajoutées automatiquement.\n4. Si un apporteur est fourni, nomme-le par son prénom et son nom, comme dans le brouillon. Pas de « M. », pas de prénom seul.\n5. Reprends l'objectif du prospect en le reformulant proprement : corrige fautes, mots tronqués et majuscules (ex. « transfert  de grosse » → « transférer de gros volumes de données »). Si la saisie est incompréhensible, utilise le besoin principal. Corrige aussi le nom de l'entreprise s'il contient une faute évidente de saisie, sinon garde-le tel quel.\n6. Ton affirmé : aucune excuse ni justification du contact (interdit : « désolé », « je me permets », « avec votre accord », « n'hésitez pas »).\n7. Le lien vers la documentation doit rester sur sa propre ligne, EXACTEMENT sous la forme « Le détail est dans notre documentation : URL » (URL identique à celle du brouillon). Aucun autre lien.\n8. Termine par UNE seule demande : un échange de 15 minutes, en invitant à répondre à l'e-mail.\n9. Supprime les phrases creuses (ex. « C'est exactement ce que BEAM accélère »). Interdits absolus : tout prix, montant, pourcentage ou chiffre de réduction ; le mot « gratuit » ; crypto, blockchain, token, Bittensor ; Guadeloupe, Martinique, Guyane, Antilles, Caraïbes ; superlatifs creux (« révolutionnaire », « leader ») ; promesse de délai.\n10. N'invente AUCUN fait (client, chiffre, fonctionnalité, rencontre) absent du brouillon ou du formulaire.\n11. Si le brouillon respecte déjà tout, change le moins possible.\n\nRÉPONSE : uniquement ces trois balises, rien avant ni après.\n<objet>l'objet final</objet>\n<corps>le corps final</corps>\n<changements>en une phrase courte, ce que tu as corrigé (ou « Aucun changement nécessaire »)</changements>"
  }
 }
