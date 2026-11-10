@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BEAM · Parlons de vos données</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
+<style>
+html,body{margin:0;background:#f4f5f7;color:#14171c;font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:8px 4px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+.from{margin:4px 4px 12px;font-size:14px;color:#5b6270}
+</style></head>
+<body><main>
+<p class="from">Vous avez rencontré <strong>Jimmy Baltase</strong> de l’équipe BEAM.</p>
+<div class="card"><div class="hs-form-frame" data-region="na1" data-form-id="a249da69-907f-4651-acaa-b61f8349b375" data-portal-id="52267765"></div></div>
+</main>
+<script>
+// Remplit le champ caché commercial_apporteur (pré-remplissage HubSpot par l'adresse de la page).
+(function(){
+  var p=new URLSearchParams(location.search);
+  if(p.get('commercial_apporteur')!=="Jimmy Baltase"){
+    p.set('commercial_apporteur',"Jimmy Baltase");
+    history.replaceState(null,'',location.pathname+'?'+p.toString());
+  }
+  var s=document.createElement('script');
+  s.src='https://js.hsforms.net/forms/embed/52267765.js'; s.defer=true;
+  document.head.appendChild(s);
+})();
+</script>
+</body></html>

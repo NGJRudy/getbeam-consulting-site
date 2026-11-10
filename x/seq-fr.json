@@ -112,7 +112,8 @@
  "apporteurs": {
   "_aide": "Nom affiché au prospect dans les e-mails. Clé = valeur du champ « commercial_apporteur ». Format : « Prénom Nom » ou « Prénom Nom, de Société ».",
   "Rudy": "Rudy Savy",
-  "Nick": "Nicolas Savy",
-  "Harry Filla": "Harry Filla"
+  "Harry Filla": "Harry Filla",
+  "Astrid": "Astrid",
+  "Jimmy Baltase": "Jimmy Baltase"
  }
 }
