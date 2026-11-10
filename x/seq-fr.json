@@ -1,5 +1,5 @@
 {
- "version": "2026-11-10-template-pro",
+ "version": "2026-11-10-apporteurs",
  "accroche": {
   "Salon": "Bonjour {prenom},\n\nMerci pour notre échange lors de {salon}. Vous nous aviez parlé de votre projet : « {sujet} ». Voici le suivi promis.",
   "LinkedIn": "Bonjour {prenom},\n\nSuite à notre échange sur LinkedIn au sujet de votre projet (« {sujet} »), voici le point promis.",
@@ -109,5 +109,11 @@
   "objet": "Réservation {entreprise} : un message à transmettre",
   "corps": "Bonjour {apporteur},\n\nVotre réservation de {entreprise} est enregistrée pour 14 jours, jusqu'au {date_fin}.\n\nProchaine étape : demandez à {prenom} s'il est d'accord pour être contacté par BEAM. Voici un message prêt à copier-coller (WhatsApp, SMS ou e-mail) :\n\n----------\n{texte_prospect}\n----------\n\nDès qu'il est d'accord, renvoyez le formulaire de réservation avec l'adresse e-mail du prospect ({email_prospect}) et cochez « Oui : je lui ai présenté BEAM ». La réservation passe alors à 90 jours, et BEAM le contacte directement en vous citant.\n\nFormulaire : https://v4a2d.share.hsforms.com/2oknaaZB_RlGsqrYfg0mzdQ\n\nSans présentation d'ici le {date_fin}, la réservation sera libérée.\n\nMerci,\nL'équipe BEAM",
   "texte_prospect": "Bonjour {prenom}, je travaille avec BEAM, une solution qui {pitch}. Vu votre projet autour de {sujet}, je pense que ça peut vous intéresser. Êtes-vous d'accord pour que l'équipe BEAM vous contacte directement ?"
+ },
+ "apporteurs": {
+  "_aide": "Nom affiché au prospect dans les e-mails. Clé = valeur du champ « commercial_apporteur ». Format : « Prénom Nom » ou « Prénom Nom, de Société ».",
+  "Rudy": "Rudy Savy",
+  "Nick": "Nicolas Savy",
+  "Harry Filla": "Harry Filla"
  }
 }
