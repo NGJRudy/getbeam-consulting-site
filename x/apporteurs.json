@@ -1,6 +1,21 @@
 {
   "_aide": "LISTE UNIQUE des apporteurs. Ajouter un apporteur = ajouter une ligne ici, puis lancer tools/build_go.py (crée sa page /go/<id>/ et son QR code). Le QR transmet seulement l'identifiant ; Make retrouve le nom ici. actif=false : la page reste, mais les réservations sont signalées. Les e-mails des apporteurs ne sont PAS ici (fichier public) : ils sont dans le magasin Make privé « BEAM apporteurs ».",
-  "formulaire": { "portal": "52267765", "form_id": "a249da69-907f-4651-acaa-b61f8349b375", "region": "na1", "rendez_vous": "https://meetings.hubspot.com/rudy-savy" },
+  "formulaire": { "portal": "52267765", "form_id": "a249da69-907f-4651-acaa-b61f8349b375", "region": "na1" },
+  "rendez_vous": {
+    "_aide": "Après l'envoi du formulaire, la page part vers un agenda. La première règle dont TOUTES les conditions « si_tout » sont vraies ET au moins une condition « si_un » (si présente) est vraie gagne ; sinon « defaut ». Conditions : « dans » = valeur exacte du champ ; « contient » = mot ou expression dans le texte (majuscules et accents ignorés). Paramètres : {champ} est remplacé par la réponse du prospect, {apporteur} par le nom de l'apporteur.",
+    "defaut": { "nom": "equipe", "url": "https://meetings.hubspot.com/rudy-savy",
+      "params": { "firstName": "{firstname}", "lastName": "{lastname}", "email": "{email}" } },
+    "regles": [
+      { "nom": "fondateur", "_pourquoi": "Décideur avec un projet ce mois-ci : rendez-vous direct avec Nicolas, fondateur de BEAM.",
+        "si_tout": [ { "champ": "echeance_projet", "dans": ["ce_mois"] } ],
+        "si_un": [
+          { "champ": "role_dans_la_decision", "dans": ["decideur_principal"] },
+          { "champ": "jobtitle", "contient": ["ceo", "cto", "coo", "cio", "dsi", "dg", "pdg", "president", "fondateur", "cofondateur", "co-fondateur", "founder", "cofounder", "co-founder", "directeur general", "managing director", "owner", "vp", "svp"] }
+        ],
+        "url": "https://cal.com/fusionblock/beam-meeting",
+        "params": { "name": "{firstname} {lastname}", "email": "{email}", "notes": "BEAM · {company} · {jobtitle} · présenté par {apporteur}", "duration": "30" } }
+    ]
+  },
   "apporteurs": [
     { "id": "rudy",        "nom": "Rudy Savy",               "actif": true, "ancienne_valeur": "Rudy" },
     { "id": "harry",       "nom": "Harry Filla",             "actif": true, "ancienne_valeur": "Harry Filla" },

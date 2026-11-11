@@ -55,15 +55,32 @@ main{{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}}
 // Pourquoi : le lien « Choisir mon créneau » est dans le cadre HubSpot et s'ouvre dans un nouvel
 // onglet, ce que les navigateurs intégrés (WhatsApp, Instagram, lecteurs de QR) bloquent souvent.
 // Le lien reste affiché en secours.
+// Quel agenda : règles de x/apporteurs.json (clé rendez_vous), recopiées ici à la génération.
 (function(){{
-  var RDV={rdv_js}, parti=false;
+  var RDV={rdv_js}, APP={nom_js}, parti=false;
+  function norm(s){{ return ' '+String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()+' '; }}
+  function ok(c,v){{
+    var x=v[c.champ];
+    if(c.dans) return c.dans.indexOf(String(x||''))>=0;
+    if(c.contient){{ var t=norm(x); return c.contient.some(function(k){{ return t.indexOf(norm(k))>=0; }}); }}
+    return false;
+  }}
+  function choisir(v){{
+    var r=(RDV.regles||[]).filter(function(g){{
+      return (g.si_tout||[]).every(function(c){{ return ok(c,v); }}) &&
+             (!(g.si_un||[]).length || g.si_un.some(function(c){{ return ok(c,v); }}));
+    }})[0];
+    return r||RDV.defaut;
+  }}
   function go(v){{
     if(parti) return; parti=true;
-    var q=new URLSearchParams();
-    if(v.firstname) q.set('firstName',v.firstname);
-    if(v.lastname) q.set('lastName',v.lastname);
-    if(v.email) q.set('email',v.email);
-    var u=RDV+(q.toString()?(RDV.indexOf('?')<0?'?':'&')+q.toString():'');
+    var a=choisir(v), q=new URLSearchParams();
+    Object.keys(a.params||{{}}).forEach(function(k){{
+      var val=String(a.params[k]).replace(/\\{{(\\w+)\\}}/g,function(_,n){{ return n==='apporteur'?APP:(v[n]||''); }})
+        .split('·').map(function(z){{ return z.trim(); }}).filter(Boolean).join(' · ');
+      if(val) q.set(k,val);
+    }});
+    var u=a.url+(q.toString()?(a.url.indexOf('?')<0?'?':'&')+q.toString():'');
     setTimeout(function(){{ location.href=u; }},1200);
   }}
   window.addEventListener('hs-form-event:on-submission:success',function(e){{
@@ -98,7 +115,8 @@ def main():
         d = os.path.join(GO, aid)
         os.makedirs(d, exist_ok=True)
         page = PAGE.format(nom=html.escape(a['nom']), id_js=json.dumps(aid),
-                           rdv_js=json.dumps(f['rendez_vous']),
+                           rdv_js=json.dumps({k: v for k, v in reg['rendez_vous'].items() if not k.startswith('_')}, ensure_ascii=False),
+                           nom_js=json.dumps(a['nom'], ensure_ascii=False),
                            region=f['region'], form_id=f['form_id'], portal=f['portal'])
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         url = f'{DOMAIN}/go/{aid}/'

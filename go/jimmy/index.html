@@ -33,15 +33,32 @@ main{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}
 // Pourquoi : le lien « Choisir mon créneau » est dans le cadre HubSpot et s'ouvre dans un nouvel
 // onglet, ce que les navigateurs intégrés (WhatsApp, Instagram, lecteurs de QR) bloquent souvent.
 // Le lien reste affiché en secours.
+// Quel agenda : règles de x/apporteurs.json (clé rendez_vous), recopiées ici à la génération.
 (function(){
-  var RDV="https://meetings.hubspot.com/rudy-savy", parti=false;
+  var RDV={"defaut": {"nom": "equipe", "url": "https://meetings.hubspot.com/rudy-savy", "params": {"firstName": "{firstname}", "lastName": "{lastname}", "email": "{email}"}}, "regles": [{"nom": "fondateur", "_pourquoi": "Décideur avec un projet ce mois-ci : rendez-vous direct avec Nicolas, fondateur de BEAM.", "si_tout": [{"champ": "echeance_projet", "dans": ["ce_mois"]}], "si_un": [{"champ": "role_dans_la_decision", "dans": ["decideur_principal"]}, {"champ": "jobtitle", "contient": ["ceo", "cto", "coo", "cio", "dsi", "dg", "pdg", "president", "fondateur", "cofondateur", "co-fondateur", "founder", "cofounder", "co-founder", "directeur general", "managing director", "owner", "vp", "svp"]}], "url": "https://cal.com/fusionblock/beam-meeting", "params": {"name": "{firstname} {lastname}", "email": "{email}", "notes": "BEAM · {company} · {jobtitle} · présenté par {apporteur}", "duration": "30"}}]}, APP="Jimmy Baltase", parti=false;
+  function norm(s){ return ' '+String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()+' '; }
+  function ok(c,v){
+    var x=v[c.champ];
+    if(c.dans) return c.dans.indexOf(String(x||''))>=0;
+    if(c.contient){ var t=norm(x); return c.contient.some(function(k){ return t.indexOf(norm(k))>=0; }); }
+    return false;
+  }
+  function choisir(v){
+    var r=(RDV.regles||[]).filter(function(g){
+      return (g.si_tout||[]).every(function(c){ return ok(c,v); }) &&
+             (!(g.si_un||[]).length || g.si_un.some(function(c){ return ok(c,v); }));
+    })[0];
+    return r||RDV.defaut;
+  }
   function go(v){
     if(parti) return; parti=true;
-    var q=new URLSearchParams();
-    if(v.firstname) q.set('firstName',v.firstname);
-    if(v.lastname) q.set('lastName',v.lastname);
-    if(v.email) q.set('email',v.email);
-    var u=RDV+(q.toString()?(RDV.indexOf('?')<0?'?':'&')+q.toString():'');
+    var a=choisir(v), q=new URLSearchParams();
+    Object.keys(a.params||{}).forEach(function(k){
+      var val=String(a.params[k]).replace(/\{(\w+)\}/g,function(_,n){ return n==='apporteur'?APP:(v[n]||''); })
+        .split('·').map(function(z){ return z.trim(); }).filter(Boolean).join(' · ');
+      if(val) q.set(k,val);
+    });
+    var u=a.url+(q.toString()?(a.url.indexOf('?')<0?'?':'&')+q.toString():'');
     setTimeout(function(){ location.href=u; },1200);
   }
   window.addEventListener('hs-form-event:on-submission:success',function(e){
