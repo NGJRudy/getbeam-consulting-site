@@ -10,8 +10,10 @@
       "type": "calcom", "event_type_id": 5256087, "duree_min": 30,
       "preavis_jours": 3, "max_par_jour": 3,
       "_preavis_max": "preavis_jours : même délai de préparation que l'équipe. max_par_jour : nombre de créneaux fondateur proposés par jour (répartis dans la journée), pour garder le caractère exceptionnel.",
-      "libelle": "Avec le fondateur", "detail": "30 min · visio avec Nicolas, fondateur de BEAM",
-      "page_secours": "https://cal.com/fusionblock/beam-meeting"
+      "libelle": "Avec le fondateur", "court": "Fondateur", "detail": "30 min · visio avec Nicolas, fondateur de BEAM",
+      "page_secours": "https://cal.com/fusionblock/beam-meeting",
+      "notifier": "https://hook.eu1.make.com/6gr4joti1qg9od29en4nwvvqp5mbg1b3",
+      "_notifier": "Après une réservation, la page envoie l'identifiant Cal.com à Make (scénario « RDV fondateur → HubSpot + Slack »), qui vérifie la réservation chez Cal.com avant d'écrire quoi que ce soit."
     }
   }
 }

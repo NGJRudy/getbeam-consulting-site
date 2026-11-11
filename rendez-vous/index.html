@@ -149,7 +149,7 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
     var list=days[DAY];
     $('slots').innerHTML=list.map(function(s,i){var a=CFG.agendas[s.k];
       return s.k==='equipe'?'<button type="button" class="slot" data-i="'+i+'">'+fmtTime.format(s.t)+'</button>'
-        :'<button type="button" class="slot f" data-i="'+i+'">'+fmtTime.format(s.t)+'<small>★ '+esc(a.libelle)+' · '+a.duree_min+' min</small></button>'}).join('');
+        :'<button type="button" class="slot f" data-i="'+i+'">'+fmtTime.format(s.t)+'<small>★ '+esc(a.court||a.libelle)+' · '+a.duree_min+' min</small></button>'}).join('');
     $('days').onclick=function(e){var b=e.target.closest('.day');if(!b)return;DAY=b.getAttribute('data-k');render([])};
     $('slots').onclick=function(e){var b=e.target.closest('.slot');if(!b)return;PICK=list[+b.getAttribute('data-i')];confirmView()};
   }
@@ -176,7 +176,8 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
     var nom=$('nom').value.trim(),mail=$('mail').value.trim();
     if(!nom||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){$('ferr').textContent='Indiquez votre nom et une adresse e-mail valide.';$('ferr').hidden=false;return}
     var a=CFG.agendas[PICK.k],go=$('go');go.disabled=true;go.textContent='Réservation…';
-    (a.type==='hubspot'?bookHubspot(a,PICK,nom,mail):bookCalcom(a,PICK,nom,mail)).then(function(){
+    (a.type==='hubspot'?bookHubspot(a,PICK,nom,mail):bookCalcom(a,PICK,nom,mail)).then(function(res){
+      try{ var uid=res&&res.data&&res.data.uid; if(a.notifier&&uid){ fetch(a.notifier,{method:'POST',mode:'no-cors',keepalive:true,body:new URLSearchParams({uid:uid,company:person.company,jobtitle:person.jobtitle,apporteur:person.apporteur})}); } }catch(x){}
       $('v-confirm').hidden=true;$('v-ok').hidden=false;$('okrecap').innerHTML=recapHTML(PICK);window.scrollTo(0,0);
     },function(err){
       go.disabled=false;go.textContent='Confirmer le rendez-vous';
