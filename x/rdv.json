@@ -1,0 +1,15 @@
+{
+  "_aide": "Agendas affichés sur getbeam-consulting.com/rendez-vous/. « equipe » est toujours affiché. Les autres (ex. « fondateur ») ne s'affichent que si l'adresse de la page contient ?agendas=fondateur (posé par les règles de x/apporteurs.json). Ajouter un agenda = ajouter une entrée ici.",
+  "jours_affiches": 14,
+  "agendas": {
+    "equipe": {
+      "type": "hubspot", "slug": "rudy-savy", "duree_min": 15,
+      "libelle": "Échange découverte", "detail": "15 min · visio avec un expert BEAM"
+    },
+    "fondateur": {
+      "type": "calcom", "event_type_id": 5256087, "duree_min": 30,
+      "libelle": "Avec le fondateur", "detail": "30 min · visio avec Nicolas, fondateur de BEAM",
+      "page_secours": "https://cal.com/fusionblock/beam-meeting"
+    }
+  }
+}

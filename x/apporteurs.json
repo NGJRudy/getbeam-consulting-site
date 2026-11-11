@@ -6,14 +6,14 @@
     "defaut": { "nom": "equipe", "url": "https://meetings.hubspot.com/rudy-savy",
       "params": { "firstName": "{firstname}", "lastName": "{lastname}", "email": "{email}" } },
     "regles": [
-      { "nom": "fondateur", "_pourquoi": "Décideur avec un projet ce mois-ci : rendez-vous direct avec Nicolas, fondateur de BEAM.",
-        "si_tout": [ { "champ": "echeance_projet", "dans": ["ce_mois"] } ],
-        "si_un": [
+      { "nom": "fondateur", "_pourquoi": "EXCEPTIONNEL : projet ce mois-ci ET décideur principal ET dirigeant de tout premier plan. Même planning que tout le monde, avec en plus les créneaux de Nicolas (fondateur), signalés ; le prospect choisit lui-même.",
+        "si_tout": [
+          { "champ": "echeance_projet", "dans": ["ce_mois"] },
           { "champ": "role_dans_la_decision", "dans": ["decideur_principal"] },
-          { "champ": "jobtitle", "contient": ["ceo", "cto", "coo", "cio", "dsi", "dg", "pdg", "president", "fondateur", "cofondateur", "co-fondateur", "founder", "cofounder", "co-founder", "directeur general", "managing director", "owner", "vp", "svp"] }
+          { "champ": "jobtitle", "contient": ["ceo", "pdg", "dg", "directeur general", "president", "fondateur", "cofondateur", "co-fondateur", "founder", "cofounder", "co-founder", "owner", "managing director", "gerant", "chief executive"] }
         ],
-        "url": "https://cal.com/fusionblock/beam-meeting",
-        "params": { "name": "{firstname} {lastname}", "email": "{email}", "notes": "BEAM · {company} · {jobtitle} · présenté par {apporteur}", "duration": "30" } }
+        "url": "https://getbeam-consulting.com/rendez-vous/",
+        "params": { "agendas": "fondateur", "firstName": "{firstname}", "lastName": "{lastname}", "email": "{email}", "company": "{company}", "jobtitle": "{jobtitle}", "apporteur": "{apporteur}" } }
     ]
   },
   "apporteurs": [

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BEAM · Choisir un créneau</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--brand-soft:#e6ecfd;--ok:#1a7f4b;--danger:#c43d2e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{width:min(640px,100%);margin:0 auto;padding:16px 16px 40px}
+.brand{display:flex;align-items:center;gap:10px;margin:8px 4px 18px;color:var(--ink);text-decoration:none;font:600 20px/1 'Open Sans',Arial,sans-serif;letter-spacing:.14em}
+.card{background:var(--card);border-radius:16px;padding:22px 20px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+h1{font-size:22px;line-height:30px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted);margin:0 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink)}
+.dot.f{background:var(--ink)}
+.days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 6px;scrollbar-width:thin}
+.day{flex:0 0 auto;min-width:62px;padding:8px 6px;border:1px solid var(--line);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.day small{display:block;font-size:12px;color:var(--muted);line-height:16px;text-transform:capitalize}
+.day b{display:block;font-size:18px;line-height:24px}
+.day .fd{display:block;height:8px}
+.day .fd i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.day[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.slot{padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:600 15px/20px 'Open Sans',Arial,sans-serif;color:var(--ink);cursor:pointer;text-align:center}
+.slot:hover,.slot:focus-visible{border-color:var(--ink);outline:none}
+.slot.f{background:var(--ink);border-color:var(--ink);color:#fff}
+.slot.f small{display:block;font:400 12px/16px 'Open Sans',Arial,sans-serif;color:#d8dbe0}
+.tz{font-size:12px;color:var(--muted);margin:14px 0 0}
+.empty,.msg{color:var(--muted);font-size:14px;padding:12px 0}
+.msg.err{color:var(--danger)}
+.recap{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 16px}
+.recap b{display:block;font-size:17px}
+.badge{display:inline-block;margin:0 0 6px;padding:2px 10px;border-radius:999px;background:var(--ink);color:#fff;font-size:12px;font-weight:600}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;color:var(--ink)}
+input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+button.main{flex:1 1 200px;padding:13px 16px;border:0;border-radius:10px;background:#0b0d10;color:#fff;font:600 16px/20px 'Open Sans',Arial,sans-serif;cursor:pointer}
+button.main[disabled]{opacity:.6;cursor:wait}
+button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:600 15px/20px 'Open Sans',Arial,sans-serif;color:var(--ink);cursor:pointer}
+.ok{font-size:44px;line-height:1;margin:6px 0 10px}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:16px}
+.foot a{color:var(--muted)}
+[hidden]{display:none!important}
+</style></head>
+<body><main>
+<a class="brand" href="https://getbeam-consulting.com/"><img src="/assets/email/beam-logo-96.png" width="28" height="28" alt="">BEAM</a>
+
+<section class="card" id="v-choix">
+  <h1>Choisissez votre créneau</h1>
+  <p class="sub" id="sub">Un échange en visio pour comprendre votre cas.</p>
+  <div class="legend" id="legend" hidden></div>
+  <div class="days" id="days" role="group" aria-label="Jours"></div>
+  <div class="slots" id="slots" aria-live="polite"></div>
+  <p class="msg" id="msg">Chargement des disponibilités…</p>
+  <p class="tz" id="tz"></p>
+</section>
+
+<section class="card" id="v-confirm" hidden>
+  <h1>Confirmez le rendez-vous</h1>
+  <div class="recap" id="recap"></div>
+  <form id="f" novalidate>
+    <label for="nom">Nom et prénom</label><input id="nom" autocomplete="name" required>
+    <label for="mail">E-mail professionnel</label><input id="mail" type="email" autocomplete="email" required>
+    <p class="msg err" id="ferr" hidden></p>
+    <div class="actions"><button class="main" id="go" type="submit">Confirmer le rendez-vous</button><button class="ghost" type="button" id="back">Autre créneau</button></div>
+  </form>
+</section>
+
+<section class="card" id="v-ok" hidden>
+  <div class="ok">✓</div>
+  <h1>C'est confirmé</h1>
+  <div class="recap" id="okrecap"></div>
+  <p class="sub">Vous recevez l'invitation par e-mail, avec le lien de la visio. Un empêchement ? Répondez simplement à cet e-mail.</p>
+</section>
+
+<p class="foot">BEAM · <a href="https://getbeam-consulting.com/">getbeam-consulting.com</a></p>
+</main>
+<script>
+(function(){
+  var P=new URLSearchParams(location.search), TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'Europe/Paris';
+  var $=function(id){return document.getElementById(id)};
+  var CFG=null, SLOTS=[], DAY=null, PICK=null;
+  var person={
+    first:P.get('firstName')||'', last:P.get('lastName')||'', email:P.get('email')||'',
+    company:P.get('company')||'', jobtitle:P.get('jobtitle')||'', apporteur:P.get('apporteur')||''
+  };
+  var wanted=['equipe'].concat((P.get('agendas')||'').split(',').map(function(s){return s.trim()}).filter(Boolean));
+  var fmtDay=new Intl.DateTimeFormat('fr-FR',{weekday:'short',timeZone:TZ}), fmtNum=new Intl.DateTimeFormat('fr-FR',{day:'numeric',timeZone:TZ});
+  var fmtKey=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZ});
+  var fmtTime=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:TZ});
+  var fmtLong=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',timeZone:TZ});
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function msg(t,err){var m=$('msg');m.textContent=t||'';m.hidden=!t;m.className='msg'+(err?' err':'')}
+
+  // --- Lecture des disponibilités -------------------------------------------------
+  function hubspot(a,off){
+    var u='https://app.hubspot.com/api/meetings-public/v3/book/availability-page?slug='+encodeURIComponent(a.slug)+'&monthOffset='+off+'&timezone='+encodeURIComponent(TZ)+'&hs_static_app=MeetingsPublic&hs_static_app_version=1.61508';
+    return fetch(u).then(function(r){if(!r.ok)throw new Error('hubspot '+r.status);return r.json()}).then(function(j){
+      var by=(j.linkAvailability||{}).linkAvailabilityByDuration||{}, d=by[String(a.duree_min*60000)]||by[Object.keys(by)[0]]||{};
+      return (d.availabilities||[]).map(function(x){return x.startMillisUtc});
+    });
+  }
+  function calcom(a,from,to){
+    var u='https://api.cal.com/v2/slots?eventTypeId='+a.event_type_id+'&start='+from+'&end='+to+'&timeZone='+encodeURIComponent(TZ)+'&duration='+a.duree_min;
+    return fetch(u,{headers:{'cal-api-version':'2024-09-04'}}).then(function(r){if(!r.ok)throw new Error('cal '+r.status);return r.json()}).then(function(j){
+      var out=[];Object.keys(j.data||{}).forEach(function(k){(j.data[k]||[]).forEach(function(s){out.push(Date.parse(s.start))})});return out;
+    });
+  }
+  function load(){
+    msg('Chargement des disponibilités…');$('slots').innerHTML='';$('days').innerHTML='';
+    var now=Date.now(), end=now+CFG.jours_affiches*864e5, from=new Date(now).toISOString().slice(0,10), to=new Date(end).toISOString().slice(0,10);
+    var jobs=wanted.filter(function(k){return CFG.agendas[k]}).map(function(k){
+      var a=CFG.agendas[k], p=a.type==='hubspot'?Promise.all([hubspot(a,0),hubspot(a,1)]).then(function(x){return x[0].concat(x[1])}):calcom(a,from,to);
+      return p.then(function(ts){return ts.filter(function(t){return t>now&&t<end}).map(function(t){return {t:t,k:k}})},function(){return {erreur:k}});
+    });
+    return Promise.all(jobs).then(function(res){
+      var errs=res.filter(function(r){return r&&r.erreur}).map(function(r){return r.erreur});
+      SLOTS=[].concat.apply([],res.filter(function(r){return Array.isArray(r)})).sort(function(a,b){return a.t-b.t||(a.k==='equipe'?-1:1)});
+      var seen={};SLOTS=SLOTS.filter(function(s){var id=s.k+s.t;if(seen[id])return false;seen[id]=1;return true});
+      render(errs);
+    });
+  }
+
+  // --- Affichage --------------------------------------------------------------------
+  function render(errs){
+    var multi=wanted.some(function(k){return k!=='equipe'&&CFG.agendas[k]});
+    if(multi){var f=CFG.agendas.fondateur;$('legend').hidden=false;
+      $('legend').innerHTML='<span><i class="dot"></i>'+esc(CFG.agendas.equipe.libelle)+' · '+CFG.agendas.equipe.duree_min+' min</span>'+(f?'<span><i class="dot f"></i>'+esc(f.libelle)+' · '+f.duree_min+' min</span>':'');
+      $('sub').textContent='Choisissez un échange avec notre équipe ou, si vous le souhaitez, directement avec notre fondateur.';}
+    var days={};SLOTS.forEach(function(s){var k=fmtKey.format(s.t);(days[k]=days[k]||[]).push(s)});
+    var keys=Object.keys(days).sort();
+    $('tz').textContent='Heures affichées dans votre fuseau : '+TZ.replace(/_/g,' ')+'.';
+    if(!keys.length){msg(errs.length?'Le planning ne répond pas pour le moment. Réessayez dans un instant.':'Aucun créneau disponible dans les '+CFG.jours_affiches+' prochains jours. Répondez à notre e-mail, nous trouverons un moment.',!!errs.length);return}
+    msg(errs.length&&errs.indexOf('equipe')<0?'':(errs.length?'Une partie du planning ne répond pas, réessayez dans un instant.':''),true);
+    if(!DAY||!days[DAY])DAY=keys[0];
+    $('days').innerHTML=keys.map(function(k){var t=days[k][0].t,hasF=days[k].some(function(s){return s.k!=='equipe'});
+      return '<button type="button" class="day" data-k="'+k+'" aria-pressed="'+(k===DAY)+'"><small>'+esc(fmtDay.format(t).replace('.',''))+'</small><b>'+fmtNum.format(t)+'</b><span class="fd">'+(hasF?'<i title="Créneaux avec le fondateur"></i>':'')+'</span></button>'}).join('');
+    var list=days[DAY];
+    $('slots').innerHTML=list.map(function(s,i){var a=CFG.agendas[s.k];
+      return s.k==='equipe'?'<button type="button" class="slot" data-i="'+i+'">'+fmtTime.format(s.t)+'</button>'
+        :'<button type="button" class="slot f" data-i="'+i+'">'+fmtTime.format(s.t)+'<small>'+esc(a.libelle)+'</small></button>'}).join('');
+    $('days').onclick=function(e){var b=e.target.closest('.day');if(!b)return;DAY=b.getAttribute('data-k');render([])};
+    $('slots').onclick=function(e){var b=e.target.closest('.slot');if(!b)return;PICK=list[+b.getAttribute('data-i')];confirmView()};
+  }
+  function recapHTML(s){var a=CFG.agendas[s.k],fin=s.t+a.duree_min*6e4;
+    return (s.k!=='equipe'?'<span class="badge">'+esc(a.libelle)+'</span>':'')+'<b>'+esc(fmtLong.format(s.t))+' · '+fmtTime.format(s.t)+' – '+fmtTime.format(fin)+'</b><span class="sub">'+esc(a.detail)+'</span>'}
+  function confirmView(){$('v-choix').hidden=true;$('v-confirm').hidden=false;$('recap').innerHTML=recapHTML(PICK);
+    $('nom').value=(person.first+' '+person.last).trim();$('mail').value=person.email;$('ferr').hidden=true;window.scrollTo(0,0)}
+  $('back').onclick=function(){$('v-confirm').hidden=true;$('v-choix').hidden=false};
+
+  // --- Réservation ------------------------------------------------------------------
+  function bookHubspot(a,s,nom,mail){
+    var parts=nom.trim().split(/\s+/),first=parts.shift()||nom,last=parts.join(' ');
+    return fetch('https://api.hubspot.com/meetings-public/v1/book?slug='+encodeURIComponent(a.slug)+'&hs_static_app=MeetingsPublic&hs_static_app_version=1.61508',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({firstName:first,lastName:last,email:mail,startTime:s.t,duration:a.duree_min*60000,timezone:TZ,locale:'fr-fr',guestEmails:[],formFields:[],offline:false})})
+      .then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw {code:(j.subCategory||'')+' '+(j.message||r.status)};return j})});
+  }
+  function bookCalcom(a,s,nom,mail){
+    var notes=['BEAM',person.company,person.jobtitle,person.apporteur?'présenté par '+person.apporteur:''].filter(Boolean).join(' · ');
+    return fetch('https://api.cal.com/v2/bookings',{method:'POST',headers:{'content-type':'application/json','cal-api-version':'2024-08-13'},
+      body:JSON.stringify({start:new Date(s.t).toISOString(),eventTypeId:a.event_type_id,lengthInMinutes:a.duree_min,attendee:{name:nom,email:mail,timeZone:TZ,language:'fr'},bookingFieldsResponses:{notes:notes}})})
+      .then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok||j.status==='error')throw {code:((j.error||{}).message)||r.status};return j})});
+  }
+  $('f').onsubmit=function(e){e.preventDefault();
+    var nom=$('nom').value.trim(),mail=$('mail').value.trim();
+    if(!nom||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){$('ferr').textContent='Indiquez votre nom et une adresse e-mail valide.';$('ferr').hidden=false;return}
+    var a=CFG.agendas[PICK.k],go=$('go');go.disabled=true;go.textContent='Réservation…';
+    (a.type==='hubspot'?bookHubspot(a,PICK,nom,mail):bookCalcom(a,PICK,nom,mail)).then(function(){
+      $('v-confirm').hidden=true;$('v-ok').hidden=false;$('okrecap').innerHTML=recapHTML(PICK);window.scrollTo(0,0);
+    },function(err){
+      go.disabled=false;go.textContent='Confirmer le rendez-vous';
+      $('ferr').innerHTML='Ce créneau vient d\'être pris ou n\'est plus disponible. <a href="#" id="reload">Voir les autres créneaux</a>.';$('ferr').hidden=false;
+      $('reload').onclick=function(ev){ev.preventDefault();$('v-confirm').hidden=true;$('v-choix').hidden=false;load()};
+      try{console.warn('reservation',err&&err.code)}catch(x){}
+    });
+  };
+
+  fetch('/x/rdv.json?t='+Date.now()).then(function(r){return r.json()}).then(function(c){CFG=c;return load()})
+    .catch(function(){msg('Le planning ne répond pas. Rechargez la page dans un instant.',true)});
+})();
+</script>
+</body></html>
