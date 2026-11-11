@@ -17,7 +17,8 @@ h1{font-size:22px;line-height:30px;margin:0 0 4px}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted);margin:0 0 14px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink)}
-.dot.f{background:var(--ink)}
+.dot{border-color:var(--line)}
+.dot.f{border:1.5px solid var(--ink)}
 .days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 6px;scrollbar-width:thin}
 .day{flex:0 0 auto;min-width:62px;padding:8px 6px;border:1px solid var(--line);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
 .day small{display:block;font-size:12px;color:var(--muted);line-height:16px;text-transform:capitalize}
@@ -28,8 +29,8 @@ h1{font-size:22px;line-height:30px;margin:0 0 4px}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
 .slot{padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:600 15px/20px 'Open Sans',Arial,sans-serif;color:var(--ink);cursor:pointer;text-align:center}
 .slot:hover,.slot:focus-visible{border-color:var(--ink);outline:none}
-.slot.f{background:var(--ink);border-color:var(--ink);color:#fff}
-.slot.f small{display:block;font:400 12px/16px 'Open Sans',Arial,sans-serif;color:#d8dbe0}
+.slot.f{border:1.5px solid var(--ink)}
+.slot.f small{display:block;font:600 11px/15px 'Open Sans',Arial,sans-serif;color:var(--ink);letter-spacing:.02em}
 .tz{font-size:12px;color:var(--muted);margin:14px 0 0}
 .empty,.msg{color:var(--muted);font-size:14px;padding:12px 0}
 .msg.err{color:var(--danger)}
@@ -112,12 +113,16 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
       var out=[];Object.keys(j.data||{}).forEach(function(k){(j.data[k]||[]).forEach(function(s){out.push(Date.parse(s.start))})});return out;
     });
   }
+  // Garde au plus « max » créneaux par jour, répartis dans la journée (premier, dernier et entre les deux).
+  function limiter(ts,max){ if(!max) return ts; var by={}; ts.sort(function(a,b){return a-b}).forEach(function(t){var k=fmtKey.format(t);(by[k]=by[k]||[]).push(t)});
+    return [].concat.apply([],Object.keys(by).map(function(k){var l=by[k]; if(l.length<=max) return l; var out=[]; for(var i=0;i<max;i++){out.push(l[Math.round(i*(l.length-1)/(max-1||1))])} return out.filter(function(t,i,a){return a.indexOf(t)===i});})); }
   function load(){
     msg('Chargement des disponibilités…');$('slots').innerHTML='';$('days').innerHTML='';
     var now=Date.now(), end=now+CFG.jours_affiches*864e5, from=new Date(now).toISOString().slice(0,10), to=new Date(end).toISOString().slice(0,10);
     var jobs=wanted.filter(function(k){return CFG.agendas[k]}).map(function(k){
       var a=CFG.agendas[k], p=a.type==='hubspot'?Promise.all([hubspot(a,0),hubspot(a,1)]).then(function(x){return x[0].concat(x[1])}):calcom(a,from,to);
-      return p.then(function(ts){return ts.filter(function(t){return t>now&&t<end}).map(function(t){return {t:t,k:k}})},function(){return {erreur:k}});
+      var min=now+(a.preavis_jours||0)*864e5;
+      return p.then(function(ts){return limiter(ts.filter(function(t){return t>=min&&t<end}),a.max_par_jour).map(function(t){return {t:t,k:k}})},function(){return {erreur:k}});
     });
     return Promise.all(jobs).then(function(res){
       var errs=res.filter(function(r){return r&&r.erreur}).map(function(r){return r.erreur});
@@ -131,7 +136,7 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
   function render(errs){
     var multi=wanted.some(function(k){return k!=='equipe'&&CFG.agendas[k]});
     if(multi){var f=CFG.agendas.fondateur;$('legend').hidden=false;
-      $('legend').innerHTML='<span><i class="dot"></i>'+esc(CFG.agendas.equipe.libelle)+' · '+CFG.agendas.equipe.duree_min+' min</span>'+(f?'<span><i class="dot f"></i>'+esc(f.libelle)+' · '+f.duree_min+' min</span>':'');
+      $('legend').innerHTML='<span><i class="dot"></i>'+esc(CFG.agendas.equipe.libelle)+' · '+CFG.agendas.equipe.duree_min+' min</span>'+(f?'<span><i class="dot f"></i>★ '+esc(f.libelle)+' · '+f.duree_min+' min</span>':'');
       $('sub').textContent='Choisissez un échange avec notre équipe ou, si vous le souhaitez, directement avec notre fondateur.';}
     var days={};SLOTS.forEach(function(s){var k=fmtKey.format(s.t);(days[k]=days[k]||[]).push(s)});
     var keys=Object.keys(days).sort();
@@ -144,7 +149,7 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
     var list=days[DAY];
     $('slots').innerHTML=list.map(function(s,i){var a=CFG.agendas[s.k];
       return s.k==='equipe'?'<button type="button" class="slot" data-i="'+i+'">'+fmtTime.format(s.t)+'</button>'
-        :'<button type="button" class="slot f" data-i="'+i+'">'+fmtTime.format(s.t)+'<small>'+esc(a.libelle)+'</small></button>'}).join('');
+        :'<button type="button" class="slot f" data-i="'+i+'">'+fmtTime.format(s.t)+'<small>★ '+esc(a.libelle)+' · '+a.duree_min+' min</small></button>'}).join('');
     $('days').onclick=function(e){var b=e.target.closest('.day');if(!b)return;DAY=b.getAttribute('data-k');render([])};
     $('slots').onclick=function(e){var b=e.target.closest('.slot');if(!b)return;PICK=list[+b.getAttribute('data-i')];confirmView()};
   }
