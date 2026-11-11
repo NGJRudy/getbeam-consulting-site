@@ -51,6 +51,34 @@ main{{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}}
   s.src='https://js.hsforms.net/forms/embed/{portal}.js'; s.defer=true;
   document.head.appendChild(s);
 }})();
+// Après l'envoi : la page entière part vers le calendrier, pré-rempli (prénom, nom, e-mail).
+// Pourquoi : le lien « Choisir mon créneau » est dans le cadre HubSpot et s'ouvre dans un nouvel
+// onglet, ce que les navigateurs intégrés (WhatsApp, Instagram, lecteurs de QR) bloquent souvent.
+// Le lien reste affiché en secours.
+(function(){{
+  var RDV={rdv_js}, parti=false;
+  function go(v){{
+    if(parti) return; parti=true;
+    var q=new URLSearchParams();
+    if(v.firstname) q.set('firstName',v.firstname);
+    if(v.lastname) q.set('lastName',v.lastname);
+    if(v.email) q.set('email',v.email);
+    var u=RDV+(q.toString()?(RDV.indexOf('?')<0?'?':'&')+q.toString():'');
+    setTimeout(function(){{ location.href=u; }},1200);
+  }}
+  window.addEventListener('hs-form-event:on-submission:success',function(e){{
+    var v={{}};
+    try{{
+      var f=window.HubSpotFormsV4&&HubSpotFormsV4.getFormFromEvent(e);
+      if(!f) return go(v);
+      f.getFormFieldValues().then(function(arr){{
+        (arr||[]).forEach(function(x){{ var k=String(x.name||'').split('/').pop(); v[k]=Array.isArray(x.value)?x.value[0]:x.value; }});
+        go(v);
+      }},function(){{ go(v); }});
+      setTimeout(function(){{ go(v); }},2500);
+    }}catch(err){{ go(v); }}
+  }});
+}})();
 </script>
 </body></html>
 '''
@@ -70,6 +98,7 @@ def main():
         d = os.path.join(GO, aid)
         os.makedirs(d, exist_ok=True)
         page = PAGE.format(nom=html.escape(a['nom']), id_js=json.dumps(aid),
+                           rdv_js=json.dumps(f['rendez_vous']),
                            region=f['region'], form_id=f['form_id'], portal=f['portal'])
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         url = f'{DOMAIN}/go/{aid}/'
