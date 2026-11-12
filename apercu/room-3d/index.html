@@ -31,6 +31,7 @@ h1{font:800 clamp(34px,4.4vw,60px)/1.04 'Open Sans',Arial,sans-serif;letter-spac
 .pause{width:28px;height:28px;border:1px solid #dfe3ea;border-radius:50%;background:#fff;cursor:pointer;display:grid;place-items:center;margin-left:4px}
 .pause::before{content:'';width:8px;height:10px;border-left:3px solid var(--ink);border-right:3px solid var(--ink);box-sizing:border-box}
 .pause.lecture::before{width:0;height:0;border:0;border-left:9px solid var(--ink);border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:3px}
+.badge{position:absolute;z-index:2;left:0;top:0;transform:translate(-50%,-100%);pointer-events:none;font:600 13px/18px 'Open Sans',Arial,sans-serif;color:var(--brand);background:#fff;border:1px solid #d6dff8;border-radius:999px;padding:6px 12px;white-space:nowrap;opacity:0;transition:opacity .3s}
 .tip{position:absolute;z-index:3;left:0;top:0;pointer-events:none;background:#fff;border:1px solid #e3e6ea;border-radius:12px;padding:8px 12px;
   box-shadow:0 10px 30px -12px rgba(20,23,28,.25);font-size:13px;line-height:18px;max-width:240px;opacity:0;transition:opacity .15s;transform:translate(-50%,calc(-100% - 14px))}
 .tip b{display:block;font-weight:600;color:var(--ink)}.tip span{color:var(--muted)}
@@ -48,12 +49,13 @@ h1{font:800 clamp(34px,4.4vw,60px)/1.04 'Open Sans',Arial,sans-serif;letter-spac
 <body>
 <section class="hero">
   <div class="copy">
-    <div class="texte" id="texte" aria-live="polite"><p class="step" id="sur"></p><h1 id="titre"></h1><p class="lead" id="lead"></p></div>
+    <div class="texte" id="texte" aria-live="polite"><p class="step" id="sur">Aujourd'hui</p><h1 id="titre">Vos machines travaillent chacune dans leur coin.</h1><p class="lead" id="lead">GPU, serveurs, ordinateurs, navigateurs, données : tout est là, mais rien ne se parle vraiment.</p></div>
     <a class="cta" href="/rendez-vous/">Prendre rendez-vous</a>
     <div class="nav" id="nav"><button class="pause" id="pause" type="button" aria-label="Mettre en pause l'animation"></button></div>
   </div>
   <div id="scene"></div>
   <div class="tip" id="tip"></div>
+  <div class="badge" id="badge" aria-hidden="true"></div>
 </section>
 
 <script type="module">
@@ -80,23 +82,32 @@ const C = {
     { type: 'telephone', x: 1.55,  z: 1.15,  rot: -20, nom: 'Téléphone',   role: 'Les appareils en déplacement.' },
     { type: 'telephone', x: 1.95,  z: 1.0,   rot: -8,  nom: 'Téléphone',   role: 'Les appareils en déplacement.' },
     { type: 'serveur',   x: 2.05,  z: -0.75, rot: 0,   nom: 'Serveur',     role: 'Vos serveurs, au bureau ou dans le cloud.' },
-    { type: 'serveur',   x: 2.75,  z: -0.45, rot: 0,   nom: 'Serveur',     role: 'Vos serveurs, au bureau ou dans le cloud.' }
+    { type: 'serveur',   x: 2.75,  z: -0.45, rot: 0,   nom: 'Serveur',     role: 'Vos serveurs, au bureau ou dans le cloud.' },
+    { type: 'navigateur',x: 0.1,   z: -1.0,  rot: 8,   nom: 'Navigateur',  role: 'Un simple onglet de navigateur peut rejoindre la Room.' }
   ],
-  petitsCubes: [[-1.4, 1.05], [-0.15, -0.35], [0.95, -0.55], [1.3, 0.15], [-2.55, 0.65], [2.45, 0.75], [0.25, 1.55]],
+  petitsCubes: [[-1.4, 1.05], [-0.35, -0.2], [1.05, -0.45], [1.3, 0.15], [-2.55, 0.65], [2.45, 0.75], [0.25, 1.55]],
   // Les échanges « ratés » d'aujourd'hui : un trait bleu part, puis s'éteint avant d'arriver.
   echecs: [[0, 1], [1, 2], [2, 3], [5, 2], [0, 5]],
   rythmeEchecs: 0.6, // secondes entre deux tentatives
   room: { centre: [0.45, 1.85, -0.1], rayon: 1.5, finesse: 2, echelleMembres: 0.62 },
-  transition: 2.8, // secondes pour passer d'une étape à l'autre
+  transition: 1.8, // secondes pour passer d'une étape à l'autre
   // L'histoire : chaque étape = un texte + un état de la scène. Ajouter une étape = ajouter une entrée.
   etapes: [
-    { etat: 0, duree: 6.5, sur: "Aujourd'hui", titre: 'Vos machines travaillent chacune dans leur coin.',
-      texte: 'GPU, serveurs, ordinateurs, téléphones, données : tout est là, mais rien ne se parle vraiment. Les échanges passent par des détours et se perdent en route.' },
-    { etat: 1, duree: 7, sur: 'Avec une Room', titre: 'Une Room les réunit dans une bulle privée.',
-      texte: "Tous vos appareils entrent dans le même espace chiffré. Ils se voient, se reconnaissent et peuvent échanger directement, où qu'ils soient." }
+    { etat: 0, mode: 'isole', duree: 4, sur: "Aujourd'hui", titre: 'Vos machines travaillent chacune dans leur coin.',
+      texte: 'GPU, serveurs, ordinateurs, navigateurs, données : tout est là, mais rien ne se parle vraiment.' },
+    { etat: 1, mode: 'pair', duree: 4.5, sur: 'Avec une Room', titre: 'Une Room les réunit dans une bulle privée.',
+      texte: 'Tous vos appareils entrent dans le même espace chiffré et se parlent directement, de pair à pair.' },
+    { etat: 1, mode: 'multicast', duree: 5, sur: 'Partager', titre: 'Un seul envoi, tout le monde reçoit en même temps.',
+      texte: 'Fichiers, modèles, flux vidéo : la donnée part une fois et arrive chez chaque membre au même instant.' },
+    { etat: 1, mode: 'entrainement', duree: 7.5, sur: 'Entraîner une IA', titre: 'Entraînez une IA avec les machines que vous avez déjà.',
+      texte: "GPU, ordinateurs, et même un simple navigateur : chacun apprend de son côté, puis la Room met tout en commun. Pas besoin d'un centre de calcul." },
+    { etat: 1, mode: 'automatisation', duree: 5.5, sur: 'Automatiser', titre: "Vos machines s'enchaînent toutes seules.",
+      texte: 'Quand une machine termine, la suivante démarre : collecte, calcul, envoi, sans intervention.' }
   ],
+  // Qui fait quoi dans chaque cas d'usage (numéros = ordre dans « objets »).
+  roles: { source: 0, entraineurs: [1, 2, 7, 3, 5], chaine: [3, 0, 1, 5, 2] },
   // Caméra pour chaque état (0 = écosystème, 1 = Room).
-  cadrages: [ { cible: [0.25, 0.35, 0], distance: 15.5 }, { cible: [0.4, 1.15, 0], distance: 18.5 } ]
+  cadrages: [ { cible: [0.25, 0.35, 0], distance: 15.5 }, { cible: [0.4, 1.4, 0], distance: 15.5 } ]
 };
 /* ═══════════════════════════════════════════════════════════════════════════════ */
 
@@ -191,6 +202,17 @@ const FORMES = {
     const inst = new THREE.InstancedMesh(sp, noir, pts.length); pts.forEach((p, i) => inst.setMatrixAt(i, new THREE.Matrix4().makeTranslation(...p))); g.add(inst);
     ombre(g, 1.5, 1.5);
   },
+  navigateur(g) { // une fenêtre de navigateur debout : barre d'onglets, adresse, contenu
+    const w = .62, h = .44, cadre = new THREE.Group(); cadre.position.y = .03; cadre.rotation.x = -.12; g.add(cadre);
+    piece(bloc(w, h, .025, .012), argile, cadre, 0, h / 2, 0);
+    piece(new THREE.BoxGeometry(w - .02, .055, .004), argileSombre, cadre, 0, h - .04, .013, false);
+    [-.26, -.235, -.21].forEach(x => piece(new THREE.CylinderGeometry(.008, .008, .004, 12).rotateX(Math.PI / 2), fente, cadre, x, h - .04, .016, false));
+    piece(new THREE.BoxGeometry(.36, .022, .004), argile, cadre, .05, h - .04, .016, false);
+    piece(new THREE.BoxGeometry(.25, .17, .004), ecran, cadre, -.13, .2, .013, false);
+    [.2, .16, .12].forEach(y => piece(new THREE.BoxGeometry(.24, .016, .004), argileSombre, cadre, .16, y + .07, .013, false));
+    piece(bloc(.16, .02, .12, .006), argile, g, 0, .01, 0);
+    ombre(g, .85, .45);
+  },
   cube(g) { const t = .15; piece(bloc(t, t, t, .012), argile, g, 0, t / 2, 0); ombre(g, .32, .32); }
 };
 
@@ -245,15 +267,15 @@ const sommets = [], aretes = [];
   for (let i = 0; i < pa.count; i += 3) { const t = [id(i), id(i + 1), id(i + 2)]; [[0, 1], [1, 2], [2, 0]].forEach(([a, b]) => { const x = Math.min(t[a], t[b]), y = Math.max(t[a], t[b]), k = x + ',' + y; if (!vus.has(k)) { vus.add(k); aretes.push([x, y]); } }); }
 }
 const PROF = `float prof(vec3 p){ vec4 mv=modelViewMatrix*vec4(p,1.); float zc=(modelViewMatrix*vec4(0.,0.,0.,1.)).z; return clamp(.6+(mv.z-zc)*.32,.2,1.); }`;
-const uRevele = { value: 0 };
+const uRevele = { value: 0 }, uAttenue = { value: 1 }; // uAttenue : la bulle s'efface un peu quand les échanges commencent
 {
   const p = [], h = [];
   aretes.forEach(([a, b]) => { p.push(...sommets[a].toArray(), ...sommets[b].toArray()); h.push(sommets[a].y, sommets[b].y); });
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
   room.add(new THREE.LineSegments(g, new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, uniforms: { uRevele, uR: { value: R.rayon }, uC: { value: new THREE.Color(C.couleurs.bleu) } },
-    vertexShader: `uniform float uRevele; uniform float uR; varying float vA; ${PROF}
-      void main(){ float h=(position.y+uR)/(2.*uR); vA=smoothstep(h-.02,h+.06,uRevele*1.08)*prof(position)*.62; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    transparent: true, depthWrite: false, uniforms: { uRevele, uAttenue, uR: { value: R.rayon }, uC: { value: new THREE.Color(C.couleurs.bleu) } },
+    vertexShader: `uniform float uRevele; uniform float uAttenue; uniform float uR; varying float vA; ${PROF}
+      void main(){ float h=(position.y+uR)/(2.*uR); vA=smoothstep(h-.02,h+.06,uRevele*1.08)*prof(position)*.62*uAttenue; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
     fragmentShader: `uniform vec3 uC; varying float vA; void main(){ if(vA<.003) discard; gl_FragColor=vec4(uC,vA); }`
   })));
 }
@@ -275,7 +297,8 @@ membres.forEach((g, i) => {
   // Les gros objets et les petits cubes alternent, pour que les objets se répartissent sur toute la hauteur.
   const n = membres.length, j = i < objets.length ? i * 2 : (i - objets.length) * 2 + 1, y = 1 - 2 * (j + .5) / n, r = Math.sqrt(1 - y * y), a = j * Math.PI * (3 - Math.sqrt(5));
   g.userData.dansRoom = new THREE.Vector3(Math.cos(a) * r * .66, y * .62 - .05, Math.sin(a) * r * .66).multiplyScalar(R.rayon).add(centreRoom);
-  g.userData.retard = (i % 7) * .07 + (i >= objets.length ? .12 : 0);
+  g.userData.retard = (i % 8) * .045 + (i >= objets.length ? .08 : 0);
+  g.userData.echelleRoom = ({ telephone: 1.05, navigateur: .8, ordinateur: .75 })[g.userData.type] || R.echelleMembres;
 });
 
 /* Traînées bleues : le chemin parcouru par chaque objet qui monte. */
@@ -344,8 +367,89 @@ let px = 0, py = 0;
 const facile = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
 
+
+/* ══════════ Les échanges dans la Room : chaque cas d'usage a sa propre « signature » de mouvement ══════════ */
+const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3();
+const centreDe = (x, out) => x === 'c' ? out.copy(centreRoom) : out.copy(membres[x].position).setY(membres[x].position.y + .1 * membres[x].scale.x);
+// Liens autorisés : chaque membre est relié à ses 3 voisins les plus proches dans la bulle.
+const liens = [];
+membres.forEach((g, i) => membres.map((h, j) => [j, g.userData.dansRoom.distanceTo(h.userData.dansRoom)]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]).slice(0, 3)
+  .forEach(([j]) => { if (!liens.some(([a, b]) => (a === i && b === j) || (a === j && b === i))) liens.push([i, j]); }));
+const liPos = new Float32Array(liens.length * 6), liGeo = new THREE.BufferGeometry(); liGeo.setAttribute('position', new THREE.BufferAttribute(liPos, 3));
+const liMat = new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false });
+const liLignes = new THREE.LineSegments(liGeo, liMat); liLignes.frustumCulled = false; scene.add(liLignes);
+// Paquets de données (tête + petite traînée) et anneaux d'arrivée.
+const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
+let paquets = [];
+function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin }); }
+function posPaquet(p, t, out) { centreDe(p.a, tA); centreDe(p.b, tB); tC.copy(tA).add(tB).multiplyScalar(.5).lerp(centreRoom, .3); const u = 1 - t;
+  return out.copy(tA).multiplyScalar(u * u).addScaledVector(tC, 2 * u * t).addScaledVector(tB, t * t); }
+const anneaux = Array.from({ length: 40 }, () => { const m = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); m.visible = false; scene.add(m); return { m, t0: -9, x: 0, taille: .3 }; });
+function anneau(x, taille = .32) { const a = anneaux.find(r => horloge - r.t0 > .8) || anneaux[0]; a.t0 = horloge; a.x = x; a.taille = taille; a.m.visible = true; }
+// Le modèle commun (entraînement IA) : un cristal au centre de la Room.
+const cristal = new THREE.Group(); cristal.position.copy(centreRoom); cristal.scale.setScalar(.001); scene.add(cristal);
+{ const ico = new THREE.IcosahedronGeometry(.24, 0);
+  cristal.add(new THREE.Mesh(ico, new THREE.MeshBasicMaterial({ color: C.couleurs.bleuClair, transparent: true, opacity: .35, depthWrite: false })));
+  cristal.add(new THREE.LineSegments(new THREE.EdgesGeometry(ico), new THREE.LineBasicMaterial({ color: C.couleurs.bleu })));
+  const coeur = new THREE.IcosahedronGeometry(.11, 1); cristal.add(new THREE.LineSegments(new THREE.EdgesGeometry(coeur), new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: .6 }))); }
+let cristalCible = 0, cristalPouls = 0;
+// Anneaux d'entraînement local : un cercle qui tourne autour de chaque machine qui apprend.
+const cerclesLocaux = C.roles.entraineurs.map(() => { const pts = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI * 1.6).getPoints(40).map(p => new THREE.Vector3(p.x, 0, p.y));
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0 })); scene.add(l); return l; });
+const badge = document.getElementById('badge');
+let modeCourant = null, evt = 0, recus = 0, tour = 0;
+function activite(dt) {
+  const e = E[etape], actif = m > .97 ? e.mode : 'isole';
+  if (actif !== modeCourant) { modeCourant = actif; evt = 0; recus = 0; tour = 0; badge.style.opacity = 0; }
+  const t = tEtape;
+  liMat.opacity = THREE.MathUtils.clamp((m - .85) / .15, 0, 1) * .38;
+  // Hiérarchie : quand les échanges commencent, la bulle passe au second plan pour que les données ressortent.
+  uAttenue.value += ((actif === 'isole' ? 1 : .38) - uAttenue.value) * Math.min(1, dt * 3);
+  cristalCible = actif === 'entrainement' ? 1 : 0;
+  if (actif === 'pair') { // des échanges de pair à pair, partout, dans les deux sens
+    if (t > evt) { const [a, b] = liens[Math.floor(Math.random() * liens.length)]; Math.random() < .5 ? envoyer(a, b, .75) : envoyer(b, a, .75); evt = t + .09; }
+  } else if (actif === 'multicast') { // un envoi, tous reçoivent sur la même image
+    const departs = [.35, 2.6];
+    departs.forEach((d, k) => { if (evt <= k && t > d) { evt = k + 1; recus = 0; anneau(C.roles.source, .45);
+      membres.forEach((g, i) => { if (i !== C.roles.source) envoyer(C.roles.source, i, 1.0, { delai: .25, taille: .055, fin: () => { recus++; anneau(i); } }); }); } });
+    afficherBadge(recus ? `1 envoi → ${recus} reçus en même temps` : 'Envoi en cours…');
+  } else if (actif === 'entrainement') { // apprentissage local, puis mise en commun, puis renvoi à tous (DiLoCo)
+    const cycle = 2.4, k = Math.floor(t / cycle), u = t - k * cycle, W = C.roles.entraineurs;
+    if (evt <= k * 3 && u > 1.1) { evt = k * 3 + 1; W.forEach(i => envoyer(i, 'c', .55, { taille: .03 })); }
+    if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, fin: () => anneau(i, .28) })); }
+    cerclesLocaux.forEach((l, j) => { const g = membres[W[j]]; centreDe(W[j], l.position); l.position.y -= .06; l.scale.setScalar(.3 * g.scale.x / .62 + .05);
+      l.rotation.y -= dt * (u < 1.1 ? 5 : 1); l.material.opacity = u < 1.1 ? .85 : .25; });
+    afficherBadge(u < 1.1 ? `Chacun apprend de son côté · tour ${k + 1}` : 'Mise en commun → modèle partagé à jour');
+  } else if (actif === 'automatisation') { // une chaîne : chaque machine déclenche la suivante
+    const Ch = C.roles.chaine, pas = .85, k = Math.floor(t / pas);
+    if (evt <= k && k < Ch.length - 1) { evt = k + 1; anneau(Ch[k], .3); envoyer(Ch[k], Ch[k + 1], .7, { taille: .04, fin: () => anneau(Ch[k + 1], .34) }); }
+    afficherBadge(`Étape ${Math.min(k + 1, Ch.length)} / ${Ch.length} · ${membres[Ch[Math.min(k, Ch.length - 1)]].userData.nom}`);
+  }
+  if (actif !== 'entrainement') cerclesLocaux.forEach(l => l.material.opacity = Math.max(0, l.material.opacity - dt * 3));
+  // Cristal : apparaît, tourne, bat au moment de la mise en commun.
+  const sc = THREE.MathUtils.lerp(cristal.scale.x, cristalCible * (1 + cristalPouls * .35), Math.min(1, dt * 6)); cristal.scale.setScalar(Math.max(.001, sc));
+  cristal.rotation.y += dt * .8; cristal.rotation.x += dt * .3; cristalPouls = Math.max(0, cristalPouls - dt * 2.5);
+}
+function afficherBadge(txt) { if (badge.textContent !== txt) badge.textContent = txt; badge.style.opacity = 1; }
+function dessinerEchanges() {
+  // Liens
+  liens.forEach(([a, b], k) => { centreDe(a, tA).toArray(liPos, k * 6); centreDe(b, tB).toArray(liPos, k * 6 + 3); }); liGeo.attributes.position.needsUpdate = true;
+  // Paquets
+  let n = 0; const garde = [];
+  for (const p of paquets) { const t = (horloge - p.t0) / p.dur;
+    if (t >= 1) { p.fin && p.fin(); continue; } garde.push(p); if (t < 0) continue;
+    for (let q = 0; q < 4 && n < MAXP; q++, n++) { const tt = Math.max(0, t - q * .045), s = p.taille * (1 - q * .2); posPaquet(p, tt, v1); paqMesh.setMatrixAt(n, m4.compose(v1, q0, v2.set(s, s, s))); } }
+  paquets = garde; paqMesh.count = n; paqMesh.instanceMatrix.needsUpdate = true;
+  // Anneaux : s'agrandissent et s'effacent, toujours face à la caméra
+  anneaux.forEach(a => { const e = (horloge - a.t0) / .8; if (e > 1) { a.m.visible = false; return; } centreDe(a.x, a.m.position); a.m.quaternion.copy(camera.quaternion);
+    a.m.scale.setScalar(a.taille * (.35 + e * .9)); a.m.material.opacity = (1 - e) * .9; });
+  // Badge au-dessus de la Room
+  if (m > .9) { tA.copy(centreRoom).setY(centreRoom.y + R.rayon + .25).project(camera); badge.style.left = ((tA.x + 1) / 2 * W) + 'px'; badge.style.top = ((1 - tA.y) / 2 * H + host.offsetTop) + 'px'; }
+  else badge.style.opacity = 0;
+}
+
 /* ── Boucle ── */
-const horlogeGL = new THREE.Clock(); let horloge = 0, prochaine = 0.8, visible = true;
+const horlogeGL = new THREE.Clock(); let horloge = 0, prochaine = 0.15, visible = true;
 new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(host);
 renderer.setAnimationLoop(() => {
   const dt = Math.min(.05, horlogeGL.getDelta()); if (!visible) return; horloge += dt;
@@ -369,7 +473,7 @@ renderer.setAnimationLoop(() => {
 
   // La Room se dessine de bas en haut.
   uRevele.value = THREE.MathUtils.clamp((m - .05) / .75, 0, 1);
-  sommets.forEach((v, i) => { const h = (v.y + R.rayon) / (2 * R.rayon), s = THREE.MathUtils.smoothstep(uRevele.value * 1.08, h, h + .08) * tailles[i];
+  sommets.forEach((v, i) => { const h = (v.y + R.rayon) / (2 * R.rayon), s = THREE.MathUtils.smoothstep(uRevele.value * 1.08, h, h + .08) * tailles[i] * (.55 + .45 * uAttenue.value);
     perle.setMatrixAt(i, m4.compose(v, q0, v1.set(s, s, s))); });
   perle.instanceMatrix.needsUpdate = true;
 
@@ -379,7 +483,7 @@ renderer.setAnimationLoop(() => {
     const u = g.userData, p = facile(THREE.MathUtils.clamp((m - u.retard) / (1 - .55), 0, 1));
     chemin(g, p, g.position);
     if (p > .98) g.position.y += Math.sin(horloge * 1.3 + u.retard * 20) * .025; // flotte doucement
-    g.scale.setScalar(1 + (R.echelleMembres - 1) * p);
+    g.scale.setScalar(1 + ((u.echelleRoom || R.echelleMembres) - 1) * p);
     (u.ombres || []).forEach(mt => mt.opacity = 1 - Math.min(1, p * 3));
     // Traînée : de la position actuelle vers l'arrière du chemin, s'éteint à l'arrivée.
     const vie = p > 0 && p < 1 ? 1 : 0, long = Math.min(p, .35);
@@ -407,6 +511,7 @@ renderer.setAnimationLoop(() => {
   for (let k = n; k < MAXT; k++) { tPos.fill(0, k * 6, k * 6 + 6); tCol.fill(1, k * 6, k * 6 + 6); }
   tGeo.setPositions(tPos); tGeo.setColors(tCol);
 
+  activite(dt); dessinerEchanges();
   renderer.render(scene, camera);
 
   // Survol (après rendu) : met aussi l'histoire en pause le temps de lire.
