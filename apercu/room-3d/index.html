@@ -32,6 +32,8 @@ h1{font:800 clamp(34px,4.4vw,60px)/1.04 'Open Sans',Arial,sans-serif;letter-spac
 .pause::before{content:'';width:8px;height:10px;border-left:3px solid var(--ink);border-right:3px solid var(--ink);box-sizing:border-box}
 .pause.lecture::before{width:0;height:0;border:0;border-left:9px solid var(--ink);border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:3px}
 .badge{position:absolute;z-index:2;left:0;top:0;transform:translate(-50%,-100%);pointer-events:none;font:600 13px/18px 'Open Sans',Arial,sans-serif;color:var(--brand);background:#fff;border:1px solid #d6dff8;border-radius:999px;padding:6px 12px;white-space:nowrap;opacity:0;transition:opacity .3s}
+.chip{position:absolute;z-index:2;left:0;top:0;transform:translate(-50%,0);pointer-events:none;font:600 12px/16px 'Open Sans',Arial,sans-serif;color:var(--ink);background:rgba(255,255,255,.9);border:1px solid #e3e6ea;border-radius:8px;padding:3px 8px;white-space:nowrap;opacity:0;transition:opacity .25s}
+.chip.c{color:var(--brand);border-color:#d6dff8}
 .tip{position:absolute;z-index:3;left:0;top:0;pointer-events:none;background:#fff;border:1px solid #e3e6ea;border-radius:12px;padding:8px 12px;
   box-shadow:0 10px 30px -12px rgba(20,23,28,.25);font-size:13px;line-height:18px;max-width:240px;opacity:0;transition:opacity .15s;transform:translate(-50%,calc(-100% - 14px))}
 .tip b{display:block;font-weight:600;color:var(--ink)}.tip span{color:var(--muted)}
@@ -105,7 +107,7 @@ const C = {
       texte: 'Quand une machine termine, la suivante démarre : collecte, calcul, envoi, sans intervention.' }
   ],
   // Qui fait quoi dans chaque cas d'usage (numéros = ordre dans « objets »).
-  roles: { source: 0, entraineurs: [1, 2, 7, 3, 5], chaine: [3, 0, 1, 5, 2] },
+  roles: { source: 0, entraineurs: [1, 2, 5, 7, 3], chaine: [3, 0, 1, 5, 2] },
   // Caméra pour chaque état (0 = écosystème, 1 = Room).
   cadrages: [ { cible: [0.25, 0.35, 0], distance: 15.5 }, { cible: [0.4, 1.4, 0], distance: 15.5 } ]
 };
@@ -298,8 +300,27 @@ membres.forEach((g, i) => {
   const n = membres.length, j = i < objets.length ? i * 2 : (i - objets.length) * 2 + 1, y = 1 - 2 * (j + .5) / n, r = Math.sqrt(1 - y * y), a = j * Math.PI * (3 - Math.sqrt(5));
   g.userData.dansRoom = new THREE.Vector3(Math.cos(a) * r * .66, y * .62 - .05, Math.sin(a) * r * .66).multiplyScalar(R.rayon).add(centreRoom);
   g.userData.retard = (i % 8) * .045 + (i >= objets.length ? .08 : 0);
-  g.userData.echelleRoom = ({ telephone: 1.05, navigateur: .8, ordinateur: .75 })[g.userData.type] || R.echelleMembres;
+  g.userData.echelleRoom = ({ telephone: 1.5, navigateur: .85, ordinateur: .8 })[g.userData.type] || R.echelleMembres;
 });
+
+/* ══════════ Formations : chaque méthode range les membres dans une figure simple et reconnaissable ══════════
+   pair = anneau (tout le monde se parle) · multicast = étoile (un au centre, tous autour)
+   entrainement = roue (le modèle au centre, les machines qui apprennent autour) · automatisation = chaîne (de gauche à droite) */
+const anneauY = () => centreRoom.y - .12;
+const surAnneau = (k, n, r) => new THREE.Vector3(Math.cos(k / n * Math.PI * 2 + .5) * r, 0, Math.sin(k / n * Math.PI * 2 + .5) * r * .9).add(centreRoom).setY(anneauY());
+const droiteEcran = new THREE.Vector3(1, 0, 0);
+function formation(mode, i) { // → [position, visible]
+  const O = objets.length, estCube = i >= O;
+  if (mode === 'isole' || mode === 'pair') return estCube ? [membres[i].userData.dansRoomInitial, mode === 'isole'] : [surAnneau(i, O, .98), true];
+  if (estCube) return [centreRoom, false];
+  if (mode === 'multicast') { if (i === C.roles.source) return [centreRoom.clone().setY(anneauY()), true]; const autres = objets.map((_, j) => j).filter(j => j !== C.roles.source); return [surAnneau(autres.indexOf(i), autres.length, 1.02), true]; }
+  if (mode === 'entrainement') { const W = C.roles.entraineurs, k = W.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + 1.6, W.length, 1.05), true]; }
+  if (mode === 'automatisation') { const Ch = C.roles.chaine, k = Ch.indexOf(i); if (k < 0) return [centreRoom, false];
+    return [centreRoom.clone().addScaledVector(droiteEcran, -1.08 + k * 2.16 / (Ch.length - 1)).setY(anneauY() + Math.sin(k / (Ch.length - 1) * Math.PI) * .18), true]; }
+  return [centreRoom, true];
+}
+membres.forEach((g, i) => { g.userData.dansRoomInitial = g.userData.dansRoom.clone(); g.userData.vis = 1; });
+membres.forEach((g, i) => { if (i < objets.length) g.userData.dansRoom.copy(formation('pair', i)[0]); });
 
 /* Traînées bleues : le chemin parcouru par chaque objet qui monte. */
 const SEGT = 14, MAXL = membres.length * SEGT;
@@ -330,10 +351,11 @@ function cadrer() {
   renderer.setSize(W, H, false); camera.aspect = W / H; tMat.resolution.set(W, H); lMat.resolution.set(W, H);
   membres.forEach(g => g.userData.surSol = new THREE.Vector3(g.userData.x * (etroit ? .62 : 1), 0, g.userData.z));
 }
+let zoom = 0;
 function placerCamera(m) {
   const a = C.cadrages[0], b = C.cadrages[1];
-  cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m);
-  const k = C.camera, base = a.distance + (b.distance - a.distance) * m;
+  cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m).lerp(centreRoom, zoom * .8);
+  const k = C.camera, base = (a.distance + (b.distance - a.distance) * m) * (1 - .24 * zoom);
   const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H)));
   const el = THREE.MathUtils.degToRad(k.hauteurDeg), az = THREE.MathUtils.degToRad(k.azimutDeg);
   camera.position.set(cible.x + Math.sin(az) * Math.cos(el) * dist, cible.y + Math.sin(el) * dist, cible.z + Math.cos(az) * Math.cos(el) * dist);
@@ -372,12 +394,20 @@ const m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), v1 = new THREE.Vect
 const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3();
 const centreDe = (x, out) => x === 'c' ? out.copy(centreRoom) : out.copy(membres[x].position).setY(membres[x].position.y + .1 * membres[x].scale.x);
 // Liens autorisés : chaque membre est relié à ses 3 voisins les plus proches dans la bulle.
-const liens = [];
-membres.forEach((g, i) => membres.map((h, j) => [j, g.userData.dansRoom.distanceTo(h.userData.dansRoom)]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]).slice(0, 3)
-  .forEach(([j]) => { if (!liens.some(([a, b]) => (a === i && b === j) || (a === j && b === i))) liens.push([i, j]); }));
-const liPos = new Float32Array(liens.length * 6), liGeo = new THREE.BufferGeometry(); liGeo.setAttribute('position', new THREE.BufferAttribute(liPos, 3));
+const O = objets.length, idxObjets = objets.map((_, i) => i);
+const LIENS = {
+  isole: [], pair: idxObjets.flatMap(i => [[i, (i + 1) % O], [i, (i + 3) % O]]),
+  multicast: idxObjets.filter(i => i !== C.roles.source).map(i => [C.roles.source, i]),
+  entrainement: C.roles.entraineurs.map(i => ['c', i]),
+  automatisation: C.roles.chaine.slice(0, -1).map((a, k) => [a, C.roles.chaine[k + 1]])
+};
+let liens = LIENS.pair;
+const liPos = new Float32Array(40 * 6), liGeo = new THREE.BufferGeometry(); liGeo.setAttribute('position', new THREE.BufferAttribute(liPos, 3));
 const liMat = new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false });
 const liLignes = new THREE.LineSegments(liGeo, liMat); liLignes.frustumCulled = false; scene.add(liLignes);
+// Étiquettes directes : le nom de chaque membre actif, posé sous lui (pas besoin de survoler).
+const puces = [...objets.map(g => { const d = document.createElement('div'); d.className = 'chip'; d.textContent = g.userData.nom; host.parentElement.appendChild(d); return d; })];
+const puceModele = document.createElement('div'); puceModele.className = 'chip c'; puceModele.textContent = 'Modèle commun'; host.parentElement.appendChild(puceModele);
 // Paquets de données (tête + petite traînée) et anneaux d'arrivée.
 const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
 let paquets = [];
@@ -400,18 +430,18 @@ const badge = document.getElementById('badge');
 let modeCourant = null, evt = 0, recus = 0, tour = 0;
 function activite(dt) {
   const e = E[etape], actif = m > .97 ? e.mode : 'isole';
-  if (actif !== modeCourant) { modeCourant = actif; evt = 0; recus = 0; tour = 0; badge.style.opacity = 0; }
+  if (actif !== modeCourant) { modeCourant = actif; evt = 0; recus = 0; tour = 0; badge.style.opacity = 0; liens = LIENS[actif] || []; paquets = []; }
   const t = tEtape;
-  liMat.opacity = THREE.MathUtils.clamp((m - .85) / .15, 0, 1) * .38;
+  liMat.opacity = THREE.MathUtils.clamp((m - .9) / .1, 0, 1) * .45;
   // Hiérarchie : quand les échanges commencent, la bulle passe au second plan pour que les données ressortent.
-  uAttenue.value += ((actif === 'isole' ? 1 : .38) - uAttenue.value) * Math.min(1, dt * 3);
+  uAttenue.value += ((actif === 'isole' ? 1 : .3) - uAttenue.value) * Math.min(1, dt * 3);
   cristalCible = actif === 'entrainement' ? 1 : 0;
   if (actif === 'pair') { // des échanges de pair à pair, partout, dans les deux sens
     if (t > evt) { const [a, b] = liens[Math.floor(Math.random() * liens.length)]; Math.random() < .5 ? envoyer(a, b, .75) : envoyer(b, a, .75); evt = t + .09; }
   } else if (actif === 'multicast') { // un envoi, tous reçoivent sur la même image
     const departs = [.35, 2.6];
     departs.forEach((d, k) => { if (evt <= k && t > d) { evt = k + 1; recus = 0; anneau(C.roles.source, .45);
-      membres.forEach((g, i) => { if (i !== C.roles.source) envoyer(C.roles.source, i, 1.0, { delai: .25, taille: .055, fin: () => { recus++; anneau(i); } }); }); } });
+      idxObjets.forEach(i => { if (i !== C.roles.source) envoyer(C.roles.source, i, 1.0, { delai: .25, taille: .055, fin: () => { recus++; anneau(i); } }); }); } });
     afficherBadge(recus ? `1 envoi → ${recus} reçus en même temps` : 'Envoi en cours…');
   } else if (actif === 'entrainement') { // apprentissage local, puis mise en commun, puis renvoi à tous (DiLoCo)
     const cycle = 2.4, k = Math.floor(t / cycle), u = t - k * cycle, W = C.roles.entraineurs;
@@ -419,7 +449,7 @@ function activite(dt) {
     if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, fin: () => anneau(i, .28) })); }
     cerclesLocaux.forEach((l, j) => { const g = membres[W[j]]; centreDe(W[j], l.position); l.position.y -= .06; l.scale.setScalar(.3 * g.scale.x / .62 + .05);
       l.rotation.y -= dt * (u < 1.1 ? 5 : 1); l.material.opacity = u < 1.1 ? .85 : .25; });
-    afficherBadge(u < 1.1 ? `Chacun apprend de son côté · tour ${k + 1}` : 'Mise en commun → modèle partagé à jour');
+    afficherBadge(u < 1.1 ? `Méthode DiLoCo · tour ${k + 1} : chacun apprend de son côté` : 'Mise en commun → tout le monde reçoit le modèle à jour');
   } else if (actif === 'automatisation') { // une chaîne : chaque machine déclenche la suivante
     const Ch = C.roles.chaine, pas = .85, k = Math.floor(t / pas);
     if (evt <= k && k < Ch.length - 1) { evt = k + 1; anneau(Ch[k], .3); envoyer(Ch[k], Ch[k + 1], .7, { taille: .04, fin: () => anneau(Ch[k + 1], .34) }); }
@@ -433,7 +463,13 @@ function activite(dt) {
 function afficherBadge(txt) { if (badge.textContent !== txt) badge.textContent = txt; badge.style.opacity = 1; }
 function dessinerEchanges() {
   // Liens
-  liens.forEach(([a, b], k) => { centreDe(a, tA).toArray(liPos, k * 6); centreDe(b, tB).toArray(liPos, k * 6 + 3); }); liGeo.attributes.position.needsUpdate = true;
+  liens.forEach(([a, b], k) => { centreDe(a, tA).toArray(liPos, k * 6); centreDe(b, tB).toArray(liPos, k * 6 + 3); }); liGeo.setDrawRange(0, liens.length * 2); liGeo.attributes.position.needsUpdate = true;
+  // Étiquettes directes
+  const mon = m > .97 && modeCourant !== 'isole' && !(etroit && (modeCourant === 'pair' || modeCourant === 'multicast')), off = host.offsetTop, offL = host.offsetLeft;
+  objets.forEach((g, i) => { const d = puces[i], ok = mon && g.userData.vis > .7; d.style.opacity = ok ? 1 : 0; if (!ok) return;
+    tA.copy(g.position).setY(g.position.y - .06).project(camera); d.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; d.style.top = ((1 - tA.y) / 2 * H + off + 6) + 'px'; });
+  const okM = mon && modeCourant === 'entrainement'; puceModele.style.opacity = okM ? 1 : 0;
+  if (okM) { tA.copy(centreRoom).setY(centreRoom.y - .3).project(camera); puceModele.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; puceModele.style.top = ((1 - tA.y) / 2 * H + off) + 'px'; }
   // Paquets
   let n = 0; const garde = [];
   for (const p of paquets) { const t = (horloge - p.t0) / p.dur;
@@ -460,6 +496,7 @@ renderer.setAnimationLoop(() => {
   // État de la scène : glisse doucement vers celui de l'étape.
   const viseM = E[etape].etat; m = reduit ? viseM : m + Math.sign(viseM - m) * Math.min(Math.abs(viseM - m), dt / C.transition);
   const me = facile(m);
+  zoom += ((m > .97 && E[etape].mode !== 'pair' ? 1 : m > .97 ? .55 : 0) - zoom) * Math.min(1, dt * 1.8);
   placerCamera(me);
 
   if (!reduit) {
@@ -479,11 +516,17 @@ renderer.setAnimationLoop(() => {
 
   // Les membres montent dans la bulle, chacun avec un léger décalage, et laissent une traînée.
   let nl = 0;
-  membres.forEach(g => {
+  droiteEcran.setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+  const modeVise = m > .97 ? E[etape].mode : 'isole';
+  membres.forEach((g, i) => {
     const u = g.userData, p = facile(THREE.MathUtils.clamp((m - u.retard) / (1 - .55), 0, 1));
+    // Une méthode = une formation : les membres glissent vers leur place, ceux qui ne participent pas s'effacent.
+    const [cibleF, visF] = formation(modeVise, i);
+    if (m > .97) u.dansRoom.lerp(cibleF, Math.min(1, dt * 3.2)); else if (i < objets.length) u.dansRoom.copy(formation('pair', i)[0]);
+    u.vis += ((visF ? 1 : 0) - u.vis) * Math.min(1, dt * 4);
     chemin(g, p, g.position);
     if (p > .98) g.position.y += Math.sin(horloge * 1.3 + u.retard * 20) * .025; // flotte doucement
-    g.scale.setScalar(1 + ((u.echelleRoom || R.echelleMembres) - 1) * p);
+    g.scale.setScalar(Math.max(.001, (1 + ((u.echelleRoom || R.echelleMembres) - 1) * p) * (p > .5 ? u.vis : 1)));
     (u.ombres || []).forEach(mt => mt.opacity = 1 - Math.min(1, p * 3));
     // Traînée : de la position actuelle vers l'arrière du chemin, s'éteint à l'arrivée.
     const vie = p > 0 && p < 1 ? 1 : 0, long = Math.min(p, .35);
@@ -516,7 +559,7 @@ renderer.setAnimationLoop(() => {
 
   // Survol (après rendu) : met aussi l'histoire en pause le temps de lire.
   ray.setFromCamera(souris, camera);
-  const hit = souris.x < 5 ? ray.intersectObjects(objets, true)[0] : null;
+  const hit = souris.x < 5 ? ray.intersectObjects(objets.filter(o => o.userData.vis > .5), true)[0] : null;
   let g = hit && hit.object; while (g && !objets.includes(g)) g = g.parent;
   if (g !== survol) { survol = g; survolActif = !!g; if (g) tip.innerHTML = `<b>${g.userData.nom}</b><span>${g.userData.role}</span>`; tip.style.opacity = g ? 1 : 0; host.style.cursor = g ? 'help' : ''; }
   if (survol) { const r = host.getBoundingClientRect(), hr = host.parentElement.getBoundingClientRect(); tip.style.left = (sx + r.left - hr.left) + 'px'; tip.style.top = (sy + r.top - hr.top) + 'px'; }
