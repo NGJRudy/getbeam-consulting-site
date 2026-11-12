@@ -1,6 +1,6 @@
 {
   "_aide": "Agendas affichés sur getbeam-consulting.com/rendez-vous/. « equipe » est toujours affiché. Les autres (ex. « fondateur ») ne s'affichent que si l'adresse de la page contient ?agendas=fondateur (posé par les règles de x/apporteurs.json). Ajouter un agenda = ajouter une entrée ici.",
-  "jours_affiches": 14,
+  "jours_affiches": 56,
   "agendas": {
     "equipe": {
       "type": "hubspot", "slug": "rudy-savy", "duree_min": 15,

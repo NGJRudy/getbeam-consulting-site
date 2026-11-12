@@ -119,8 +119,11 @@ button.ghost{padding:13px 16px;border:1px solid var(--line);border-radius:10px;b
   function load(){
     msg('Chargement des disponibilités…');$('slots').innerHTML='';$('days').innerHTML='';
     var now=Date.now(), end=now+CFG.jours_affiches*864e5, from=new Date(now).toISOString().slice(0,10), to=new Date(end).toISOString().slice(0,10);
+    // HubSpot répond mois par mois : on demande tous les mois couverts par « jours_affiches ».
+    var d0=new Date(now), d1=new Date(end), mois=[];
+    for(var o=0;o<=(d1.getFullYear()-d0.getFullYear())*12+d1.getMonth()-d0.getMonth();o++) mois.push(o);
     var jobs=wanted.filter(function(k){return CFG.agendas[k]}).map(function(k){
-      var a=CFG.agendas[k], p=a.type==='hubspot'?Promise.all([hubspot(a,0),hubspot(a,1)]).then(function(x){return x[0].concat(x[1])}):calcom(a,from,to);
+      var a=CFG.agendas[k], p=a.type==='hubspot'?Promise.all(mois.map(function(o){return hubspot(a,o)})).then(function(x){return [].concat.apply([],x)}):calcom(a,from,to);
       var min=now+(a.preavis_jours||0)*864e5;
       return p.then(function(ts){return limiter(ts.filter(function(t){return t>=min&&t<end}),a.max_par_jour).map(function(t){return {t:t,k:k}})},function(){return {erreur:k}});
     });
