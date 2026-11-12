@@ -45,3 +45,24 @@
 .r3d-pret .r3d-poster{opacity:0;pointer-events:none}
 .r3d-scene canvas{position:relative;z-index:1}
 @media (max-width:820px){.r3d-poster img{object-position:center}}
+
+/* ── Mode intégré au héros : la scène vit dans la fenêtre en verre, sous le titre de la page ── */
+.r3d-integre{height:auto;min-height:0;overflow:hidden;border-radius:30px;background:#fff;display:block}
+.r3d-integre .r3d-scene{position:relative;inset:auto;aspect-ratio:16/10}
+.r3d-legende{position:absolute;z-index:3;left:28px;top:22px;max-width:25rem;text-align:left;pointer-events:none;transition:opacity .45s ease}
+.r3d-legende.r3d-sort{opacity:0}
+.r3d-legende .r3d-sur{margin:0 0 6px;font:600 13px/18px 'Open Sans',Arial,sans-serif;color:var(--brand)}
+.r3d-legende .r3d-titre{margin:0;min-height:0;font:600 22px/1.25 'Open Sans',Arial,sans-serif;letter-spacing:-.01em;color:var(--ink)}
+.r3d-barre{position:absolute;z-index:3;left:16px;right:16px;bottom:16px;display:flex;justify-content:center;pointer-events:none}
+.r3d-integre .r3d-nav{pointer-events:auto;margin:0;padding:6px 8px 6px 16px;gap:16px;flex-wrap:nowrap;background:rgba(255,255,255,.88);border:1px solid #e3e6ea;border-radius:999px;box-shadow:0 8px 24px -12px rgba(20,23,28,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.r3d-integre .r3d-dot{height:28px}
+@media (max-width:820px){
+  .r3d-integre{display:block}
+  .r3d-integre .r3d-scene{height:auto;min-height:0;aspect-ratio:4/5}
+  .r3d-legende{left:16px;right:16px;top:14px}
+  .r3d-legende .r3d-titre{font-size:18px}
+  .r3d-integre .r3d-nav{gap:12px;padding:4px 6px 4px 12px;max-width:100%;overflow-x:auto}
+  .r3d-integre .r3d-dot{font-size:12px}
+}
+.r3d-integre .r3d-badge{position:static;transform:none;display:inline-block;margin-top:10px;white-space:normal}
+@media (max-width:820px){.r3d-integre .r3d-badge{font-size:12px;line-height:16px;padding:4px 10px;margin-top:8px}}

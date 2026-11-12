@@ -67,6 +67,8 @@ const C = {
 };
 /* ═══════════════════════════════════════════════════════════════════════════════ */
 (L.etapes || []).forEach((e, i) => Object.assign(C.etapes[i], e));
+// Intégré au héros : pas de texte à gauche, la scène est centrée dans sa fenêtre.
+const INTEGRE = !!L.integre; if (INTEGRE) C.centreEcran = { large: .5, etroit: .5 };
 (L.objets || []).forEach((o, i) => Object.assign(C.objets[i], o));
 
 const host = document.getElementById('r3d-scene'), tip = document.getElementById('r3d-tip');
@@ -339,11 +341,11 @@ function placerCamera(m) {
   const a = C.cadrages[0], b = C.cadrages[1];
   cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m).lerp(centreRoom, zoom * .8);
   const k = C.camera, base = (a.distance + (b.distance - a.distance) * m) * (1 - .24 * zoom);
-  const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H)));
+  const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H))) * (INTEGRE ? (etroit ? 1.12 : .8) : 1);
   const el = THREE.MathUtils.degToRad(k.hauteurDeg), az = THREE.MathUtils.degToRad(k.azimutDeg);
   camera.position.set(cible.x + Math.sin(az) * Math.cos(el) * dist, cible.y + Math.sin(el) * dist, cible.z + Math.cos(az) * Math.cos(el) * dist);
   camera.lookAt(cible);
-  camera.setViewOffset(W, H, (0.5 - (etroit ? C.centreEcran.etroit : C.centreEcran.large - .06 * decal)) * W, etroit ? 0 : -H * .04, W, H);
+  camera.setViewOffset(W, H, (0.5 - (etroit ? C.centreEcran.etroit : C.centreEcran.large - (INTEGRE ? 0 : .06) * decal)) * W, etroit ? 0 : -H * .04, W, H);
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', cadrer); cadrer();
@@ -356,7 +358,7 @@ const points = E.map((e, i) => { const b = document.createElement('button'); b.t
 let etape = 0, tEtape = 0, enPause = reduit, survolActif = false, m = 0;
 function afficherTexte(i) {
   texte.classList.add('r3d-sort');
-  setTimeout(() => { el('r3d-sur').textContent = E[i].sur; el('r3d-titre').textContent = E[i].titre; el('r3d-lead').textContent = E[i].texte; texte.classList.remove('r3d-sort'); }, texte.dataset.pret ? 380 : 0);
+  setTimeout(() => { el('r3d-sur').textContent = E[i].sur; el('r3d-titre').textContent = E[i].titre; if (el('r3d-lead')) el('r3d-lead').textContent = E[i].texte; texte.classList.remove('r3d-sort'); }, texte.dataset.pret ? 380 : 0);
   texte.dataset.pret = 1;
 }
 function allerA(i) { etape = (i + E.length) % E.length; tEtape = 0; afficherTexte(etape); points.forEach((p, k) => k === etape ? p.setAttribute('aria-current', 'step') : p.removeAttribute('aria-current')); }
@@ -415,6 +417,7 @@ let cristalCible = 0, cristalPouls = 0;
 const cerclesLocaux = C.roles.entraineurs.map(() => { const pts = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI * 1.6).getPoints(40).map(p => new THREE.Vector3(p.x, 0, p.y));
   const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0 })); scene.add(l); return l; });
 const badge = document.getElementById('r3d-badge');
+if (INTEGRE) document.getElementById('r3d-texte').appendChild(badge);
 let modeCourant = null, evt = 0, recus = 0, tour = 0, sortieTxt = '', entreeTxt = '', donneesEnvoyees = false;
 const srcDonnees = new THREE.Object3D(); scene.add(srcDonnees);
 // Trajet d'un acteur : dehors à gauche → sa place dans la Room (arrivée à tA1) → reste → ressort à droite (de tB à tB2).
@@ -518,7 +521,8 @@ function dessinerEchanges() {
   anneaux.forEach(a => { const e = (horloge - a.t0) / .8; if (e > 1) { a.m.visible = false; return; } centreDe(a.x, a.m.position); a.m.quaternion.copy(camera.quaternion);
     a.m.scale.setScalar(a.taille * (.35 + e * .9)); a.m.material.opacity = (1 - e) * .9; });
   // Badge au-dessus de la Room
-  if (m > .9) { tA.copy(centreRoom).setY(centreRoom.y + R.rayon + .25).project(camera); badge.style.left = ((tA.x + 1) / 2 * W) + 'px'; badge.style.top = ((1 - tA.y) / 2 * H + host.offsetTop) + 'px'; }
+  if (INTEGRE) { if (m <= .9) badge.style.opacity = 0; }
+  else if (m > .9) { tA.copy(centreRoom).setY(centreRoom.y + R.rayon + .25).project(camera); badge.style.left = ((tA.x + 1) / 2 * W) + 'px'; badge.style.top = ((1 - tA.y) / 2 * H + host.offsetTop) + 'px'; }
   else badge.style.opacity = 0;
 }
 
