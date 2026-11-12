@@ -24,9 +24,11 @@ h1{font:800 clamp(34px,4.4vw,60px)/1.04 'Open Sans',Arial,sans-serif;letter-spac
 .texte{transition:opacity .45s ease}.texte.sort{opacity:0}
 .texte h1{min-height:3.12em}
 .nav{display:flex;align-items:center;gap:10px;margin-top:28px}
-.dot{position:relative;width:44px;height:28px;border:0;background:none;padding:0;cursor:pointer}
-.dot::before{content:'';position:absolute;left:0;right:0;top:13px;height:3px;border-radius:2px;background:#dfe3ea}
-.dot i{position:absolute;left:0;top:13px;height:3px;border-radius:2px;background:var(--brand);width:0}
+.dot{position:relative;height:30px;border:0;background:none;padding:0 0 8px;cursor:pointer;font:600 13px/18px 'Open Sans',Arial,sans-serif;color:var(--muted);white-space:nowrap}
+.dot[aria-current=step]{color:var(--ink)}
+.dot::before{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;background:#dfe3ea}
+.dot i{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:var(--brand);width:0}
+.nav{flex-wrap:wrap;gap:14px}
 .dot:focus-visible,.pause:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
 .pause{width:28px;height:28px;border:1px solid #dfe3ea;border-radius:50%;background:#fff;cursor:pointer;display:grid;place-items:center;margin-left:4px}
 .pause::before{content:'';width:8px;height:10px;border-left:3px solid var(--ink);border-right:3px solid var(--ink);box-sizing:border-box}
@@ -56,7 +58,7 @@ h1{font:800 clamp(34px,4.4vw,60px)/1.04 'Open Sans',Arial,sans-serif;letter-spac
     <a class="cta" href="/rendez-vous/">Prendre rendez-vous</a>
     <div class="nav" id="nav"><button class="pause" id="pause" type="button" aria-label="Mettre en pause l'animation"></button></div>
   </div>
-  <div id="scene"></div>
+  <div id="scene" role="img" aria-label="Animation : des machines isolées entrent dans une Room, une bulle privée où elles échangent des données directement ; exemples : entraînement d’une IA, mise à jour d’une flotte de camions, partenaire invité puis retiré."></div>
   <div class="tip" id="tip"></div>
   <div class="badge" id="badge" aria-hidden="true"></div>
 </section>
@@ -83,9 +85,9 @@ const C = {
     { type: 'gpu',       x: -0.95, z: 0.75,  rot: 0,   nom: 'GPU',         role: 'La puissance de calcul, souvent sous-utilisée.' },
     { type: 'ordinateur',x: 0.75,  z: 0.85,  rot: -12, nom: 'Ordinateur',  role: 'Le poste de travail de vos équipes.' },
     { type: 'telephone', x: 1.55,  z: 1.15,  rot: -20, nom: 'Téléphone',   role: 'Les appareils en déplacement.' },
-    { type: 'telephone', x: 1.95,  z: 1.0,   rot: -8,  nom: 'Téléphone',   role: 'Les appareils en déplacement.' },
+    { type: 'telephone', x: 1.95,  z: 1.0,   rot: -8,  nom: 'Tablette',    role: 'Les appareils sur le terrain.' },
     { type: 'serveur',   x: 2.05,  z: -0.75, rot: 0,   nom: 'Serveur',     role: 'Vos serveurs, au bureau ou dans le cloud.' },
-    { type: 'serveur',   x: 2.75,  z: -0.45, rot: 0,   nom: 'Serveur',     role: 'Vos serveurs, au bureau ou dans le cloud.' },
+    { type: 'serveur',   x: 2.75,  z: -0.45, rot: 0,   nom: 'Cloud',       role: 'Vos serveurs loués dans le cloud.' },
     { type: 'navigateur',x: 0.1,   z: -1.0,  rot: 8,   nom: 'Navigateur',  role: 'Un simple onglet de navigateur peut rejoindre la Room.' }
   ],
   petitsCubes: [[-1.4, 1.05], [-0.35, -0.2], [1.05, -0.45], [1.3, 0.15], [-2.55, 0.65], [2.45, 0.75], [0.25, 1.55]],
@@ -96,16 +98,16 @@ const C = {
   transition: 1.8, // secondes pour passer d'une étape à l'autre
   // L'histoire : chaque étape = un texte + un état de la scène. Ajouter une étape = ajouter une entrée.
   etapes: [
-    { etat: 0, mode: 'isole', duree: 4, sur: "Aujourd'hui", titre: 'Vos machines travaillent chacune dans leur coin.',
+    { etat: 0, mode: 'isole', duree: 4, onglet: "Aujourd'hui", sur: "Aujourd'hui", titre: 'Vos machines travaillent chacune dans leur coin.',
       texte: 'GPU, serveurs, ordinateurs, navigateurs, données : tout est là, mais rien ne se parle vraiment.' },
-    { etat: 1, mode: 'pair', duree: 4.5, sur: 'Avec une Room', titre: 'Une Room les réunit dans une bulle privée.',
+    { etat: 1, mode: 'pair', duree: 4.5, onglet: 'La Room', sur: 'Avec une Room', titre: 'Une Room les réunit dans une bulle privée.',
       texte: 'Tous vos appareils entrent dans le même espace chiffré et se parlent directement, de pair à pair.' },
     // Cas d'usage : toujours la même grammaire, de gauche à droite. Ça entre → la Room travaille → un résultat sort.
-    { etat: 1, mode: 'entrainement', cas: 'ia', duree: 8.5, sur: 'Cas d’usage · Intelligence artificielle', titre: 'Entraînez votre IA sur vos propres données.',
+    { etat: 1, mode: 'entrainement', cas: 'ia', duree: 8.5, onglet: 'IA', sur: 'Cas d’usage · Intelligence artificielle', titre: 'Entraînez votre IA sur vos propres données.',
       texte: 'Vos données entrent, vos GPU, ordinateurs et même un navigateur apprennent ensemble. Le modèle en sort prêt à être utilisé.' },
-    { etat: 1, mode: 'multicast', cas: 'flotte', duree: 6.5, sur: 'Cas d’usage · Flotte', titre: 'Mettez à jour toute votre flotte d’un seul envoi.',
+    { etat: 1, mode: 'multicast', cas: 'flotte', duree: 6.5, onglet: 'Flotte', sur: 'Cas d’usage · Flotte', titre: 'Mettez à jour toute votre flotte d’un seul envoi.',
       texte: 'Un camion entre dans la Room, reçoit son itinéraire et ses mises à jour en même temps que toutes vos machines, puis repart.' },
-    { etat: 1, mode: 'pair', cas: 'partenaires', duree: 6.5, sur: 'Cas d’usage · Partenaires', titre: 'Invitez un partenaire le temps d’un projet.',
+    { etat: 1, mode: 'pair', cas: 'partenaires', duree: 6.5, onglet: 'Partenaires', sur: 'Cas d’usage · Partenaires', titre: 'Invitez un partenaire le temps d’un projet.',
       texte: 'Un expert, un client ou un financeur entre par invitation et échange en direct avec votre équipe. Projet terminé : son accès est retiré d’un coup.' }
   ],
   // Qui fait quoi dans chaque cas d'usage (numéros = ordre dans « objets »).
@@ -118,7 +120,8 @@ const C = {
 const host = document.getElementById('scene'), tip = document.getElementById('tip');
 const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+const qualite = { dpr: Math.min(2, devicePixelRatio), n: 0, somme: 0 }; // quatre marches au plus : 2 → 1,5 → 1
+renderer.setPixelRatio(qualite.dpr);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 host.appendChild(renderer.domElement);
@@ -324,7 +327,7 @@ membres.forEach((g, i) => {
   const n = membres.length, j = i < objets.length ? i * 2 : (i - objets.length) * 2 + 1, y = 1 - 2 * (j + .5) / n, r = Math.sqrt(1 - y * y), a = j * Math.PI * (3 - Math.sqrt(5));
   g.userData.dansRoom = new THREE.Vector3(Math.cos(a) * r * .66, y * .62 - .05, Math.sin(a) * r * .66).multiplyScalar(R.rayon).add(centreRoom);
   g.userData.retard = (i % 8) * .045 + (i >= objets.length ? .08 : 0);
-  g.userData.echelleRoom = ({ telephone: 1.5, navigateur: .85, ordinateur: .8 })[g.userData.type] || R.echelleMembres;
+  g.userData.echelleRoom = ({ telephone: 1.5, navigateur: .85, ordinateur: .8, donnees: .42 })[g.userData.type] || R.echelleMembres;
 });
 
 /* ══════════ Formations : chaque méthode range les membres dans une figure simple et reconnaissable ══════════
@@ -396,7 +399,7 @@ addEventListener('resize', cadrer); cadrer();
 /* ══════════ L'histoire : avance toute seule, sans clic. Pause possible (accessibilité). ══════════ */
 const E = C.etapes, el = id => document.getElementById(id);
 const nav = el('nav'), btnPause = el('pause'), texte = el('texte');
-const points = E.map((e, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'dot'; b.setAttribute('aria-label', `Étape ${i + 1} : ${e.sur}`); b.innerHTML = '<i></i>';
+const points = E.map((e, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'dot'; b.setAttribute('aria-label', `Étape ${i + 1} : ${e.sur}`); b.innerHTML = `${e.onglet}<i></i>`;
   b.addEventListener('click', () => allerA(i)); nav.insertBefore(b, btnPause); return b; });
 let etape = 0, tEtape = 0, enPause = reduit, survolActif = false, m = 0;
 function afficherTexte(i) {
@@ -404,7 +407,7 @@ function afficherTexte(i) {
   setTimeout(() => { el('sur').textContent = E[i].sur; el('titre').textContent = E[i].titre; el('lead').textContent = E[i].texte; texte.classList.remove('sort'); }, texte.dataset.pret ? 380 : 0);
   texte.dataset.pret = 1;
 }
-function allerA(i) { etape = (i + E.length) % E.length; tEtape = 0; afficherTexte(etape); }
+function allerA(i) { etape = (i + E.length) % E.length; tEtape = 0; afficherTexte(etape); points.forEach((p, k) => k === etape ? p.setAttribute('aria-current', 'step') : p.removeAttribute('aria-current')); }
 function majPause() { btnPause.classList.toggle('lecture', enPause); btnPause.setAttribute('aria-label', enPause ? "Reprendre l'animation" : "Mettre en pause l'animation"); }
 btnPause.addEventListener('click', () => { enPause = !enPause; majPause(); });
 allerA(0); majPause();
@@ -439,7 +442,8 @@ const puces = [...objets.map(g => { const d = document.createElement('div'); d.c
 const puce = (txt, cl = 'chip') => { const d = document.createElement('div'); d.className = cl; d.textContent = txt; host.parentElement.appendChild(d); return d; };
 Object.values(ACTEURS).forEach(a => a.puce = puce(a.nom));
 const puceEntree = puce('', 'chip'), puceSortie = puce('', 'chip sortie');
-const puceModele = document.createElement('div'); puceModele.className = 'chip c'; puceModele.textContent = 'Modèle commun'; host.parentElement.appendChild(puceModele);
+const puceModele = document.createElement('div'); puceModele.className = 'chip c'; puceModele.textContent = 'Modèle commun';
+const puceSource = puce('Serveur · envoie à tous', 'chip c'); host.parentElement.appendChild(puceModele);
 // Paquets de données (tête + petite traînée) et anneaux d'arrivée.
 const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
 let paquets = [];
@@ -535,12 +539,21 @@ function dessinerEchanges() {
   liens.forEach(([a, b], k) => { centreDe(a, tA).toArray(liPos, k * 6); centreDe(b, tB).toArray(liPos, k * 6 + 3); }); liGeo.setDrawRange(0, liens.length * 2); liGeo.attributes.position.needsUpdate = true;
   // Étiquettes directes
   const mon = m > .97 && !modeCourant.startsWith('isole') && !(etroit && (modeCourant.startsWith('pair') || modeCourant.startsWith('multicast'))), off = host.offsetTop, offL = host.offsetLeft;
-  objets.forEach((g, i) => { const d = puces[i], ok = mon && g.userData.vis > .7; d.style.opacity = ok ? 1 : 0; if (!ok) return;
-    tA.copy(g.position).setY(g.position.y - .06).project(camera); d.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; d.style.top = ((1 - tA.y) / 2 * H + off + 6) + 'px'; });
-  const placer = (d, p, dy = 6) => { tA.copy(p).project(camera); d.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; d.style.top = ((1 - tA.y) / 2 * H + off + dy) + 'px'; };
+  // Qui nommer : dans un cas d'usage, seulement les acteurs de l'histoire (sinon 8 étiquettes se disputent l'œil).
+  const utile = i => casCourant === 'flotte' ? i === C.roles.source : casCourant === 'partenaires' ? false : modeCourant.startsWith('entrainement') ? C.roles.entraineurs.includes(i) : true;
+  const pris = [];
+  const libre = (x, y, w) => { if (pris.some(r => Math.abs(r[0] - x) < (r[2] + w) / 2 + 4 && Math.abs(r[1] - y) < 24)) return false; pris.push([x, y, w]); return true; };
+  Object.values(ACTEURS).forEach(a => { if (a.vis > .7) { tA.copy(a.g.position).project(camera); pris.push([(tA.x + 1) / 2 * W, (1 - tA.y) / 2 * H + 6, a.nom.length * 7 + 16]); } });
+  objets.forEach((g, i) => { const d = puces[i]; let ok = mon && g.userData.vis > .7 && utile(i);
+    if (ok) { tA.copy(g.position).setY(g.position.y - .06).project(camera); const x = (tA.x + 1) / 2 * W, y = (1 - tA.y) / 2 * H + 6; ok = libre(x, y, g.userData.nom.length * 7 + 16);
+      if (ok) { d.style.left = (x + offL) + 'px'; d.style.top = (y + off) + 'px'; } }
+    d.style.opacity = ok ? 1 : 0; });
+  const placer = (d, p, dy = 6) => { tA.copy(p).project(camera); const demi = d.offsetWidth / 2 + 8; d.style.left = (THREE.MathUtils.clamp((tA.x + 1) / 2 * W, demi, W - demi) + offL) + 'px'; // jamais coupée au bord de l'écran
+    d.style.top = ((1 - tA.y) / 2 * H + off + dy) + 'px'; };
   Object.values(ACTEURS).forEach(a => { const ok = m > .97 && a.vis > .7; a.puce.style.opacity = ok ? 1 : 0; if (ok) placer(a.puce, v1.copy(a.g.position).setY(a.g.position.y - .04)); });
   puceEntree.style.opacity = entreeTxt && m > .97 ? 1 : 0; if (entreeTxt) { puceEntree.textContent = entreeTxt; placer(puceEntree, dehors(-1, v1).setY(v1.y + .35), 0); }
   puceSortie.style.opacity = sortieTxt && m > .97 ? 1 : 0; if (sortieTxt) { puceSortie.textContent = sortieTxt; placer(puceSortie, dehors(1, v1).setY(v1.y - .2), 10); }
+  const okS = m > .97 && casCourant === 'flotte'; puceSource.style.opacity = okS ? 1 : 0; if (okS) placer(puceSource, v1.copy(objets[C.roles.source].position).setY(objets[C.roles.source].position.y - .06));
   const okM = mon && modeCourant.startsWith('entrainement') && !(casCourant === 'ia' && tEtape > 6.0); puceModele.style.opacity = okM ? 1 : 0;
   if (okM) { tA.copy(centreRoom).setY(centreRoom.y - .3).project(camera); puceModele.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; puceModele.style.top = ((1 - tA.y) / 2 * H + off) + 'px'; }
   // Paquets
@@ -559,13 +572,16 @@ function dessinerEchanges() {
 
 /* ── Boucle ── */
 const horlogeGL = new THREE.Clock(); let horloge = 0, prochaine = 0.15, visible = true;
-new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(host);
+let dansEcran = true; new IntersectionObserver(([e]) => { dansEcran = e.isIntersecting; visible = dansEcran && !document.hidden; }).observe(host);
+document.addEventListener('visibilitychange', () => { visible = dansEcran && !document.hidden; horlogeGL.getDelta(); });
 renderer.setAnimationLoop(() => {
-  const dt = Math.min(.05, horlogeGL.getDelta()); if (!visible) return; horloge += dt;
+  const brut = horlogeGL.getDelta(), dt = Math.min(.05, brut); if (!visible) return; horloge += dt;
+  qualite.n++; qualite.somme += brut; if (qualite.n === 90) { const moy = qualite.somme / 90; qualite.n = 0; qualite.somme = 0;
+    if (moy > 1 / 45 && qualite.dpr > 1) { qualite.dpr = Math.max(1, qualite.dpr - .5); renderer.setPixelRatio(qualite.dpr); cadrer(); } }
 
   // Avance automatique de l'histoire (en pause si demandé, ou pendant qu'on lit une info-bulle).
   if (!enPause && !survolActif) { tEtape += dt; if (tEtape > E[etape].duree) allerA(etape + 1); }
-  points.forEach((p, i) => p.firstChild.style.width = (i < etape ? 100 : i > etape ? 0 : Math.min(100, tEtape / E[etape].duree * 100)) + '%');
+  points.forEach((p, i) => p.lastChild.style.width = (i < etape ? 100 : i > etape ? 0 : Math.min(100, tEtape / E[etape].duree * 100)) + '%');
   // État de la scène : glisse doucement vers celui de l'étape.
   const viseM = E[etape].etat; m = reduit ? viseM : m + Math.sign(viseM - m) * Math.min(Math.abs(viseM - m), dt / C.transition);
   const me = facile(m);
