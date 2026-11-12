@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aperçu · objets 3D de la Room</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
+<style>
+html,body{margin:0;height:100%;background:#0b0d10;color:#f2f4f7;font:400 14px/20px 'Open Sans',Arial,sans-serif}
+#scene{position:fixed;inset:0}
+.info{position:fixed;left:16px;bottom:16px;right:16px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.info span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:6px 10px;border-radius:999px}
+.top{position:fixed;left:16px;top:14px;font-weight:600}
+.top small{display:block;font-weight:400;color:#a7aebb}
+</style>
+<script type="importmap">{"imports":{"three":"/vendor/three-0.160.0.module.min.js","three/addons/":"/vendor/three-addons-0.160.0/"}}</script>
+</head>
+<body>
+<div class="top"><span id="nom">Objet 3D</span><small>Faites-le tourner à la souris ou au doigt</small></div>
+<div id="scene"></div>
+<div class="info" id="info"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+/* Registre des objets : ajouter un objet = ajouter une entrée. */
+const OBJETS = {
+  gpu:      { nom: 'Nœud GPU', fichier: '/assets/rooms/3d/gpu.glb' },
+  gpu1024:  { nom: 'Nœud GPU (textures 1024)', fichier: '/assets/rooms/3d/gpu-1024.glb' }
+};
+const id = new URLSearchParams(location.search).get('o') || 'gpu', obj = OBJETS[id];
+document.getElementById('nom').textContent = obj.nom;
+
+const host = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+host.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0b0d10');
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const key = new THREE.DirectionalLight('#ffffff', 1.2); key.position.set(2, 4, 3); scene.add(key);
+const rim = new THREE.DirectionalLight('#8aa6ff', 1.6); rim.position.set(-3, 2, -3); scene.add(rim);
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.01, 100);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.autoRotate = !matchMedia('(prefers-reduced-motion: reduce)').matches; controls.autoRotateSpeed = 1.2;
+
+const t0 = performance.now();
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+const res = await fetch(obj.fichier); const buf = await res.arrayBuffer();
+loader.parse(buf, '', gltf => {
+  const m = gltf.scene, box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  m.position.sub(c); scene.add(m);
+  const r = size.length() / 2; camera.position.set(r * 1.6, r * 0.9, r * 2.6); controls.target.set(0, 0, 0); controls.update();
+  const sol = new THREE.Mesh(new THREE.CircleGeometry(r * 1.6, 64), new THREE.MeshStandardMaterial({ color: '#111419', roughness: 0.35, metalness: 0 }));
+  sol.rotation.x = -Math.PI / 2; sol.position.y = -size.y / 2; scene.add(sol);
+  let tris = 0; m.traverse(o => { if (o.isMesh) tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+  document.getElementById('info').innerHTML =
+    `<span>${(buf.byteLength / 1024).toFixed(0)} Ko</span><span>${Math.round(tris).toLocaleString('fr-FR')} triangles</span><span>chargé en ${Math.round(performance.now() - t0)} ms</span>`;
+  window.__pret = true;
+});
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>
