@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aperçu · visuel Rooms</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#f1f0ec; --card:#ffffff; --ink:#14171c; --muted:#5b6270; --line:#e3e6ea;
+  --brand:#2350d8; --brand-soft:#eef2fd; --brand-line:#b9c8f5; --idle:#c3c9d3;
+  --shadow-product:0 30px 60px -24px rgba(20,23,28,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--ink);font:400 16px/26px 'Open Sans',Arial,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:48px 16px 64px}
+.frame{background:var(--card);border-radius:28px;box-shadow:var(--shadow-product);padding:20px;overflow:hidden}
+.tabs{display:flex;gap:6px;padding:4px;background:#f4f5f7;border-radius:999px;width:max-content;max-width:100%;overflow-x:auto}
+.tab{font:600 14px/20px 'Open Sans',Arial,sans-serif;border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(20,23,28,.08),0 2px 8px -2px rgba(20,23,28,.08)}
+.tab .c{display:none}@media (max-width:720px){.tab .l{display:none}.tab .c{display:inline}.tabs{width:100%}.tab{flex:1}}
+.tab:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.stage{margin-top:16px}
+.stage > svg{display:block;width:100%;height:auto}
+.steps{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;color:var(--muted);font-size:14px;line-height:21px}
+.step b{display:block;color:var(--ink);font-weight:600;font-size:15px;line-height:22px}
+.step .n{flex:none;width:24px;height:24px;border-radius:999px;border:1.5px solid var(--idle);display:grid;place-items:center;font:600 12px/1 'Open Sans',Arial,sans-serif;color:var(--muted)}
+.step[data-on]{background:var(--brand-soft)}
+.step[data-on] .n{background:var(--brand);border-color:var(--brand);color:#fff}
+@media (max-width:720px){.steps{grid-template-columns:1fr}.frame{padding:14px;border-radius:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <div class="tabs" role="tablist" aria-label="Cas d'usage des Rooms"></div>
+    <div class="stage" role="tabpanel"></div>
+    <ol class="steps"></ol>
+  </div>
+</div>
+
+<script>
+/* Registre des cas d'usage : ajouter un cas = ajouter une entrée ici.
+   pos : position des membres en mode large (d) et étroit (m), dans le repère du dessin. */
+var ROOMS = {
+  etape_active: 0,
+  cas: [
+    {
+      id: 'automatiser', onglet: 'Automatiser entre vos machines', court: 'Automatiser',
+      room: 'Room « Rapports ventes »',
+      membres: {
+        agent:  { titre: 'Agent IA',        detail: 'agent-ventes',       icone: 'agent',  d:[150,300], m:[170,150] },
+        base:   { titre: 'Base de données', detail: 'Postgres, prod',     icone: 'base',   d:[470,120], m:[170,330] },
+        gpu:    { titre: 'Serveur GPU',     detail: 'gpu-01, Paris',      icone: 'serveur',d:[560,390], m:[170,510] },
+        bucket: { titre: 'Bucket',          detail: 's3://rapports',      icone: 'bucket', d:[820,240], m:[170,690] }
+      },
+      flux: [
+        { de:'agent', vers:'base',   etiquette:'Requête SQL',      titre:"L'agent IA interroge la base", texte:'Il lit les commandes du jour, sans tunnel ni VPN.' },
+        { de:'base',  vers:'gpu',    etiquette:'12 400 lignes',    titre:'Le serveur GPU calcule',       texte:'Les données arrivent chiffrées, prêtes à traiter.' },
+        { de:'gpu',   vers:'bucket', etiquette:'rapport.parquet',  titre:'Le résultat est rangé',        texte:'Le rapport part dans le bucket, et chaque échange est tracé.' }
+      ]
+    },
+    {
+      id: 'partager', onglet: 'Partager avec vos clients', court: 'Partager',
+      room: 'Room « Client Atlas »',
+      membres: {
+        serveur:{ titre: 'Votre serveur',   detail: 'api-prod',           icone: 'serveur',d:[150,300], m:[170,150] },
+        agent:  { titre: 'Agent IA',        detail: 'agent-support',      icone: 'agent',  d:[470,120], m:[170,330] },
+        client: { titre: 'Client invité',   detail: 'sans compte BEAM',   icone: 'invite', d:[820,270], m:[170,510] },
+        partenaire:{ titre:'Partenaire invité', detail:'accès lecture',   icone: 'invite', d:[680,405], m:[170,690] }
+      },
+      flux: [
+        { de:'serveur', vers:'agent',     etiquette:'flux en direct', titre:'Vous publiez une fois',      texte:'Fichiers et flux partent de votre serveur dans la Room.' },
+        { de:'agent',   vers:'client',    etiquette:'résumé',         titre:'Le client reçoit en direct', texte:"Invité par lien, il n'installe rien et ne crée aucun compte." },
+        { de:'serveur', vers:'partenaire',etiquette:'export.csv',     titre:'Vous gardez la main',        texte:"Droits par canal, et l'accès se retire en un clic." }
+      ]
+    }
+  ]
+};
+
+var ICONES = {
+  agent:  '<path d="M9 3h6M12 3v3"/><rect x="5" y="6" width="14" height="12" rx="4"/><circle cx="9.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><path d="M9.5 15.5h5"/>',
+  base:   '<ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/>',
+  serveur:'<rect x="4" y="4" width="16" height="7" rx="1.8"/><rect x="4" y="13" width="16" height="7" rx="1.8"/><path d="M8 7.5h.01M8 16.5h.01"/>',
+  bucket: '<path d="M4 6h16l-1.6 12.4A2 2 0 0 1 16.4 20H7.6a2 2 0 0 1-2-1.6L4 6z"/><ellipse cx="12" cy="6" rx="8" ry="2"/>',
+  invite: '<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M19 8v6M16 11h6"/>'
+};
+
+function el(t,a,h){ var s='<'+t; for(var k in a) s+=' '+k+'="'+a[k]+'"'; return s+'>'+(h||'')+'</'+t+'>'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function dessiner(cas, actif){
+  var large = window.matchMedia('(min-width: 721px)').matches;
+  var W = large ? 960 : 340, H = large ? 480 : 776, P = large ? 'd' : 'm';
+  var tw = large ? 216 : 260, th = 72;
+  var pos = {}; Object.keys(cas.membres).forEach(function(k){ pos[k]=cas.membres[k][P]; });
+  var out = '';
+  // La Room : une zone privée, double contour = chiffrée de bout en bout.
+  out += el('rect',{x:10,y:10,width:W-20,height:H-20,rx:30,fill:'none',stroke:'var(--brand-line)','stroke-width':1});
+  out += el('rect',{x:18,y:18,width:W-36,height:H-36,rx:24,fill:'var(--brand-soft)',stroke:'var(--brand)','stroke-width':1.5});
+  out += '<g transform="translate(40,44)">'
+      + el('svg',{x:0,y:-14,width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'var(--brand)','stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'},'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>')
+      + el('text',{x:26,y:0,'font-size':15,'font-weight':600,fill:'var(--ink)'},esc(cas.room))
+      + el('text',{x:26,y:20,'font-size':13,fill:'var(--muted)'},'Chiffrée de bout en bout, sur invitation')
+      + '</g>';
+  // Liens entre membres.
+  cas.flux.forEach(function(f,i){
+    var a=pos[f.de], b=pos[f.vers], on=(i===actif), done=(i<actif);
+    var mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2, dx=b[0]-a[0], dy=b[1]-a[1];
+    var c = large ? [mx - dy*0.18, my + dx*0.18] : [mx, my];
+    var d = 'M'+a[0]+' '+a[1]+' Q'+c[0]+' '+c[1]+' '+b[0]+' '+b[1];
+    out += el('path',{d:d,fill:'none',stroke: on?'var(--brand)':(done?'#8aa6ff':'var(--idle)'),'stroke-width': on?2.5:1.5,'stroke-dasharray': on||done?'none':'4 6','stroke-linecap':'round'});
+    // Étiquette centrée au milieu du trajet ; le paquet en transit juste avant.
+    function pt(t){ return [(1-t)*(1-t)*a[0]+2*(1-t)*t*c[0]+t*t*b[0], (1-t)*(1-t)*a[1]+2*(1-t)*t*c[1]+t*t*b[1]]; }
+    var mid=pt(0.5), lw = f.etiquette.length*7.4+24, lx = mid[0]-lw/2, ly = mid[1]-14;
+    var dot = large ? pt(0.72) : [mid[0], ly-18], px=dot[0], py=dot[1];
+    if(on){
+      out += el('circle',{cx:px,cy:py,r:14,fill:'var(--brand)',opacity:.14});
+      out += el('circle',{cx:px,cy:py,r:6,fill:'var(--brand)'});
+    }
+    out += el('rect',{x:lx,y:ly,width:lw,height:28,rx:14,fill:'#fff',stroke: on?'var(--brand)':'var(--line)'});
+    out += el('text',{x:lx+12,y:ly+19,'font-size':13,'font-weight':on?600:500,fill: on?'var(--brand)':'var(--muted)'},esc(f.etiquette));
+  });
+  // Membres de la Room.
+  Object.keys(cas.membres).forEach(function(k){
+    var m=cas.membres[k], p=pos[k], x=p[0]-tw/2, y=p[1]-th/2;
+    var actifIci = cas.flux[actif] && (cas.flux[actif].de===k || cas.flux[actif].vers===k);
+    out += el('rect',{x:x,y:y+4,width:tw,height:th,rx:16,fill:'rgba(20,23,28,.06)'});
+    out += el('rect',{x:x,y:y,width:tw,height:th,rx:16,fill:'#fff',stroke: actifIci?'var(--brand)':'var(--line)','stroke-width':actifIci?1.5:1});
+    out += el('rect',{x:x+14,y:y+16,width:40,height:40,rx:12,fill: actifIci?'var(--brand)':'#f4f5f7'});
+    out += el('svg',{x:x+22,y:y+24,width:24,height:24,viewBox:'0 0 24 24',fill:'none',stroke: actifIci?'#fff':'var(--ink)',color: actifIci?'#fff':'var(--ink)','stroke-width':1.7,'stroke-linecap':'round','stroke-linejoin':'round'},ICONES[m.icone]);
+    out += el('text',{x:x+66,y:y+32,'font-size':15,'font-weight':600,fill:'var(--ink)'},esc(m.titre));
+    out += el('text',{x:x+66,y:y+52,'font-size':13,fill:'var(--muted)'},esc(m.detail));
+  });
+  return el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':esc(cas.room+' : '+cas.flux.map(function(f){return f.titre;}).join(', ')),'font-family':"'Open Sans', Arial, sans-serif"},out);
+}
+
+var courant = 0;
+function rendre(){
+  var cas = ROOMS.cas[courant], actif = ROOMS.etape_active;
+  document.querySelector('.tabs').innerHTML = ROOMS.cas.map(function(c,i){
+    return '<button class="tab" role="tab" aria-selected="'+(i===courant)+'" data-i="'+i+'"><span class="l">'+esc(c.onglet)+'</span><span class="c">'+esc(c.court||c.onglet)+'</span></button>';
+  }).join('');
+  document.querySelector('.stage').innerHTML = dessiner(cas, actif);
+  document.querySelector('.steps').innerHTML = cas.flux.map(function(f,i){
+    return '<li class="step"'+(i===actif?' data-on':'')+'><span class="n">'+(i+1)+'</span><span><b>'+esc(f.titre)+'</b>'+esc(f.texte)+'</span></li>';
+  }).join('');
+}
+document.querySelector('.tabs').addEventListener('click',function(e){ var b=e.target.closest('.tab'); if(b){ courant=+b.dataset.i; rendre(); } });
+window.addEventListener('resize', rendre);
+var q = new URLSearchParams(location.search); if(q.get('cas')) courant = Math.max(0, ROOMS.cas.findIndex(function(c){return c.id===q.get('cas');}));
+rendre();
+</script>
+</body>
+</html>
