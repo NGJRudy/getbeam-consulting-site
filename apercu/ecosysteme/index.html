@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aperçu · Room et écosystème</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;800&display=swap">
+<style>
+:root{--ground:#ffffff;--ink:#101114;--muted:#5b6270;--accent:#d4423b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--ink);font:400 16px/26px 'Open Sans',Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:36px 16px 40px}
+h1{font:800 clamp(30px,4.6vw,58px)/1.02 'Open Sans',Arial,sans-serif;letter-spacing:-.025em;margin:0 0 12px;max-width:17ch}
+.lead{color:var(--muted);max-width:60ch;margin:0}
+.stage{position:relative;height:min(70vh,640px);min-height:440px;margin-top:8px;cursor:grab;touch-action:pan-y}
+.stage:active{cursor:grabbing}
+.stage canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.labels{position:absolute;inset:0;pointer-events:none}
+.lab{position:absolute;left:0;top:0;font:600 12px/16px 'Open Sans',Arial,sans-serif;letter-spacing:.04em;color:var(--ink);white-space:nowrap;transform:translate(-50%,0)}
+.lab.room{color:var(--accent);font-size:13px;transform:translate(0,-50%)}
+.legend{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:14px;line-height:20px}
+@media (max-width:720px){.stage{height:56vh;min-height:380px}.lab{font-size:11px}}
+</style>
+<script type="importmap">{"imports":{"three":"/vendor/three-0.160.0.module.min.js","three/addons/":"/vendor/three-addons-0.160.0/"}}</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Une Room relie tout votre écosystème.</h1>
+  <p class="lead">Vos données, serveurs, GPU et appareils entrent dans une bulle privée. À l'intérieur, chaque membre échange directement avec les autres.</p>
+  <div class="stage" id="stage"><div class="labels" id="labels"></div></div>
+  <div class="legend"><span>Faites tourner la Room. Touchez-la pour envoyer une donnée à tous ses membres en même temps.</span></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ───────── Configuration : ajouter un élément = ajouter une entrée ───────── */
+const CONFIG = {
+  accent: '#d4423b',          // couleur de la Room
+  encre: '#15161a',           // couleur du réseau au sol
+  room: { nom: 'ROOM', y: 1.0, rayon: 1.3, finesse: 3 },
+  sol: { y: -1.05, demiLargeur: 9, demiProfondeur: 1.9, pas: 0.3 },
+  // Les zones de l'écosystème posées sur le réseau.
+  zones: [
+    { nom: 'DONNÉES',    type: 'grappe',    x: -3.4, z: 0.1 },
+    { nom: 'GPU',        type: 'gpu',       x: -1.75, z: 1.15 },
+    { nom: 'APPAREILS',  type: 'appareils', x: 1.75, z: 1.2 },
+    { nom: 'SERVEURS',   type: 'tours',     x: 3.55, z: -0.1 }
+  ],
+  filaments: 11,              // fils qui relient le réseau à la Room
+  flux_par_seconde: 5,        // données qui montent vers la Room
+  envoi_toutes_les: 6         // secondes entre deux envois dans la Room
+};
+/* ─────────────────────────────────────────────────────────────────────── */
+
+const stage = document.getElementById('stage'), labelsEl = document.getElementById('labels');
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ACC = new THREE.Color(CONFIG.accent), ENC = new THREE.Color(CONFIG.encre);
+let graine = 11; const rnd = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 80);
+const cible = new THREE.Vector3(0, 0.15, 0);
+scene.add(new THREE.HemisphereLight('#ffffff', '#c9ccd3', 2.2));
+const soleil = new THREE.DirectionalLight('#ffffff', 1.6); soleil.position.set(-3, 6, 4); scene.add(soleil);
+
+/* ── Shaders partagés : points ronds et lignes à couleur + opacité par sommet ── */
+const FONDU = `uniform float uFonduX; float fondu(vec3 w){ return (1.-smoothstep(uFonduX*.42,uFonduX*.8,abs(w.x)))*(1.-smoothstep(1.35,2.,abs(w.z-.1))*step(w.y,-1.)); }`;
+function matPoints() {
+  return new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uEchelle: { value: 1 }, uFonduX: { value: CONFIG.sol.demiLargeur } },
+    vertexShader: `attribute vec4 aC; attribute float aS; uniform float uEchelle; varying vec4 vC; ${FONDU}
+      void main(){ vec4 w=modelMatrix*vec4(position,1.); vec4 mv=viewMatrix*w; vC=vec4(aC.rgb,aC.a*fondu(w.xyz)); gl_PointSize=aS*uEchelle*(26./-mv.z); gl_Position=projectionMatrix*mv; }`,
+    fragmentShader: `varying vec4 vC; void main(){ float d=length(gl_PointCoord-.5)*2.; if(d>1.) discard;
+      float coeur=1.-smoothstep(.62,.8,d); float halo=(1.-d)*.22; gl_FragColor=vec4(vC.rgb,(coeur+halo)*vC.a); }`
+  });
+}
+function matLignes() {
+  return new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uFonduX: { value: CONFIG.sol.demiLargeur } },
+    vertexShader: `attribute vec4 aC; varying vec4 vC; ${FONDU}
+      void main(){ vec4 w=modelMatrix*vec4(position,1.); vC=vec4(aC.rgb,aC.a*fondu(w.xyz)); gl_Position=projectionMatrix*viewMatrix*w; }`,
+    fragmentShader: `varying vec4 vC; void main(){ gl_FragColor=vC; }`
+  });
+}
+function geo(pos, col, tailles) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  g.setAttribute('aC', new THREE.BufferAttribute(new Float32Array(col), 4));
+  if (tailles) g.setAttribute('aS', new THREE.BufferAttribute(new Float32Array(tailles), 1));
+  return g;
+}
+const tousPoints = [];
+const ajoutPoints = (g, parent = scene) => { const p = new THREE.Points(g, matPoints()); p.frustumCulled = false; parent.add(p); tousPoints.push(p); return p; };
+const ajoutLignes = (g, parent = scene) => { const l = new THREE.LineSegments(g, matLignes()); l.frustumCulled = false; parent.add(l); return l; };
+const taillePoint = () => { const r = rnd(); return r < .7 ? 1.2 + rnd() * 1.2 : r < .93 ? 2.6 + rnd() * 1.6 : 4.4 + rnd() * 2; };
+
+/* ══════════ 1. Le réseau au sol ══════════ */
+const S = CONFIG.sol, cols = Math.round(S.demiLargeur * 2 / S.pas) + 1, rows = Math.round(S.demiProfondeur * 2 / S.pas) + 1;
+const noeuds = [];
+for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+  noeuds.push(new THREE.Vector3(-S.demiLargeur + c * S.pas + (rnd() - .5) * .06, S.y, -S.demiProfondeur + r * S.pas + (rnd() - .5) * .06));
+const idx = (r, c) => r * cols + c;
+{
+  const p = [], col = [];
+  const lien = (a, b, al) => { p.push(...noeuds[a].toArray(), ...noeuds[b].toArray()); col.push(ENC.r, ENC.g, ENC.b, al, ENC.r, ENC.g, ENC.b, al); };
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    if (c + 1 < cols && rnd() < .9) lien(idx(r, c), idx(r, c + 1), .2);
+    if (r + 1 < rows && rnd() < .8) lien(idx(r, c), idx(r + 1, c), .16);
+    if (r + 1 < rows && c + 1 < cols && rnd() < .14) lien(idx(r, c), idx(r + 1, c + 1), .12);
+  }
+  // Flux qui arrivent des bords : l'écosystème continue au-delà de l'écran.
+  for (let k = 0; k < 16; k++) {
+    const r = Math.floor(rnd() * rows), cote = k % 2 ? 1 : -1, z = noeuds[idx(r, 0)].z;
+    p.push(cote * (S.demiLargeur + 3), S.y, z + (rnd() - .5) * .4, cote * S.demiLargeur * .55, S.y, z);
+    col.push(ENC.r, ENC.g, ENC.b, 0, ENC.r, ENC.g, ENC.b, .22);
+  }
+  ajoutLignes(geo(p, col));
+  const pc = [], ts = [];
+  noeuds.forEach(() => { const t = taillePoint(); ts.push(t); pc.push(ENC.r, ENC.g, ENC.b, t > 4 ? .95 : .75); });
+  ajoutPoints(geo(noeuds.flatMap(v => v.toArray()), pc, ts));
+}
+
+/* ══════════ 2. Les objets de l'écosystème (registre de formes) ══════════ */
+const blanc = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .55, metalness: 0 });
+const arete = new THREE.LineBasicMaterial({ color: CONFIG.encre, transparent: true, opacity: .28 });
+const fente = new THREE.MeshBasicMaterial({ color: '#8c9099' });
+function boite(w, h, d, x, y, z, parent) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), blanc); m.position.set(x, y + h / 2, z);
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), arete)); parent.add(m); return m;
+}
+const FORMES = {
+  grappe(g) { // un bloc de données : cubes empilés dans un treillis
+    const n = 3, t = .27, e = .34;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) for (let k = 0; k < n; k++)
+      if (rnd() < .78 || j === 0) boite(t, t, t, (i - 1) * e, j * e, (k - 1) * e, g);
+    const cage = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(e * 3.3, e * 3.3, e * 3.3, 3, 3, 3)), arete);
+    cage.position.y = e * 1.45; g.add(cage);
+  },
+  tours(g) { // deux baies de serveurs avec leurs fentes
+    [[-.32, 1.25, -.15], [.32, 1.0, .25]].forEach(([x, h, z]) => {
+      boite(.52, h, .52, x, 0, z, g);
+      for (let y = .16; y < h - .08; y += .085) { const f = new THREE.Mesh(new THREE.BoxGeometry(.3, .018, .005), fente); f.position.set(x, y, z + .262); g.add(f); }
+    });
+  },
+  gpu(g) { // quatre cartes de calcul à ailettes
+    for (let i = 0; i < 4; i++) {
+      boite(.62, .06, .26, 0, i * .1, 0, g);
+      for (let a = -.26; a <= .26; a += .045) { const f = new THREE.Mesh(new THREE.BoxGeometry(.012, .035, .24), fente); f.position.set(a, i * .1 + .075, 0); g.add(f); }
+    }
+  },
+  appareils(g) { // un ordinateur portable et deux téléphones
+    boite(.6, .025, .4, 0, 0, .05, g);
+    const ecran = boite(.6, .4, .02, 0, .02, -.15, g); ecran.rotation.x = -.18;
+    boite(.15, .3, .02, .48, 0, .12, g).rotation.x = -1.2;
+    boite(.15, .3, .02, -.48, 0, .18, g).rotation.x = -1.35;
+  }
+};
+const zones = CONFIG.zones.map(z => { const g = new THREE.Group(); g.position.set(z.x, S.y, z.z); FORMES[z.type](g); scene.add(g); return { ...z, g, base: g.position.clone() }; });
+// Petits blocs de données éparpillés sur le réseau.
+const eparpilles = [];
+for (let k = 0; k < 18; k++) {
+  const v = noeuds[Math.floor(rnd() * noeuds.length)];
+  if (Math.abs(v.x) > 5.2 || zones.some(z => Math.hypot(z.x - v.x, z.z - v.z) < .8) || Math.abs(v.x) < 1.1 || v.z > .7) continue;
+  const t = .12 + rnd() * .1, g = new THREE.Group(); g.position.copy(v); boite(t, t, t, 0, 0, 0, g); scene.add(g); eparpilles.push(g);
+}
+
+/* ══════════ 3. La Room : sphère géodésique ══════════ */
+const R = CONFIG.room, room = new THREE.Group(); room.position.set(0, R.y, 0); scene.add(room);
+const ico = new THREE.IcosahedronGeometry(R.rayon, R.finesse), pa = ico.attributes.position;
+const sommets = [], cle = new Map(), triangles = [];
+for (let i = 0; i < pa.count; i++) {
+  const v = new THREE.Vector3().fromBufferAttribute(pa, i), k = v.toArray().map(x => x.toFixed(4)).join();
+  if (!cle.has(k)) { cle.set(k, sommets.length); sommets.push(v.clone()); }
+  if (i % 3 === 2) triangles.push([cle.get(keyOf(i - 2)), cle.get(keyOf(i - 1)), cle.get(k)]);
+}
+function keyOf(i) { return new THREE.Vector3().fromBufferAttribute(pa, i).toArray().map(x => x.toFixed(4)).join(); }
+// Le réseau de la Room est irrégulier, comme un vrai maillage : on déplace un peu chaque sommet.
+sommets.forEach(v => v.multiplyScalar(1 + (rnd() - .5) * .07));
+const aretes = new Set(), voisins = sommets.map(() => []);
+triangles.forEach(t => [[0, 1], [1, 2], [2, 0]].forEach(([a, b]) => { const i = Math.min(t[a], t[b]), j = Math.max(t[a], t[b]), k = i + ',' + j; if (!aretes.has(k)) { aretes.add(k); voisins[i].push(j); voisins[j].push(i); } }));
+const listeAretes = [...aretes].map(k => k.split(',').map(Number));
+const numArete = new Map(listeAretes.map(([a, b], k) => [a + ',' + b, k]));
+// Faces translucides : une partie seulement, pour la profondeur.
+{
+  const p = [];
+  triangles.forEach(t => { if (rnd() < .35) t.forEach(i => p.push(...sommets[i].toArray())); });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  room.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: CONFIG.accent, transparent: true, opacity: .045, side: THREE.DoubleSide, depthWrite: false })));
+}
+// Remplissage doux : plus rose au centre, transparent sur les bords.
+room.add(new THREE.Mesh(new THREE.SphereGeometry(R.rayon * .98, 64, 48), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, uniforms: { uC: { value: ACC } },
+  vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `uniform vec3 uC; varying vec3 vN; varying vec3 vV; void main(){ float f=abs(dot(vN,vV)); gl_FragColor=vec4(uC,pow(f,2.2)*.13); }`
+})));
+// Arêtes : l'avant plus marqué que l'arrière.
+const PROF = `float prof(vec3 p){ vec4 mv=modelViewMatrix*vec4(p,1.); float zc=(modelViewMatrix*vec4(0.,0.,0.,1.)).z; return clamp(.62+(mv.z-zc)*.38,.22,1.); }`;
+const aI = new Float32Array(listeAretes.length * 2);
+const aGeo = new THREE.BufferGeometry();
+aGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(listeAretes.flatMap(([a, b]) => [...sommets[a].toArray(), ...sommets[b].toArray()])), 3));
+aGeo.setAttribute('aI', new THREE.BufferAttribute(aI, 1));
+const aMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, uniforms: { uC: { value: ACC } },
+  vertexShader: `attribute float aI; varying float vA; ${PROF} void main(){ vA=(.34+aI*.66)*prof(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader: `uniform vec3 uC; varying float vA; void main(){ gl_FragColor=vec4(uC*.92,vA); }`
+});
+room.add(new THREE.LineSegments(aGeo, aMat));
+// Membres de la Room (sommets) + quelques points à l'intérieur.
+const interieurs = Array.from({ length: 26 }, () => new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).normalize().multiplyScalar(R.rayon * (.2 + rnd() * .6)));
+const mPos = [...sommets, ...interieurs], mBase = [], mCol = [], mT = [];
+mPos.forEach((v, i) => { const t = taillePoint() * (i >= sommets.length ? .8 : 1.05); mBase.push(t); mT.push(t); const sombre = rnd() < .35; const c = sombre ? new THREE.Color('#3a1512') : ACC; mCol.push(c.r, c.g, c.b, i >= sommets.length ? .45 : .95); });
+const mGeo = geo(mPos.flatMap(v => v.toArray()), mCol, mT);
+const mPts = ajoutPoints(mGeo, room); mPts.material.uniforms.uFonduX.value = 1e3;
+const eclat = new Float32Array(mPos.length);
+
+/* ══════════ 4. Les filaments : du réseau vers la Room ══════════ */
+const bas = sommets.map((v, i) => [i, v]).filter(([, v]) => v.y < -R.rayon * .55);
+const filaments = [];
+{
+  const p = [], col = [];
+  for (let k = 0; k < CONFIG.filaments; k++) {
+    const [si, top] = bas[Math.floor(k / CONFIG.filaments * bas.length)];
+    const ang = Math.atan2(top.z, top.x), rr = 0.55 + rnd() * 1.05;
+    const pied = new THREE.Vector3(Math.cos(ang) * rr * 1.25, S.y, Math.sin(ang) * rr * .7 + .25);
+    const haut = top.clone().add(room.position);
+    const c = new THREE.CubicBezierCurve3(pied, pied.clone().setY(S.y + .55), haut.clone().add(new THREE.Vector3(top.x * .4, -.5, top.z * .4)), haut);
+    filaments.push({ c, si });
+    const pts = c.getPoints(40);
+    for (let i = 0; i < 40; i++) {
+      const t0 = i / 40, t1 = (i + 1) / 40, a = pts[i], b = pts[i + 1];
+      const ca = ENC.clone().lerp(ACC, Math.pow(t0, .7)), cb = ENC.clone().lerp(ACC, Math.pow(t1, .7));
+      p.push(...a.toArray(), ...b.toArray()); col.push(ca.r, ca.g, ca.b, .55, cb.r, cb.g, cb.b, .55);
+    }
+  }
+  ajoutLignes(geo(p, col)).material.uniforms.uFonduX.value = 1e3;
+  // Perles sur les filaments, comme sur l'image de référence.
+  const pp = [], pc = [], pt = [];
+  filaments.forEach(({ c }) => [.18, .42, .66].forEach(t => { if (rnd() < .8) { const v = c.getPoint(t + (rnd() - .5) * .08), cc = ENC.clone().lerp(ACC, t); pp.push(...v.toArray()); pc.push(cc.r, cc.g, cc.b, .95); pt.push(2.6 + rnd() * 2.6); } }));
+  ajoutPoints(geo(pp, pc, pt)).material.uniforms.uFonduX.value = 1e3;
+}
+
+/* ══════════ 5. Les données en mouvement ══════════ */
+const MAX = 1400, dGeo = geo(new Array(MAX * 3).fill(0), new Array(MAX * 4).fill(0), new Array(MAX).fill(0));
+ajoutPoints(dGeo).material.uniforms.uFonduX.value = 1e3;
+let flux = [], sauts = [], horloge = 0;
+const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+const mondeSommet = (i, out) => out.copy(mPos[i]).applyMatrix4(room.matrixWorld);
+
+// Une donnée part d'une zone, glisse sur le réseau jusqu'au pied d'un filament, puis monte dans la Room.
+function nouveauFlux() {
+  const f = filaments[Math.floor(Math.random() * filaments.length)];
+  const z = zones[Math.floor(Math.random() * zones.length)];
+  const depart = Math.random() < .3 ? new THREE.Vector3((Math.random() < .5 ? -1 : 1) * S.demiLargeur * .9, S.y, (Math.random() - .5) * 2 * S.demiProfondeur) : z.base.clone().add(new THREE.Vector3((Math.random() - .5) * .5, 0, (Math.random() - .5) * .5));
+  const pied = f.c.getPoint(0), milieu = depart.clone().lerp(pied, .5); milieu.z += (Math.random() - .5) * .8;
+  flux.push({ sol: new THREE.QuadraticBezierCurve3(depart, milieu, pied), f, t0: horloge, dSol: 1.6 + depart.distanceTo(pied) * .32, dMontee: 1.1 });
+}
+// Dans la Room : un saut d'un membre à un autre le long d'une arête.
+function saut(a, b, t0, dur, envoi) { sauts.push({ a, b, t0, dur, envoi }); }
+function bavardage() { const [a, b] = listeAretes[Math.floor(Math.random() * listeAretes.length)]; Math.random() < .5 ? saut(a, b, horloge, .9 + Math.random() * .8, false) : saut(b, a, horloge, .9 + Math.random() * .8, false); }
+// Envoi à tous : la donnée se propage de proche en proche, chaque vague part au même instant.
+function envoyer(src) {
+  const niveau = new Array(sommets.length).fill(-1); niveau[src] = 0; let file = [src], L = 0; eclat[src] = 1.5;
+  while (file.length) { const suiv = []; file.forEach(i => voisins[i].forEach(j => { if (niveau[j] < 0) { niveau[j] = L + 1; suiv.push(j); saut(i, j, horloge + .35 + L * .42, .42, true); } })); file = suiv; L++; }
+}
+
+/* ── Interaction : glisser fait tourner la Room ; toucher la Room = envoi ── */
+let vitY = .12, vitX = 0, rotX = .18, glisse = null, dernierEnvoi = -10;
+stage.addEventListener('pointerdown', e => { glisse = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }; });
+addEventListener('pointerup', e => {
+  if (glisse && Math.hypot(e.clientX - glisse.x0, e.clientY - glisse.y0) < 6) {
+    const r = stage.getBoundingClientRect(); let best = -1, bd = 1e9;
+    sommets.forEach((v, i) => { mondeSommet(i, tmp).project(camera); const d = Math.hypot((tmp.x + 1) / 2 * r.width - (e.clientX - r.left), (1 - tmp.y) / 2 * r.height - (e.clientY - r.top)); if (d < bd && tmp.z < 1) { bd = d; best = i; } });
+    if (best >= 0 && bd < 140) { envoyer(best); dernierEnvoi = horloge; }
+  }
+  glisse = null;
+});
+addEventListener('pointermove', e => { if (!glisse || e.pointerType === 'touch' && Math.abs(e.clientY - glisse.y0) > Math.abs(e.clientX - glisse.x0)) return; vitY = (e.clientX - glisse.x) * .004 / .016; rotX = THREE.MathUtils.clamp(rotX + (e.clientY - glisse.y) * .004, -.6, .7); glisse.x = e.clientX; glisse.y = e.clientY; });
+
+/* ── Étiquettes ── */
+const etiq = [...zones.map(z => ({ el: null, txt: z.nom, pos: () => tmp2.copy(z.g.position).setY(S.y - .02).add(new THREE.Vector3(0, 0, .62)) })),
+  { el: null, txt: CONFIG.room.nom, cls: 'room', pos: () => tmp2.set(R.rayon * 1.12, R.y + R.rayon * .45, 0) }];
+etiq.forEach(e => { e.el = document.createElement('div'); e.el.className = 'lab ' + (e.cls || ''); e.el.textContent = e.txt; labelsEl.appendChild(e.el); });
+
+/* ── Mise en page ── */
+function taille() {
+  const w = stage.clientWidth, h = stage.clientHeight, a = w / h; renderer.setSize(w, h, false); camera.aspect = a;
+  const etroit = w < 720 || a < .9, d = etroit ? 14.5 : a < 1.4 ? 13.5 : 11.2;
+  // Sur téléphone, on resserre l'écosystème autour de la Room pour que tout tienne.
+  zones.forEach(z => { z.g.position.x = z.x * (etroit ? .6 : 1); z.g.scale.setScalar(etroit ? .75 : 1); z.base.x = z.g.position.x; });
+  eparpilles.forEach(g => g.visible = !etroit); camera.position.set(0, d * .34, d); camera.lookAt(cible); camera.updateProjectionMatrix();
+  tousPoints.forEach(p => p.material.uniforms.uEchelle.value = h / 640 * Math.min(2, devicePixelRatio) * (w < 720 ? 1.15 : 1));
+}
+addEventListener('resize', taille); taille();
+
+/* ── Boucle ── */
+const horlogeGL = new THREE.Clock(); let accFlux = 0, accBav = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(.05, horlogeGL.getDelta()); horloge += dt;
+  if (!glisse) vitY += (.12 - vitY) * Math.min(1, dt * 1.5);
+  if (!reduit || glisse) room.rotation.y += vitY * dt;
+  room.rotation.x += (rotX - room.rotation.x) * Math.min(1, dt * 4);
+  if (!reduit) {
+    room.position.y = R.y + Math.sin(horloge * .7) * .04;
+    zones.forEach((z, i) => z.g.position.y = z.base.y + Math.max(0, Math.sin(horloge * 1.1 + i * 1.7)) * .025);
+    accFlux += dt * CONFIG.flux_par_seconde; while (accFlux > 1) { accFlux--; nouveauFlux(); }
+    accBav += dt * 9; while (accBav > 1) { accBav--; bavardage(); }
+    if (horloge - dernierEnvoi > CONFIG.envoi_toutes_les) { envoyer(Math.floor(Math.random() * sommets.length)); dernierEnvoi = horloge; }
+  }
+  room.updateMatrixWorld();
+
+  const P = dGeo.attributes; let n = 0;
+  const pose = (v, c, a, s) => { if (n >= MAX) return; v.toArray(P.position.array, n * 3); P.aC.array.set([c.r, c.g, c.b, a], n * 4); P.aS.array[n] = s; n++; };
+  // Flux montants.
+  flux = flux.filter(f => {
+    const e = horloge - f.t0, fin = f.dSol + f.dMontee;
+    if (e > fin) { const s = f.f.si; eclat[s] = Math.max(eclat[s], .9); return false; }
+    for (let q = 0; q < 6; q++) {
+      const eq = Math.max(0, e - q * .05), dim = 1 - q / 6;
+      if (eq < f.dSol) { const t = eq / f.dSol; f.sol.getPoint(t * t * (3 - 2 * t), tmp); pose(tmp, ENC, .9 * dim, 3.4 * (1 - q / 9)); }
+      else { const t = (eq - f.dSol) / f.dMontee; f.f.c.getPoint(t, tmp); pose(tmp, ENC.clone().lerp(ACC, t), dim, 3.8 * (1 - q / 9)); }
+    }
+    return true;
+  });
+  // Échanges dans la Room.
+  sauts = sauts.filter(s => {
+    const t = (horloge - s.t0) / s.dur; if (t < 0) return true;
+    if (t >= 1) { if (s.envoi) eclat[s.b] = Math.max(eclat[s.b], 1.2); return false; }
+    for (let q = 0; q < (s.envoi ? 5 : 3); q++) {
+      const tt = Math.max(0, t - q * .07); mondeSommet(s.a, tmp); mondeSommet(s.b, tmp2); tmp.lerp(tmp2, tt);
+      pose(tmp, s.envoi ? ACC : new THREE.Color('#7a2a24'), (s.envoi ? 1 : .7) * (1 - q / 5), (s.envoi ? 4.4 : 2.6) * (1 - q / 8));
+    }
+    // L'arête s'allume quand une donnée y passe.
+    return true;
+  });
+  for (; n < MAX; n++) P.aS.array[n] = 0;
+  ['position', 'aC', 'aS'].forEach(a => P[a].needsUpdate = true);
+
+  // Arêtes allumées par les envois.
+  for (let k = 0; k < listeAretes.length; k++) aI[k * 2] = aI[k * 2 + 1] = Math.max(0, aI[k * 2] - dt * 1.2);
+  sauts.forEach(s => { if (s.envoi && horloge >= s.t0) { const k = numArete.get(Math.min(s.a, s.b) + ',' + Math.max(s.a, s.b)); if (k !== undefined) aI[k * 2] = aI[k * 2 + 1] = 1; } });
+  aGeo.attributes.aI.needsUpdate = true;
+  // Membres qui viennent de recevoir : ils grossissent un instant.
+  for (let i = 0; i < mPos.length; i++) { eclat[i] = Math.max(0, eclat[i] - dt * 1.8); mGeo.attributes.aS.array[i] = mBase[i] * (1 + eclat[i] * .9); }
+  mGeo.attributes.aS.needsUpdate = true;
+
+  renderer.render(scene, camera);
+  const r = stage.getBoundingClientRect();
+  etiq.forEach(e => { e.pos().project(camera); e.el.style.left = ((tmp2.x + 1) / 2 * r.width) + 'px'; e.el.style.top = ((1 - tmp2.y) / 2 * r.height) + 'px'; });
+  window.__pret = true;
+});
+</script>
+</body>
+</html>
