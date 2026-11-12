@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aperçu · la bulle Room</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--band:#0e1118;--ink:#f2f4f7;--muted:#a7aebb;--brand:#8aa6ff;--line:#2a3140}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--band);color:var(--ink);font:400 16px/26px 'Open Sans',Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 16px 48px}
+h1{font:700 clamp(28px,4vw,44px)/1.12 'Open Sans',Arial,sans-serif;letter-spacing:-.01em;margin:0 0 10px;max-width:22ch}
+.lead{color:var(--muted);max-width:58ch;margin:0 0 24px}
+.scene{position:relative;border-radius:28px;overflow:hidden;border:1px solid var(--line);
+  background:radial-gradient(55% 60% at 50% 48%,#18203a 0%,#0f1422 55%,#0b0e16 100%)}
+.stage{position:relative;height:min(78vh,680px);min-height:460px;cursor:grab}
+.stage:active{cursor:grabbing}
+.stage canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.labels{position:absolute;inset:0;pointer-events:none}
+.lab{position:absolute;left:0;top:0;padding:5px 10px;border-radius:10px;background:rgba(14,17,24,.82);border:1px solid rgba(138,166,255,.35);
+  font:600 13px/17px 'Open Sans',Arial,sans-serif;white-space:nowrap;transform:translate(-50%,-150%);transition:opacity .2s}
+.lab small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.lab.src{background:#2350d8;border-color:#2350d8}
+.lab.src small{color:#dbe4ff}
+.hud{position:absolute;left:20px;right:20px;top:18px;display:flex;justify-content:space-between;gap:12px;pointer-events:none;flex-wrap:wrap}
+.hud .room{font:600 14px/20px 'Open Sans',Arial,sans-serif}
+.hud .room small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+.count{font:600 14px/20px 'Open Sans',Arial,sans-serif;background:rgba(138,166,255,.12);border:1px solid rgba(138,166,255,.3);padding:7px 14px;border-radius:999px;color:#dbe4ff}
+.bar{position:absolute;left:20px;right:20px;bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.hint{color:var(--muted);font-size:14px;line-height:20px;max-width:48ch;pointer-events:none}
+button{font:600 15px/20px 'Open Sans',Arial,sans-serif;color:#0b0d10;background:#fff;border:0;border-radius:999px;padding:11px 20px;cursor:pointer}
+button:hover{background:#dbe4ff}
+button:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+@media (max-width:720px){.stage{height:72vh;min-height:420px}.hint{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"/vendor/three-0.160.0.module.min.js","three/addons/":"/vendor/three-addons-0.160.0/"}}</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Une Room : tous vos appareils se parlent directement.</h1>
+  <p class="lead">Chaque point est un membre de la Room. Les lignes sont les échanges autorisés. Les données passent de pair à pair, sans serveur central.</p>
+  <div class="scene">
+    <div class="stage" id="stage"><div class="labels" id="labels"></div></div>
+    <div class="hud"><div class="room" id="room"></div><div class="count" id="count" aria-live="polite"></div></div>
+    <div class="bar"><div class="hint">Faites tourner la bulle. Touchez un membre pour qu'il envoie à tous ceux qu'il a le droit de joindre.</div><button id="send" type="button">Envoyer une donnée</button></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ───────── Configuration : changer la Room = changer ces données ───────── */
+const ROOM = {
+  nom: 'Room « Production »',
+  detail: 'Chiffrée de bout en bout',
+  // type → libellé affiché. Ajouter un membre = ajouter une ligne.
+  membres: [
+    ['Nœud GPU 1','Calcul'],['Nœud GPU 2','Calcul'],['Nœud GPU 3','Calcul'],['Nœud GPU 4','Calcul'],
+    ['Serveur Paris','Serveur'],['Serveur Lyon','Serveur'],['Base clients','Base de données'],['Stockage','Fichiers'],
+    ['Agent IA ventes','Agent IA'],['Agent IA support','Agent IA'],['Agent IA analyse','Agent IA'],
+    ['Ordinateur Léa','Ordinateur'],['Ordinateur Marc','Ordinateur'],['Téléphone Sarah','Téléphone'],['Téléphone Ali','Téléphone'],
+    ['Navigateur web','Navigateur'],['Nœud GPU 5','Calcul'],['Nœud GPU 6','Calcul'],['Serveur Bordeaux','Serveur'],['Ordinateur Inès','Ordinateur'],['Téléphone Tom','Téléphone'],['Tablette atelier','Tablette'],['Agent IA factures','Agent IA'],['Sauvegarde','Fichiers'],['Capteur 3','Objet connecté'],['Partenaire assurance','Entreprise partenaire'],['Caisse magasin','Point de vente'],['Robot ligne 2','Machine'],['Drone 7','Objet connecté'],['Caméra entrepôt','Objet connecté'],
+    ['Camionnette 12','Véhicule'],['Partenaire logistique','Entreprise partenaire'],['Partenaire banque','Entreprise partenaire'],
+    ['Invité externe','Sans autorisation']
+  ],
+  voisins: 4,                    // chaque membre est relié à ses N plus proches voisins
+  non_autorises: ['Invité externe'], // dans la bulle mais ne reçoit rien
+  interieurs: 7,                 // les N derniers membres autorisés flottent au cœur de la bulle
+  duree_saut: 1.15,              // secondes pour traverser un lien pendant l'envoi
+  pause_entre_envois: 7          // secondes entre deux envois automatiques
+};
+/* ─────────────────────────────────────────────────────────────────────── */
+
+const stage = document.getElementById('stage'), labelsEl = document.getElementById('labels');
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.getElementById('room').innerHTML = `${ROOM.nom}<small>${ROOM.detail}</small>`;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
+camera.position.set(0.6, 0.9, 4.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableZoom = false; controls.enablePan = false; controls.enableDamping = true;
+controls.autoRotate = !reduit; controls.autoRotateSpeed = 0.55;
+const monde = new THREE.Group(); scene.add(monde);
+
+/* ── Membres : répartis régulièrement sur la sphère (spirale de Fibonacci) ── */
+const N = ROOM.membres.length, interdit = new Set(ROOM.non_autorises);
+const coque = ROOM.membres.map((m, i) => i).filter(i => i < N - ROOM.interieurs - 1 || interdit.has(ROOM.membres[i][0]));
+const pos = new Array(N);
+coque.forEach((i, k) => {
+  const y = 1 - 2 * (k + 0.5) / coque.length, r = Math.sqrt(1 - y * y), a = k * Math.PI * (3 - Math.sqrt(5));
+  pos[i] = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r).multiplyScalar(0.8);
+});
+let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647; // aléatoire stable
+ROOM.membres.forEach((m, i) => { if (!pos[i]) pos[i] = new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).normalize().multiplyScalar(0.25 + rnd() * 0.25); });
+
+/* ── Liens autorisés : N plus proches voisins, dans les deux sens ── */
+const voisins = pos.map(() => new Set()), liens = [];
+pos.forEach((p, i) => {
+  if (interdit.has(ROOM.membres[i][0])) return;
+  pos.map((q, j) => [j, p.distanceTo(q)]).filter(([j]) => j !== i && !interdit.has(ROOM.membres[j][0]))
+    .sort((a, b) => a[1] - b[1]).slice(0, ROOM.voisins).forEach(([j]) => { voisins[i].add(j); voisins[j].add(i); });
+});
+voisins.forEach((v, i) => v.forEach(j => { if (i < j) liens.push([i, j]); }));
+const courbe = (a, b) => { const c = pos[a].clone().add(pos[b]).multiplyScalar(0.5); c.multiplyScalar(0.72); return new THREE.QuadraticBezierCurve3(pos[a], c, pos[b]); };
+const courbes = new Map(); liens.forEach(([a, b]) => courbes.set(a + '-' + b, courbe(a, b)));
+const surLien = (a, b, t, out) => a < b ? courbes.get(a + '-' + b).getPoint(t, out) : courbes.get(b + '-' + a).getPoint(1 - t, out);
+
+/* Atténuation en profondeur : l'arrière de la bulle est plus sombre (lecture de la 3D). */
+const PROFONDEUR = `float profondeur(vec3 p){ vec4 mv=modelViewMatrix*vec4(p,1.); float zc=(modelViewMatrix*vec4(0.,0.,0.,1.)).z; return clamp(.55+(mv.z-zc)*.55,.18,1.); }`;
+
+/* ── La bulle : verre, reflet sur les bords (effet de Fresnel) ── */
+const bulle = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uCouleur: { value: new THREE.Color('#7f9cff') }, uFlash: { value: 0 } },
+  vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `uniform vec3 uCouleur; uniform float uFlash; varying vec3 vN; varying vec3 vV;
+    void main(){ float f=pow(1.-abs(dot(vN,vV)),3.2); float a=f*(.55+uFlash*.9)+.015; gl_FragColor=vec4(uCouleur*(1.+uFlash),a); }`
+}));
+monde.add(bulle);
+// Quelques cercles très fins pour donner la rondeur.
+const anneauMat = new THREE.LineBasicMaterial({ color: '#7f9cff', transparent: true, opacity: 0.07, depthWrite: false });
+[0, 60, 120].forEach(d => {
+  const g = new THREE.BufferGeometry().setFromPoints(new THREE.EllipseCurve(0, 0, 1, 1).getPoints(128).map(p => new THREE.Vector3(p.x, 0, p.y)));
+  const l = new THREE.LineLoop(g, anneauMat); l.rotation.set(Math.PI / 2, THREE.MathUtils.degToRad(d), 0); monde.add(l);
+});
+
+/* ── Lignes des liens ── */
+const SEG = 28, lPos = new Float32Array(liens.length * SEG * 2 * 3), lInt = new Float32Array(liens.length * SEG * 2);
+const tmp = new THREE.Vector3();
+liens.forEach(([a, b], k) => { const c = courbes.get(a + '-' + b); for (let i = 0; i < SEG; i++) for (let e = 0; e < 2; e++) { c.getPoint((i + e) / SEG, tmp); tmp.toArray(lPos, ((k * SEG + i) * 2 + e) * 3); } });
+const lGeo = new THREE.BufferGeometry();
+lGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
+lGeo.setAttribute('aI', new THREE.BufferAttribute(lInt, 1));
+const lMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: `attribute float aI; varying float vA; ${PROFONDEUR} void main(){ vA=(.16+aI)*profondeur(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader: `varying float vA; void main(){ gl_FragColor=vec4(vec3(.55,.66,1.)*1.1,vA); }`
+});
+monde.add(new THREE.LineSegments(lGeo, lMat));
+const intLien = new Float32Array(liens.length); // surbrillance par lien, retombe doucement
+const indexLien = new Map(); liens.forEach(([a, b], k) => { indexLien.set(a + '-' + b, k); indexLien.set(b + '-' + a, k); });
+
+/* ── Points lumineux (membres et paquets) : un seul shader ── */
+const pointMat = (taille) => new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uEchelle: { value: 1 }, uTaille: { value: taille } },
+  vertexShader: `attribute vec3 aC; attribute float aS; attribute float aG; uniform float uEchelle; uniform float uTaille; varying vec3 vC; varying float vG; varying float vF; ${PROFONDEUR}
+    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); vF=profondeur(position); vC=aC; vG=aG; gl_PointSize=uTaille*aS*uEchelle*(4.6/-mv.z); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader: `varying vec3 vC; varying float vG; varying float vF;
+    void main(){ float d=length(gl_PointCoord-.5)*2.; if(d>1.) discard; float coeur=smoothstep(.34,.22,d); float halo=exp(-d*d*5.)*vG; gl_FragColor=vec4(vC*(coeur+halo),(coeur+halo*.8)*vF); }`
+});
+const mk = (n, mat) => { const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('aC', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('aS', new THREE.BufferAttribute(new Float32Array(n), 1));
+  g.setAttribute('aG', new THREE.BufferAttribute(new Float32Array(n), 1));
+  const p = new THREE.Points(g, mat); p.frustumCulled = false; monde.add(p); return g; };
+const mGeo = mk(N, pointMat(40));
+pos.forEach((p, i) => p.toArray(mGeo.attributes.position.array, i * 3));
+const MAXP = 900, pGeo = mk(MAXP, pointMat(19));
+
+/* ── État ── */
+const BLEU = new THREE.Color('#9fb4ff'), BLANC = new THREE.Color('#ffffff'), VERT = new THREE.Color('#6ef0b0'), GRIS = new THREE.Color('#4a5163');
+const flash = new Float32Array(N), recu = new Uint8Array(N);
+let paquets = [], envoi = null, survol = -1, prochainAuto = 2.2, horloge = 0;
+const autorises = ROOM.membres.filter(m => !interdit.has(m[0])).length;
+const compteur = document.getElementById('count');
+const majCompteur = () => { compteur.textContent = envoi ? `Reçu par ${envoi.nb} / ${autorises - 1} membres autorisés` : `${autorises} membres · ${liens.length} liens directs · 1 non autorisé`; };
+majCompteur();
+
+function lancer(src) {
+  if (interdit.has(ROOM.membres[src][0])) return;
+  recu.fill(0); recu[src] = 1; flash[src] = 1.6;
+  envoi = { src, nb: 0, fin: null };
+  bulle.material.uniforms.uFlash.value = 0.6;
+  emettre(src, horloge + 0.45); // anticipation : le membre se charge avant de partir
+  majCompteur();
+}
+// Un membre envoie à TOUS ses voisins autorisés au même instant ; ils arrivent ensemble.
+function emettre(i, t0) { voisins[i].forEach(j => { if (!recu[j] && !paquets.some(p => p.b === j && p.envoi)) paquets.push({ a: i, b: j, t0, dur: ROOM.duree_saut, envoi: true }); }); }
+
+/* Échanges de fond permanents : les pairs se parlent tout le temps, dans les deux sens. */
+function bavardage() { const [a, b] = liens[Math.floor(Math.random() * liens.length)]; const sens = Math.random() < .5; paquets.push({ a: sens ? a : b, b: sens ? b : a, t0: horloge, dur: 1.6 + Math.random() * 1.6, envoi: false }); }
+
+/* ── Étiquettes HTML (survol + source) ── */
+const etiquettes = new Map();
+function etiquette(i, classe) {
+  let el = etiquettes.get(i);
+  if (!el) { el = document.createElement('div'); el.className = 'lab'; el.innerHTML = `${ROOM.membres[i][0]}<small>${ROOM.membres[i][1]}</small>`; labelsEl.appendChild(el); etiquettes.set(i, el); }
+  el.classList.toggle('src', classe === 'src'); el.dataset.vu = '1'; return el;
+}
+
+/* ── Interaction : survol / clic sur un membre (le plus proche à l'écran) ── */
+const souris = new THREE.Vector2(-9, -9); let appui = null;
+function plusProche(x, y) {
+  const r = stage.getBoundingClientRect(); let best = -1, bd = 26 * 26;
+  pos.forEach((p, i) => { tmp.copy(p).applyMatrix4(monde.matrixWorld).project(camera);
+    const dx = (tmp.x + 1) / 2 * r.width - x, dy = (1 - tmp.y) / 2 * r.height - y, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect(); souris.set(e.clientX - r.left, e.clientY - r.top); });
+stage.addEventListener('pointerleave', () => souris.set(-9, -9));
+stage.addEventListener('pointerdown', e => appui = [e.clientX, e.clientY]);
+stage.addEventListener('pointerup', e => { if (!appui || Math.hypot(e.clientX - appui[0], e.clientY - appui[1]) > 6) return; const r = stage.getBoundingClientRect(), i = plusProche(e.clientX - r.left, e.clientY - r.top); if (i >= 0) { lancer(i); prochainAuto = horloge + ROOM.pause_entre_envois + 4; } });
+document.getElementById('send').addEventListener('click', () => { const c = [...Array(N).keys()].filter(i => !interdit.has(ROOM.membres[i][0])); lancer(c[Math.floor(Math.random() * c.length)]); prochainAuto = horloge + ROOM.pause_entre_envois + 4; });
+
+/* ── Boucle ── */
+function taille() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
+  camera.position.setLength(w / h < 0.8 ? 6.2 : 4.6); camera.updateProjectionMatrix(); pointMatEchelle(h); }
+function pointMatEchelle(h) { const e = h / 680 * Math.min(2, devicePixelRatio); monde.children.forEach(o => { if (o.isPoints) o.material.uniforms.uEchelle.value = e; }); }
+addEventListener('resize', taille); taille();
+
+const clock = new THREE.Clock(); let fond = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(0.05, clock.getDelta()); horloge += dt;
+  controls.update(); monde.updateMatrixWorld();
+
+  if (!reduit) { fond += dt * 7; while (fond > 1) { fond--; bavardage(); } }
+  if (!envoi && horloge > prochainAuto && !reduit) { const c = [...Array(N).keys()].filter(i => !interdit.has(ROOM.membres[i][0])); lancer(c[Math.floor(Math.random() * c.length)]); prochainAuto = horloge + ROOM.pause_entre_envois; }
+
+  // Paquets : avance, arrivée, relais.
+  const P = pGeo.attributes; let n = 0; const garde = [];
+  for (const p of paquets) {
+    const t = (horloge - p.t0) / p.dur;
+    if (t >= 1) {
+      if (p.envoi && !recu[p.b]) { recu[p.b] = 1; flash[p.b] = 1.4; envoi.nb++; majCompteur(); emettre(p.b, horloge + 0.12); }
+      continue;
+    }
+    garde.push(p); if (t < 0) continue;
+    const k = indexLien.get(p.a + '-' + p.b); intLien[k] = Math.max(intLien[k], p.envoi ? 0.75 : 0.18);
+    const traine = p.envoi ? 9 : 5;
+    for (let q = 0; q < traine && n < MAXP; q++, n++) {
+      const tt = Math.max(0, t - q * (p.envoi ? 0.028 : 0.04)); surLien(p.a, p.b, tt, tmp); tmp.toArray(P.position.array, n * 3);
+      const c = p.envoi ? BLANC : BLEU, f = 1 - q / traine; P.aC.array.set([c.r * f, c.g * f, c.b * f], n * 3);
+      P.aS.array[n] = (p.envoi ? 1.25 : 0.7) * (1 - q / traine * 0.6); P.aG.array[n] = p.envoi ? 1 : 0.5;
+    }
+  }
+  paquets = garde;
+  for (; n < MAXP; n++) P.aS.array[n] = 0;
+  ['position', 'aC', 'aS', 'aG'].forEach(a => P[a].needsUpdate = true);
+
+  if (envoi && !paquets.some(p => p.envoi)) { envoi.fin ??= horloge; if (horloge - envoi.fin > 2.4) { envoi = null; recu.fill(0); majCompteur(); } }
+
+  // Membres : couleur, taille, éclat.
+  survol = souris.x < 0 ? -1 : plusProche(souris.x, souris.y);
+  const M = mGeo.attributes;
+  for (let i = 0; i < N; i++) {
+    flash[i] = Math.max(0, flash[i] - dt * 1.6);
+    const bloque = interdit.has(ROOM.membres[i][0]), lie = survol >= 0 && (i === survol || voisins[survol].has(i));
+    const c = bloque ? GRIS : (envoi && i === envoi.src) ? BLANC : recu[i] ? VERT : BLEU;
+    M.aC.array.set([c.r, c.g, c.b], i * 3);
+    M.aS.array[i] = (bloque ? 0.7 : 1) + flash[i] * 0.9 + (lie ? 0.35 : 0) + (envoi && i === envoi.src ? 0.4 : 0);
+    M.aG.array[i] = bloque ? 0.15 : 0.55 + flash[i] + (lie ? 0.5 : 0);
+  }
+  ['aC', 'aS', 'aG'].forEach(a => M[a].needsUpdate = true);
+
+  // Liens : surbrillance (survol = liens autorisés de ce membre).
+  for (let k = 0; k < liens.length; k++) {
+    const [a, b] = liens[k], s2 = survol >= 0 && (a === survol || b === survol) ? 0.7 : 0;
+    intLien[k] = Math.max(s2, intLien[k] - dt * 0.9);
+    lInt.fill(intLien[k], k * SEG * 2, (k + 1) * SEG * 2);
+  }
+  lGeo.attributes.aI.needsUpdate = true;
+  bulle.material.uniforms.uFlash.value = Math.max(0, bulle.material.uniforms.uFlash.value - dt * 0.5);
+
+  renderer.render(scene, camera);
+
+  // Étiquettes : source de l'envoi + membre survolé.
+  etiquettes.forEach(el => el.dataset.vu = '');
+  const r = stage.getBoundingClientRect();
+  const montrer = (i, cl) => { const el = etiquette(i, cl); tmp.copy(pos[i]).applyMatrix4(monde.matrixWorld).project(camera);
+    el.style.left = ((tmp.x + 1) / 2 * r.width) + 'px'; el.style.top = ((1 - tmp.y) / 2 * r.height) + 'px'; el.style.opacity = 1; };
+  if (envoi) montrer(envoi.src, 'src');
+  if (survol >= 0 && (!envoi || survol !== envoi.src)) montrer(survol, '');
+  etiquettes.forEach(el => { if (!el.dataset.vu) el.style.opacity = 0; });
+  window.__pret = true;
+});
+</script>
+</body>
+</html>
