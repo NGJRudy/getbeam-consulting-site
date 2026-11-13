@@ -79,3 +79,6 @@
 .r3d-integre{background:transparent;border-radius:0;overflow:visible}
 .r3d-integre .r3d-scene{background:#fff;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 9%,#000 91%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 16%,#000 84%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0,#000 9%,#000 91%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 16%,#000 84%,transparent 100%);mask-composite:intersect}
 @media (max-width:820px){.r3d-integre .r3d-scene{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 10%,#000 90%,transparent 100%)}}
+/* Héros : cadre plus bas (16/9) pour que l'animation remonte et que les onglets collent au contenu */
+@media (min-width:821px){.r3d-integre .r3d-scene{aspect-ratio:16/9}}
+@media (max-width:820px){.r3d-integre .r3d-scene{aspect-ratio:9/10}}
