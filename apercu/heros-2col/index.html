@@ -41,6 +41,15 @@
 .h2c-visuel .r3d-legende .r3d-titre{font:400 17px/1.3 'Open Sans',Arial,sans-serif;letter-spacing:-.01em}
 .h2c-visuel .r3d-barre{bottom:5%}
 @media (max-width:980px){.h2c{grid-template-columns:1fr;padding:32px 20px 100px}.h2c-texte{align-items:center;text-align:center}.h2c-texte h1{max-width:17ch!important}.h2c-texte>div{justify-content:center!important}.h2c-texte ul{justify-items:center}.h2c-visuel{margin:0 -20px}#top>svg{-webkit-mask-image:radial-gradient(ellipse 70% 30% at 50% 72%,transparent 40%,#000 88%)!important;mask-image:radial-gradient(ellipse 70% 30% at 50% 72%,transparent 40%,#000 88%)!important}.h2c-visuel .r3d-integre .r3d-scene{aspect-ratio:9/10}.h2c-visuel .r3d-legende{left:20px;right:20px;max-width:none}}
+
+/* Fond satin de perles : couvre tout le haut de page, derrière le texte et la Room */
+.h2c-fond{position:absolute;inset:0;z-index:0;background:#f8f8f6 url(/assets/hero/satin-perles-poster.webp) right bottom/cover no-repeat;pointer-events:none}
+.h2c-fond-video{width:100%;height:100%;object-fit:cover;object-position:right bottom;display:block}
+#top{background:#f8f8f6!important}
+#top>svg{display:none!important}
+.h2c{position:relative;z-index:1}
+@media (prefers-reduced-motion:reduce){.h2c-fond-video{display:none}}
+@media (max-width:980px){.h2c-fond-video,.h2c-fond{object-position:70% bottom;background-position:70% bottom}}
 </style>
 </head>
 <body>
@@ -89,6 +98,10 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #235
 
   <!-- Héros -->
   <section id="top" style="position: relative; z-index: 1; overflow: hidden; background: #f1f0ec; border-bottom: 1px solid #e2e0da; border-radius: 0 0 50% 50% / 0 0 280px 280px; box-shadow: 0 1px 2px rgba(20,23,28,0.06), 0 8px 16px -4px rgba(20,23,28,0.08), 0 24px 48px -12px rgba(20,23,28,0.14), 0 56px 96px -32px rgba(20,23,28,0.18);">
+    <!-- Fond animé : satin de perles (boucle vidéo muette). Image fixe si animations réduites ou vidéo indisponible. -->
+    <div class="h2c-fond" aria-hidden="true">
+      <video class="h2c-fond-video" muted loop playsinline preload="metadata" poster="/assets/hero/satin-perles-poster.webp"><source src="/assets/hero/satin-perles.webm" type="video/webm"><source src="/assets/hero/satin-perles.mp4" type="video/mp4"></video>
+    </div>
     <svg aria-hidden="true" width="100%" height="100%" style="position: absolute; inset: 0; -webkit-mask-image: radial-gradient(ellipse 55% 45% at 50% 30%, transparent 30%, #000 85%); mask-image: radial-gradient(ellipse 55% 45% at 50% 30%, transparent 30%, #000 85%);">
       <defs>
         <pattern id="ondes" width="96" height="160" patternUnits="userSpaceOnUse">
@@ -537,6 +550,16 @@ class Component extends DCLogic {
   function go() { var s = document.getElementById('rooms'); if (fait || !s || s.closest('x-dc')) return; fait = true; import('/assets/rooms/room-3d.js?v=14'); }
   function plusTard() { (window.requestIdleCallback || function (f) { setTimeout(f, 200); })(go, { timeout: 1500 }); }
   var t = setInterval(function () { if (fait) return clearInterval(t); if (document.readyState === 'complete') plusTard(); }, 250); })();
+</script>
+<script>
+/* Fond : lecture seulement quand le haut de page est visible ; jamais si animations réduites. */
+(function(){
+  function go(){ var v=document.querySelector('.h2c-fond-video'); if(!v||v.closest('x-dc')) return setTimeout(go,200);
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    v.muted=true; new IntersectionObserver(function(e){ e[0].isIntersecting ? v.play().catch(function(){}) : v.pause(); }).observe(v);
+    document.addEventListener('visibilitychange',function(){ document.hidden ? v.pause() : v.play().catch(function(){}); }); }
+  if(document.readyState==='complete') go(); else addEventListener('load',go);
+})();
 </script>
 </body>
 </html>
