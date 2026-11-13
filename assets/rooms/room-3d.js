@@ -31,7 +31,10 @@ const f = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 
 /* ═══════════ Configuration : changer la scène = changer ces données ═══════════ */
 const C = {
-  couleurs: { encre: '#14171c', bleu: '#2350d8', bleuClair: '#8aa6ff', argile: '#f4f5f7', vert: '#16a34a', neutre: '#c9ced6' },
+  couleurs: { encre: '#14171c', bleu: '#2350d8', bleuClair: '#8aa6ff', argile: '#f4f5f7', vert: '#16a34a', neutre: '#d3d7de' },
+  /* Style « encre » : la Room est une toile où chaque nœud est relié à tous les autres (traits noirs très fins, la densité fait l'ombre).
+     Le noir = la structure ; le bleu = le message qui circule. */
+  toile: { noeuds: 48, opacite: .034 },
   // Où se place le centre de la scène dans la largeur de l'écran (0,66 = laisse la gauche au texte).
   centreEcran: { large: 0.71, etroit: 0.5 },
   camera: { fov: 22, distance: 15.5, hauteurDeg: 27, azimutDeg: -18 },
@@ -76,14 +79,14 @@ const C = {
      camions : voie (z), départ (x), vitesse (négative = vers la gauche). drones : rayon d'orbite, hauteur, vitesse angulaire, phase. */
   satellites: {
     flotte: { type: 'camion', echelle: .55, liste: [
-      { z: 1.75, x: -2.6, v: .17 }, { z: 1.75, x: .8, v: .17 }, { z: 2.35, x: -.4, v: -.13 }, { z: 2.35, x: 2.7, v: -.13 }, { z: 2.95, x: -1.8, v: .11 }, { z: 2.95, x: 1.6, v: .11 } ] },
+      { z: 1.7, x: -2.6, v: .16 }, { z: 1.7, x: .9, v: .16 }, { z: 2.25, x: -.5, v: -.12 }, { z: 2.25, x: 2.6, v: -.12 }, { z: 2.8, x: -1.7, v: .1 }, { z: 2.8, x: 1.7, v: .1 } ] },
     drones: { type: 'drone', echelle: 1, liste: [
       { r: 2.2, h: 2.55, w: .16, p: 0 }, { r: 2.55, h: 1.35, w: -.12, p: 1.3 }, { r: 2.05, h: 2.8, w: .1, p: 2.6 }, { r: 2.7, h: 2.0, w: .14, p: 3.9 }, { r: 2.35, h: .95, w: -.15, p: 5.0 } ] }
   },
   // Les nouvelles qui circulent : à quel instant, quel élément les apprend, leur couleur, et ce qui en résulte.
   infos: {
-    flotte: [ { t: 1.2, source: 0, couleur: 'bleu', evt: 'bouchon', res: 'itineraire' }, { t: 6.0, source: 3, couleur: 'vert', evt: 'livraison', res: 'planning' } ],
-    drones: [ { t: 1.2, source: 1, couleur: 'bleu', evt: 'anomalie', res: 'position' }, { t: 6.0, source: 3, couleur: 'vert', evt: 'zone', res: 'repartition' } ]
+    flotte: [ { t: 1.2, source: 0, couleur: 'bleu', evt: 'bouchon', res: 'itineraire' }, { t: 6.0, source: 3, couleur: 'encre', evt: 'livraison', res: 'planning' } ],
+    drones: [ { t: 1.2, source: 1, couleur: 'bleu', evt: 'anomalie', res: 'position' }, { t: 6.0, source: 3, couleur: 'encre', evt: 'zone', res: 'repartition' } ]
   },
   // Caméra pour chaque état (0 = écosystème, 1 = Room).
   cadrages: [ { cible: [0.25, 0.35, 0], distance: 15.5 }, { cible: [0.4, 1.4, 0], distance: 15.5 } ]
@@ -281,7 +284,7 @@ const membres = [...objets, ...cubes];
 const ACTEURS = { camion: { nom: TX.camion, echelle: .6 }, expert: { nom: TX.expert, echelle: .85 }, production: { nom: TX.production, echelle: .8 } };
 Object.entries(ACTEURS).forEach(([type, a]) => { a.g = new THREE.Group(); FORMES[type](a.g); fusionner(a.g); a.g.scale.setScalar(.001); a.vis = 0; scene.add(a.g); });
 // Éléments extérieurs : créés une fois, cachés tant que leur cas d'usage n'est pas à l'écran.
-const COUL = { neutre: new THREE.Color(C.couleurs.neutre), bleu: new THREE.Color(C.couleurs.bleu), vert: new THREE.Color(C.couleurs.vert) };
+const COUL = { neutre: new THREE.Color(C.couleurs.neutre), bleu: new THREE.Color(C.couleurs.bleu), vert: new THREE.Color(C.couleurs.vert), encre: new THREE.Color(C.couleurs.encre) };
 const SAT = {};
 Object.entries(C.satellites).forEach(([cas, cfg]) => SAT[cas] = cfg.liste.map((p, k) => { const g = new THREE.Group(); FORMES[cfg.type](g); fusionner(g); g.scale.setScalar(.001); scene.add(g);
   const s = { g, p, k, cfg, vis: 0, cible: 0, actif: 0, x: p.x || 0, a: p.p || 0, coul: COUL.neutre.clone(), vise: COUL.neutre.clone() }; g.userData.satellite = s; return s; }));
@@ -301,17 +304,24 @@ const uRevele = { value: 0 }, uAttenue = { value: 1 }; // uAttenue : la bulle s'
   const p = [], h = [];
   aretes.forEach(([a, b]) => { p.push(...sommets[a].toArray(), ...sommets[b].toArray()); h.push(sommets[a].y, sommets[b].y); });
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
-  room.add(new THREE.LineSegments(g, new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, uniforms: { uRevele, uAttenue, uR: { value: R.rayon }, uC: { value: new THREE.Color(C.couleurs.bleu) } },
-    vertexShader: `uniform float uRevele; uniform float uAttenue; uniform float uR; varying float vA; ${PROF}
-      void main(){ float h=(position.y+uR)/(2.*uR); vA=smoothstep(h-.02,h+.06,uRevele*1.08)*prof(position)*.62*uAttenue; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  const matArete = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, uniforms: { uRevele, uAttenue, uK: { value: .34 }, uR: { value: R.rayon }, uC: { value: new THREE.Color(C.couleurs.encre) } },
+    vertexShader: `uniform float uRevele; uniform float uAttenue; uniform float uK; uniform float uR; varying float vA; ${PROF}
+      void main(){ float h=(position.y+uR)/(2.*uR); vA=smoothstep(h-.02,h+.06,uRevele*1.08)*prof(position)*uK*(.45+.55*uAttenue); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
     fragmentShader: `uniform vec3 uC; varying float vA; void main(){ if(vA<.003) discard; gl_FragColor=vec4(uC,vA); }`
-  })));
+  });
+  room.add(new THREE.LineSegments(g, matArete));
+  // La toile : un sous-ensemble régulier de nœuds, chacun relié à TOUS les autres (multi-pair à pair, littéralement).
+  const pas = Math.max(1, Math.floor(sommets.length / C.toile.noeuds)), choisis = sommets.filter((_, i) => i % pas === 0), tp = [];
+  for (let i = 0; i < choisis.length; i++) for (let j = i + 1; j < choisis.length; j++) tp.push(...choisis[i].toArray(), ...choisis[j].toArray());
+  const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3));
+  const matToile = matArete.clone(); matToile.uniforms = { ...matArete.uniforms, uK: { value: C.toile.opacite } };
+  room.add(new THREE.LineSegments(tg, matToile));
 }
 // Nœuds : petites perles bleues, qui apparaissent avec le maillage.
-const perle = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu }), sommets.length);
+const perle = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.encre }), sommets.length);
 let gr = 21; const rr = () => (gr = gr * 16807 % 2147483647) / 2147483647;
-const tailles = sommets.map(() => rr() < .8 ? .018 : .032);
+const tailles = sommets.map(() => rr() < .85 ? .011 : .02);
 room.add(perle);
 // Voile bleu très léger à l'intérieur (plus dense au centre).
 const voile = new THREE.Mesh(new THREE.SphereGeometry(R.rayon * .99, 48, 32), new THREE.ShaderMaterial({
@@ -319,7 +329,7 @@ const voile = new THREE.Mesh(new THREE.SphereGeometry(R.rayon * .99, 48, 32), ne
   vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
   fragmentShader: `uniform vec3 uC; uniform float uRevele; varying vec3 vN; varying vec3 vV; void main(){ float f=abs(dot(vN,vV)); gl_FragColor=vec4(uC,pow(f,2.)*.16*smoothstep(.5,1.,uRevele)); }`
 }));
-room.add(voile);
+// (style encre : pas de voile coloré, la densité des traits suffit)
 
 /* Place de chaque membre dans la bulle : répartis régulièrement, à différentes hauteurs. */
 membres.forEach((g, i) => {
@@ -346,7 +356,7 @@ function formation(mode, i) { // → [position, visible]
   if (estCube) return [centreRoom, false];
   if (mode === 'multicast') { if (i === C.roles.source) return [centreRoom.clone().setY(anneauY()), true]; const autres = objets.map((_, j) => j).filter(j => j !== C.roles.source); return [surAnneau(autres.indexOf(i), autres.length + (casCourant === 'flotte' ? 1 : 0), 1.02), true]; }
   if (mode === 'entrainement') { const W = C.roles.entraineurs, k = W.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + 1.6, W.length, 1.05), true]; }
-  if (mode === 'hub') { const Hb = C.roles.hub, k = Hb.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + .5, Hb.length, .62), true]; }
+  if (mode === 'hub') { const Hb = [], k = Hb.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + .5, Hb.length, .62), true]; }
   if (mode === 'automatisation') { const Ch = C.roles.chaine, k = Ch.indexOf(i); if (k < 0) return [centreRoom, false];
     return [centreRoom.clone().addScaledVector(droiteEcran, -1.08 + k * 2.16 / (Ch.length - 1)).setY(anneauY() + Math.sin(k / (Ch.length - 1) * Math.PI) * .18), true]; }
   return [centreRoom, true];
@@ -433,10 +443,10 @@ const LIENS = {
   entrainement: C.roles.entraineurs.map(i => ['c', i]),
   automatisation: C.roles.chaine.slice(0, -1).map((a, k) => [a, C.roles.chaine[k + 1]])
 };
-LIENS.hub = C.roles.hub.map(i => ['c', i]); LIENS.flotte = LIENS.multicast; LIENS.ia = LIENS.entrainement; LIENS.partenaires = LIENS.pair;
+LIENS.hub = []; LIENS.flotte = LIENS.multicast; LIENS.ia = LIENS.entrainement; LIENS.partenaires = LIENS.pair;
 let liens = LIENS.pair;
 const liPos = new Float32Array(40 * 6), liGeo = new THREE.BufferGeometry(); liGeo.setAttribute('position', new THREE.BufferAttribute(liPos, 3));
-const liMat = new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false });
+const liMat = new THREE.LineBasicMaterial({ color: C.couleurs.encre, transparent: true, opacity: 0, depthWrite: false });
 const liLignes = new THREE.LineSegments(liGeo, liMat); liLignes.frustumCulled = false; scene.add(liLignes);
 // Étiquettes directes : le nom de chaque membre actif, posé sous lui (pas besoin de survoler).
 const puces = [...objets.map(g => { const d = document.createElement('div'); d.className = 'r3d-chip'; d.textContent = g.userData.nom; host.parentElement.appendChild(d); return d; })];
@@ -447,9 +457,9 @@ const puceModele = document.createElement('div'); puceModele.className = 'r3d-ch
 const puceSource = puce(TX.source, 'r3d-chip r3d-c'); host.parentElement.appendChild(puceModele);
 // Paquets de données (tête + petite traînée) et anneaux d'arrivée.
 const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
-for (let i = 0; i < MAXP; i++) paqMesh.setColorAt(i, COUL.bleu); // couleur par paquet (bleu par défaut, vert pour la 2e nouvelle…)
+for (let i = 0; i < MAXP; i++) paqMesh.setColorAt(i, COUL.encre); // couleur par paquet (bleu par défaut, vert pour la 2e nouvelle…)
 let paquets = [];
-function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin, couleur: o.couleur || COUL.bleu }); }
+function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin, couleur: o.couleur || COUL.encre }); }
 // Point d'attache du fil sur la bulle : là où la ligne élément → centre traverse la sphère.
 const ancre = (p, out) => out.copy(p).sub(centreRoom).normalize().multiplyScalar(R.rayon * .98).add(centreRoom);
 function posPaquet(p, t, out) {
@@ -461,7 +471,7 @@ function posPaquet(p, t, out) {
   centreDe(p.a, tA); centreDe(p.b, tB); tC.copy(tA).add(tB).multiplyScalar(.5).lerp(centreRoom, .3); const u = 1 - t;
   return out.copy(tA).multiplyScalar(u * u).addScaledVector(tC, 2 * u * t).addScaledVector(tB, t * t); }
 const anneaux = Array.from({ length: 40 }, () => { const m = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); m.visible = false; scene.add(m); return { m, t0: -9, x: 0, taille: .3 }; });
-function anneau(x, taille = .32, couleur = COUL.bleu) { const a = anneaux.find(r => horloge - r.t0 > .8) || anneaux[0]; a.t0 = horloge; a.x = x; a.taille = taille; a.m.visible = true; a.m.material.color.copy(couleur); }
+function anneau(x, taille = .32, couleur = COUL.encre) { const a = anneaux.find(r => horloge - r.t0 > .8) || anneaux[0]; a.t0 = horloge; a.x = x; a.taille = taille; a.m.visible = true; a.m.material.color.copy(couleur); }
 // Le modèle commun (entraînement IA) : un cristal au centre de la Room.
 const cristal = new THREE.Group(); cristal.position.copy(centreRoom); cristal.scale.setScalar(.001); scene.add(cristal);
 { const ico = new THREE.IcosahedronGeometry(.24, 0);
@@ -471,14 +481,14 @@ const cristal = new THREE.Group(); cristal.position.copy(centreRoom); cristal.sc
 let cristalCible = 0, cristalPouls = 0;
 // Anneaux d'entraînement local : un cercle qui tourne autour de chaque machine qui apprend.
 const cerclesLocaux = C.roles.entraineurs.map(() => { const pts = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI * 1.6).getPoints(40).map(p => new THREE.Vector3(p.x, 0, p.y));
-  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0 })); scene.add(l); return l; });
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.encre, transparent: true, opacity: 0 })); scene.add(l); return l; });
 // Fils : un trait fin de chaque élément extérieur jusqu'à la bulle ; il s'éclaire quand une donnée y passe.
 const MAXF = tousSat.length, fPos = new Float32Array(MAXF * 6), fCol = new Float32Array(MAXF * 6).fill(1);
 const fGeo = new LineSegmentsGeometry(); fGeo.setPositions(fPos); fGeo.setColors(fCol);
 const fMat = new LineMaterial({ vertexColors: true, linewidth: 1.6, worldUnits: false });
 window.__fMat = fMat; fMat.resolution.set(W, H);
 const fLignes = new LineSegments2(fGeo, fMat); fLignes.frustumCulled = false; scene.add(fLignes);
-const FIL = new THREE.Color(C.couleurs.bleuClair).lerp(BLANC, .45);
+const FIL = new THREE.Color(C.couleurs.encre).lerp(BLANC, .72);
 const puceEvt = puce('', 'r3d-chip r3d-c');
 let evtTxt = '', evtSat = null, resCouleur = 'bleu', etatsInfos = [];
 const badge = document.getElementById('r3d-badge');
@@ -509,14 +519,14 @@ function activite(dt) {
     const Ss = SAT[cas], infos = C.infos[cas] || [];
     Ss.forEach(s => s.cible = 1);
     // Bavardage de fond : un élément envoie à un autre, toujours en passant par la Room (lentement, discret).
-    if (t > evt) { const a = Ss[Math.floor(Math.random() * Ss.length)], b = Ss[(a.k + 1 + Math.floor(Math.random() * (Ss.length - 1))) % Ss.length];
-      envoyer(a.g, 'c', 1.1, { taille: .026 }); envoyer('c', b.g, 1.1, { delai: 1.1, taille: .026 }); evt = t + .55; }
+    // Fond calme : de temps en temps, le fil d'un élément s'éclaire (il reste en contact), sans paquet qui distrait.
+    if (t > evt) { Ss[Math.floor(Math.random() * Ss.length)].actif = .55; evt = t + .7; }
     let derniere = -1;
     infos.forEach((inf, k) => { if (t < inf.t) return; derniere = k; const cl = COUL[inf.couleur], src = Ss[inf.source];
       if (!etatsInfos[k]) { etatsInfos[k] = { recus: 0 }; src.vise.copy(cl); anneau(src.g, .42, cl);
         // 1) la nouvelle monte vers la Room ; 2) la Room la renvoie à tous, en même temps (dehors et dedans)
         envoyer(src.g, 'c', 1.2, { taille: .055, couleur: cl, fin: () => { anneau('c', .55, cl);
-          const cibles = [...Ss.filter(s => s !== src).map(s => s.g), ...C.roles.hub];
+          const cibles = Ss.filter(s => s !== src).map(s => s.g);
           cibles.forEach(c => envoyer('c', c, 1.4, { taille: .05, couleur: cl, fin: () => { etatsInfos[k].recus++; anneau(c, c.isObject3D ? .38 : .3, cl); if (c.isObject3D) c.userData.satellite.vise.copy(cl); } })); } }); }
     });
     if (derniere < 0) afficherBadge(cas === 'flotte' ? TX.reliesCamions : TX.reliesDrones);
@@ -546,7 +556,7 @@ function activite(dt) {
   } else if (actif === 'entrainement') { // apprentissage local, puis mise en commun, puis renvoi à tous (DiLoCo)
     const W = C.roles.entraineurs;
     if (cas === 'ia') { // 1) vos données entrent ; 3) le modèle entraîné sort vers la production
-      if (!donneesEnvoyees && t > .1) { donneesEnvoyees = true; dehors(-1, srcDonnees.position); W.forEach((i, j) => envoyer(srcDonnees, i, .9, { delai: j * .12, taille: .04, fin: () => anneau(i, .26) })); }
+      if (!donneesEnvoyees && t > .1) { donneesEnvoyees = true; dehors(-1, srcDonnees.position); W.forEach((i, j) => envoyer(srcDonnees, i, .9, { delai: j * .12, taille: .04, couleur: COUL.bleu, fin: () => anneau(i, .26, COUL.bleu) })); }
       if (t < 1.6) entreeTxt = TX.donneesEntrent;
       const P = ACTEURS.production; dehors(1, P.g.position); P.cible = t > 5.4 ? 1 : 0;
       if (t > 6.0) { const v = facile(Math.min(1, (t - 6.0) / .9)); cristal.position.copy(centreRoom).lerp(v2.copy(P.g.position).setY(P.g.position.y + .32), v); }
@@ -555,8 +565,8 @@ function activite(dt) {
     if (tc < 0 || (cas === 'ia' && t > 6.0)) { afficherBadge(cas === 'ia' && t > 6.0 ? TX.modeleSort : TX.partDonnees); cerclesLocaux.forEach(l => l.material.opacity = Math.max(0, l.material.opacity - dt * 3)); }
     else {
     const cycle = 2.4, k = Math.floor(tc / cycle), u = tc - k * cycle;
-    if (evt <= k * 3 && u > 1.1) { evt = k * 3 + 1; W.forEach(i => envoyer(i, 'c', .55, { taille: .03 })); }
-    if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, fin: () => anneau(i, .28) })); }
+    if (evt <= k * 3 && u > 1.1) { evt = k * 3 + 1; W.forEach(i => envoyer(i, 'c', .55, { taille: .03, couleur: COUL.bleu })); }
+    if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5, COUL.bleu); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, couleur: COUL.bleu, fin: () => anneau(i, .28, COUL.bleu) })); }
     cerclesLocaux.forEach((l, j) => { const g = membres[W[j]]; centreDe(W[j], l.position); l.position.y -= .06; l.scale.setScalar(.3 * g.scale.x / .62 + .05);
       l.rotation.y -= dt * (u < 1.1 ? 5 : 1); l.material.opacity = u < 1.1 ? .85 : .25; });
     afficherBadge(u < 1.1 ? f(TX.diloco, { k: k + 1 }) : TX.miseEnCommun);
@@ -582,7 +592,7 @@ function activite(dt) {
   const sc = THREE.MathUtils.lerp(cristal.scale.x, cristalCible * (1 + cristalPouls * .35), Math.min(1, dt * 6)); cristal.scale.setScalar(Math.max(.001, sc));
   cristal.rotation.y += dt * .8; cristal.rotation.x += dt * .3; cristalPouls = Math.max(0, cristalPouls - dt * 2.5);
 }
-function afficherBadge(txt) { if (badge.textContent !== txt) badge.textContent = txt; badge.style.opacity = 1; }
+function afficherBadge(txt) { txt = '› ' + txt; if (badge.textContent !== txt) badge.textContent = txt; badge.style.opacity = 1; }
 function dessinerEchanges() {
   const off = host.offsetTop, offL = host.offsetLeft;
   const placer = (d, p, dy = 6) => { tA.copy(p).project(camera); const demi = d.offsetWidth / 2 + 8; d.style.left = (THREE.MathUtils.clamp((tA.x + 1) / 2 * W, demi, W - demi) + offL) + 'px'; // jamais coupée au bord de l'écran
@@ -609,11 +619,11 @@ function dessinerEchanges() {
   // Fils des éléments extérieurs
   tousSat.forEach((s, k) => { if (s.vis < .02) { fPos.fill(0, k * 6, k * 6 + 6); fCol.fill(1, k * 6, k * 6 + 6); return; }
     centreDe(s.g, tA); ancre(tA, tB); tA.toArray(fPos, k * 6); tB.toArray(fPos, k * 6 + 3);
-    const c = FIL.clone().lerp(s.coul.equals(COUL.neutre) ? BLEU : s.coul, .25 + .6 * s.actif).lerp(BLANC, 1 - s.vis * (s.g.scale.x / (s.cfg.echelle || 1)));
+    const c = FIL.clone().lerp(s.coul.equals(COUL.neutre) ? COUL.encre : s.coul, .15 + .7 * s.actif).lerp(BLANC, 1 - s.vis * (s.g.scale.x / (s.cfg.echelle || 1)));
     fCol.set([c.r, c.g, c.b, c.r, c.g, c.b], k * 6); });
   fGeo.setPositions(fPos); fGeo.setColors(fCol);
   puceEvt.style.opacity = evtTxt && evtSat && m > .97 ? 1 : 0; if (evtTxt && evtSat) { puceEvt.textContent = evtTxt; placer(puceEvt, v1.copy(evtSat.g.position).setY(evtSat.g.position.y + .45), -26); }
-  puceSortie.classList.toggle('r3d-vert', resCouleur === 'vert');
+  puceSortie.classList.toggle('r3d-vert', resCouleur === 'vert'); puceSortie.classList.toggle('r3d-encre', resCouleur === 'encre');
   // Paquets
   let n = 0; const garde = [];
   for (const p of paquets) { const t = (horloge - p.t0) / p.dur;
@@ -685,7 +695,7 @@ renderer.setAnimationLoop(() => {
       if (!vie) { lPos.fill(0, nl * 6, nl * 6 + 6); lCol.fill(1, nl * 6, nl * 6 + 6); continue; }
       const t0 = p - long * k / SEGT, t1 = p - long * (k + 1) / SEGT;
       chemin(g, t0, v1).toArray(lPos, nl * 6); chemin(g, t1, v2).toArray(lPos, nl * 6 + 3);
-      const a = BLEU.clone().lerp(BLANC, .05 + .9 * k / SEGT), b = BLEU.clone().lerp(BLANC, .05 + .9 * (k + 1) / SEGT);
+      const a = COUL.encre.clone().lerp(BLANC, .25 + .75 * k / SEGT), b = COUL.encre.clone().lerp(BLANC, .25 + .75 * (k + 1) / SEGT);
       lCol.set([a.r, a.g, a.b, b.r, b.g, b.b], nl * 6);
     }
   });
