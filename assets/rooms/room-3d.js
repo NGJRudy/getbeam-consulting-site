@@ -94,7 +94,7 @@ const C = {
 /* ═══════════════════════════════════════════════════════════════════════════════ */
 (L.etapes || []).forEach((e, i) => Object.assign(C.etapes[i], e));
 // Intégré au héros : pas de texte à gauche, la scène est centrée dans sa fenêtre.
-const INTEGRE = !!L.integre; if (INTEGRE) C.centreEcran = { large: .5, etroit: .5 };
+const INTEGRE = !!L.integre; if (INTEGRE) C.centreEcran = { large: +L.centre || .5, etroit: .5 }; // L.centre (config) : > .5 = sujet décalé à droite
 (L.objets || []).forEach((o, i) => Object.assign(C.objets[i], o));
 
 const host = document.getElementById('r3d-scene'), tip = document.getElementById('r3d-tip');
@@ -402,7 +402,7 @@ function placerCamera(m) {
   const a = C.cadrages[0], b = C.cadrages[1];
   cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m).lerp(centreRoom, zoom * .8).add(v2.set(0, -.4, .85).multiplyScalar(vueRoute));
   const k = C.camera, base = (a.distance + (b.distance - a.distance) * m) * (1 - .24 * zoom);
-  const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H))) * (INTEGRE ? (etroit ? 1.12 : .72) * (1 + .26 * vueRoute) : 1); // vue des routes : léger recul pour que les camions restent au-dessus des onglets ; .72 = .8 × 9/10 : même taille d'objets dans un cadre 16/9 au lieu de 16/10
+  const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H))) * (INTEGRE ? (etroit ? 1.12 : .72) * (1 + .26 * vueRoute) : 1) * (etroit ? 1 : (+L.echelle || 1)); // L.echelle (config) : < 1 = scène plus grande // vue des routes : léger recul pour que les camions restent au-dessus des onglets ; .72 = .8 × 9/10 : même taille d'objets dans un cadre 16/9 au lieu de 16/10
   const el = THREE.MathUtils.degToRad(k.hauteurDeg), az = THREE.MathUtils.degToRad(k.azimutDeg);
   camera.position.set(cible.x + Math.sin(az) * Math.cos(el) * dist, cible.y + Math.sin(el) * dist, cible.z + Math.cos(az) * Math.cos(el) * dist);
   camera.lookAt(cible);
