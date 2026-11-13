@@ -102,7 +102,7 @@ const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 const qualite = { dpr: Math.min(2, devicePixelRatio), n: 0, somme: 0 }; // quatre marches au plus : 2 → 1,5 → 1
 renderer.setPixelRatio(qualite.dpr);
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.toneMapping = THREE.NoToneMapping; // style encre : blanc pur et noir pur, sans rendu photographique
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 host.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
@@ -112,21 +112,23 @@ const camera = new THREE.PerspectiveCamera(C.camera.fov, 1, 0.1, 100);
 const ENCRE = new THREE.Color(C.couleurs.encre), BLEU = new THREE.Color(C.couleurs.bleu), BLANC = new THREE.Color('#ffffff');
 
 /* ── Matériaux : argile blanche mate + arêtes fines à l'encre, comme sur les images de référence ── */
-const argile = new THREE.MeshStandardMaterial({ color: C.couleurs.argile, roughness: .62, metalness: 0, envMapIntensity: .9 });
-const argileSombre = new THREE.MeshStandardMaterial({ color: '#c9ced6', roughness: .7 });
-const fente = new THREE.MeshStandardMaterial({ color: '#7d838e', roughness: .8 });
-const ecran = new THREE.MeshStandardMaterial({ color: '#dfe4ec', roughness: .25, metalness: 0 });
-const trait = new THREE.LineBasicMaterial({ color: C.couleurs.encre, transparent: true, opacity: .45 });
+// Style encre : chaque objet est un dessin technique (aplat blanc, contours noirs nets), comme la toile de la Room.
+const argile = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+const argileSombre = new THREE.MeshBasicMaterial({ color: '#eef0f3' });
+const fente = new THREE.MeshBasicMaterial({ color: C.couleurs.encre });
+const ecran = new THREE.MeshBasicMaterial({ color: '#f4f5f7' });
+const trait = new THREE.LineBasicMaterial({ color: C.couleurs.encre, transparent: true, opacity: .9 });
 function piece(geo, mat, parent, x = 0, y = 0, z = 0, aretes = true) {
   const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m);
-  if (aretes) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 35), trait));
+  // Contour net : pour une boîte arrondie, on trace le contour de la boîte droite (un seul trait par arête, pas les facettes de l'arrondi).
+  if (aretes) { const b = geo.userData.boite; m.add(new THREE.LineSegments(b ? new THREE.EdgesGeometry(new THREE.BoxGeometry(...b)) : new THREE.EdgesGeometry(geo, 35), trait)); }
   return m;
 }
-const bloc = (w, h, d, r = 0.02) => new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3));
+const bloc = (w, h, d, r = 0.02) => { const g = new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3)); g.userData.boite = [w, h, d]; return g; };
 
 /* ── Ombre de contact douce (texture dégradée), posée sous chaque objet ── */
 const texOmbre = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-  const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, 'rgba(20,23,28,.42)'); r.addColorStop(.55, 'rgba(20,23,28,.12)'); r.addColorStop(1, 'rgba(20,23,28,0)');
+  const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, 'rgba(20,23,28,.16)'); r.addColorStop(.55, 'rgba(20,23,28,.05)'); r.addColorStop(1, 'rgba(20,23,28,0)');
   g.fillStyle = r; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
 function ombre(parent, w, d) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: texOmbre, transparent: true, depthWrite: false }));
   m.rotation.x = -Math.PI / 2; m.position.y = 0.002; m.renderOrder = -1; parent.add(m); (parent.userData.ombres ||= []).push(m.material); }
@@ -201,21 +203,21 @@ const FORMES = {
     ombre(g, .85, .45);
   },
   camion(g) {
-    const noir = new THREE.MeshStandardMaterial({ color: '#2a2e35', roughness: .8 });
+    const noir = new THREE.MeshBasicMaterial({ color: C.couleurs.encre });
     piece(bloc(.62, .34, .32, .02), argile, g, -.1, .1 + .17, 0);           // caisse
     piece(bloc(.24, .26, .3, .03), argile, g, .34, .1 + .13, 0);              // cabine
     piece(new THREE.BoxGeometry(.012, .1, .24), ecran, g, .462, .3, 0, false); // pare-brise
     piece(new THREE.BoxGeometry(.86, .04, .26), argileSombre, g, .02, .08, 0, false);
     [[-.3, 1], [-.3, -1], [.05, 1], [.05, -1], [.34, 1], [.34, -1]].forEach(([x, z]) => piece(new THREE.CylinderGeometry(.06, .06, .05, 20).rotateX(Math.PI / 2), noir, g, x, .06, z * .15, false));
     // Bande et toit peints : leur couleur montre la dernière information reçue.
-    const peinture = new THREE.MeshStandardMaterial({ color: C.couleurs.neutre, roughness: .5 }); g.userData.peinture = peinture;
+    const peinture = new THREE.MeshBasicMaterial({ color: C.couleurs.neutre }); g.userData.peinture = peinture;
     piece(new THREE.BoxGeometry(.6, .07, .326), peinture, g, -.1, .37, 0, false);
     piece(new THREE.BoxGeometry(.5, .012, .25), peinture, g, -.1, .446, 0, false);
     piece(new THREE.BoxGeometry(.2, .012, .22), peinture, g, .34, .366, 0, false);
     ombre(g, 1.1, .55);
   },
   drone(g) { // corps, quatre bras, hélices (disques flous), plaque de statut colorée
-    const peinture = new THREE.MeshStandardMaterial({ color: C.couleurs.neutre, roughness: .45 }); g.userData.peinture = peinture;
+    const peinture = new THREE.MeshBasicMaterial({ color: C.couleurs.neutre }); g.userData.peinture = peinture;
     const flou = new THREE.MeshBasicMaterial({ color: '#cfd5df', transparent: true, opacity: .55, depthWrite: false });
     piece(bloc(.17, .05, .17, .018), argile, g, 0, 0, 0);
     piece(new THREE.CylinderGeometry(.045, .045, .008, 24), peinture, g, 0, .03, 0, false);
@@ -299,6 +301,7 @@ const sommets = [], aretes = [];
   for (let i = 0; i < pa.count; i += 3) { const t = [id(i), id(i + 1), id(i + 2)]; [[0, 1], [1, 2], [2, 0]].forEach(([a, b]) => { const x = Math.min(t[a], t[b]), y = Math.max(t[a], t[b]), k = x + ',' + y; if (!vus.has(k)) { vus.add(k); aretes.push([x, y]); } }); }
 }
 const PROF = `float prof(vec3 p){ vec4 mv=modelViewMatrix*vec4(p,1.); float zc=(modelViewMatrix*vec4(0.,0.,0.,1.)).z; return clamp(.6+(mv.z-zc)*.32,.2,1.); }`;
+const noeudsToile = []; // nœuds de la toile (repère de la Room)
 const uRevele = { value: 0 }, uAttenue = { value: 1 }; // uAttenue : la bulle s'efface un peu quand les échanges commencent
 {
   const p = [], h = [];
@@ -313,6 +316,7 @@ const uRevele = { value: 0 }, uAttenue = { value: 1 }; // uAttenue : la bulle s'
   room.add(new THREE.LineSegments(g, matArete));
   // La toile : un sous-ensemble régulier de nœuds, chacun relié à TOUS les autres (multi-pair à pair, littéralement).
   const pas = Math.max(1, Math.floor(sommets.length / C.toile.noeuds)), choisis = sommets.filter((_, i) => i % pas === 0), tp = [];
+  noeudsToile.push(...choisis);
   for (let i = 0; i < choisis.length; i++) for (let j = i + 1; j < choisis.length; j++) tp.push(...choisis[i].toArray(), ...choisis[j].toArray());
   const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3));
   const matToile = matArete.clone(); matToile.uniforms = { ...matArete.uniforms, uK: { value: C.toile.opacite } };
@@ -390,7 +394,7 @@ function tenter() {
 const cible = new THREE.Vector3(); let W = 1, H = 1, etroit = false;
 function cadrer() {
   W = host.clientWidth; H = host.clientHeight; etroit = W < 820;
-  renderer.setSize(W, H, false); camera.aspect = W / H; tMat.resolution.set(W, H); lMat.resolution.set(W, H); if (window.__fMat) window.__fMat.resolution.set(W, H);
+  renderer.setSize(W, H, false); camera.aspect = W / H; tMat.resolution.set(W, H); lMat.resolution.set(W, H); if (window.__fMat) window.__fMat.resolution.set(W, H); if (window.__iMat) window.__iMat.resolution.set(W, H);
   membres.forEach(g => g.userData.surSol = new THREE.Vector3(g.userData.x * (etroit ? .62 : 1), 0, g.userData.z));
 }
 let zoom = 0, decal = 0, vueRoute = 0; // vueRoute : la caméra regarde les routes (cas « flotte ») // decal : recentre la scène pendant les cas d'usage
@@ -461,7 +465,12 @@ for (let i = 0; i < MAXP; i++) paqMesh.setColorAt(i, COUL.encre); // couleur par
 let paquets = [];
 function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin, couleur: o.couleur || COUL.encre }); }
 // Point d'attache du fil sur la bulle : là où la ligne élément → centre traverse la sphère.
-const ancre = (p, out) => out.copy(p).sub(centreRoom).normalize().multiplyScalar(R.rayon * .98).add(centreRoom);
+const noeudMonde = (i, out) => out.copy(noeudsToile[i]).applyMatrix4(room.matrixWorld);
+// Les K nœuds de la toile les plus proches d'un point (en coordonnées du monde).
+const _nw = new THREE.Vector3();
+function plusProches(p, K) { const d = noeudsToile.map((_, i) => [i, noeudMonde(i, _nw).distanceToSquared(p)]); d.sort((a, b) => a[1] - b[1]); return d.slice(0, K).map(x => x[0]); }
+// Point d'attache : le nœud de la toile le plus proche (la donnée entre par un vrai nœud du réseau).
+const ancre = (p, out) => noeudMonde(plusProches(p, 1)[0], out);
 function posPaquet(p, t, out) {
   const sa = p.a.isObject3D && p.a.userData.satellite, sb = p.b.isObject3D && p.b.userData.satellite;
   if (sa || sb) { // le long du fil : élément extérieur → bord de la bulle → centre de la Room (ou l'inverse)
@@ -483,13 +492,25 @@ let cristalCible = 0, cristalPouls = 0;
 const cerclesLocaux = C.roles.entraineurs.map(() => { const pts = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI * 1.6).getPoints(40).map(p => new THREE.Vector3(p.x, 0, p.y));
   const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.encre, transparent: true, opacity: 0 })); scene.add(l); return l; });
 // Fils : un trait fin de chaque élément extérieur jusqu'à la bulle ; il s'éclaire quand une donnée y passe.
-const MAXF = tousSat.length, fPos = new Float32Array(MAXF * 6), fCol = new Float32Array(MAXF * 6).fill(1);
+const EVENTAIL = 6, MAXF = tousSat.length * EVENTAIL, fPos = new Float32Array(MAXF * 6), fCol = new Float32Array(MAXF * 6).fill(1);
 const fGeo = new LineSegmentsGeometry(); fGeo.setPositions(fPos); fGeo.setColors(fCol);
-const fMat = new LineMaterial({ vertexColors: true, linewidth: 1.6, worldUnits: false });
+const fMat = new LineMaterial({ vertexColors: true, linewidth: 1.1, worldUnits: false });
 window.__fMat = fMat; fMat.resolution.set(W, H);
 const fLignes = new LineSegments2(fGeo, fMat); fLignes.frustumCulled = false; scene.add(fLignes);
 const FIL = new THREE.Color(C.couleurs.encre).lerp(BLANC, .72);
 const puceEvt = puce('', 'r3d-chip r3d-c');
+/* Influx : une impulsion qui file d'un nœud à un autre (tête nette, queue qui s'efface), comme un signal dans un réseau de neurones.
+   En fond, quelques influx noirs discrets : la Room vit. Lors d'un message, une cascade bleue (ou noire) part du nœud d'entrée. */
+const MAXI = 160, iPos = new Float32Array(MAXI * 6), iCol = new Float32Array(MAXI * 6).fill(1);
+const iGeo = new LineSegmentsGeometry(); iGeo.setPositions(iPos); iGeo.setColors(iCol);
+const iMat = new LineMaterial({ vertexColors: true, linewidth: 1.4, worldUnits: false }); window.__iMat = iMat; iMat.resolution.set(W, H);
+const iLignes = new LineSegments2(iGeo, iMat); iLignes.frustumCulled = false; scene.add(iLignes);
+let influx = [];
+function influer(i, j, coul, o = {}) { if (influx.length < MAXI) influx.push({ i, j, t0: horloge + (o.delai || 0), dur: o.dur || .45, coul, force: o.force || 1 }); }
+// Cascade : le nœud d'entrée excite plusieurs voisins, qui en excitent d'autres (deux vagues).
+function cascade(depuis, coul, n1 = 8, n2 = 3) { const N = noeudsToile.length; for (let a = 0; a < n1; a++) { const j = Math.floor(Math.random() * N); if (j === depuis) continue;
+    influer(depuis, j, coul, { dur: .42 }); for (let b = 0; b < n2; b++) influer(j, Math.floor(Math.random() * N), coul, { delai: .42, dur: .42, force: .75 }); } }
+let prochainInflux = 0;
 let evtTxt = '', evtSat = null, resCouleur = 'bleu', etatsInfos = [];
 const badge = document.getElementById('r3d-badge');
 if (INTEGRE) document.getElementById('r3d-texte').appendChild(badge);
@@ -523,11 +544,11 @@ function activite(dt) {
     if (t > evt) { Ss[Math.floor(Math.random() * Ss.length)].actif = .55; evt = t + .7; }
     let derniere = -1;
     infos.forEach((inf, k) => { if (t < inf.t) return; derniere = k; const cl = COUL[inf.couleur], src = Ss[inf.source];
-      if (!etatsInfos[k]) { etatsInfos[k] = { recus: 0 }; src.vise.copy(cl); anneau(src.g, .42, cl);
+      if (!etatsInfos[k]) { etatsInfos[k] = { recus: 0 }; src.vise.copy(cl); anneau(src.g, .24, cl);
         // 1) la nouvelle monte vers la Room ; 2) la Room la renvoie à tous, en même temps (dehors et dedans)
-        envoyer(src.g, 'c', 1.2, { taille: .055, couleur: cl, fin: () => { anneau('c', .55, cl);
+        envoyer(src.g, 'c', 1.2, { taille: .055, couleur: cl, fin: () => { anneau('c', .55, cl); cascade(plusProches(centreDe(src.g, v1), 1)[0], cl, 10, 3);
           const cibles = Ss.filter(s => s !== src).map(s => s.g);
-          cibles.forEach(c => envoyer('c', c, 1.4, { taille: .05, couleur: cl, fin: () => { etatsInfos[k].recus++; anneau(c, c.isObject3D ? .38 : .3, cl); if (c.isObject3D) c.userData.satellite.vise.copy(cl); } })); } }); }
+          cibles.forEach(c => envoyer('c', c, 1.4, { taille: .05, couleur: cl, fin: () => { etatsInfos[k].recus++; anneau(c, c.isObject3D ? .2 : .3, cl); if (c.isObject3D) c.userData.satellite.vise.copy(cl); } })); } }); }
     });
     if (derniere < 0) afficherBadge(cas === 'flotte' ? TX.reliesCamions : TX.reliesDrones);
     else { const inf = infos[derniere], st = etatsInfos[derniere], cl = inf.couleur; evtSat = Ss[inf.source]; evtTxt = TX[inf.evt];
@@ -566,7 +587,7 @@ function activite(dt) {
     else {
     const cycle = 2.4, k = Math.floor(tc / cycle), u = tc - k * cycle;
     if (evt <= k * 3 && u > 1.1) { evt = k * 3 + 1; W.forEach(i => envoyer(i, 'c', .55, { taille: .03, couleur: COUL.bleu })); }
-    if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5, COUL.bleu); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, couleur: COUL.bleu, fin: () => anneau(i, .28, COUL.bleu) })); }
+    if (evt === k * 3 + 1 && u > 1.7) { evt = k * 3 + 2; cristalPouls = 1; anneau('c', .5, COUL.bleu); cascade(Math.floor(Math.random() * noeudsToile.length), COUL.bleu, 8, 2); tour = k + 1; W.forEach(i => envoyer('c', i, .55, { taille: .04, couleur: COUL.bleu, fin: () => anneau(i, .28, COUL.bleu) })); }
     cerclesLocaux.forEach((l, j) => { const g = membres[W[j]]; centreDe(W[j], l.position); l.position.y -= .06; l.scale.setScalar(.3 * g.scale.x / .62 + .05);
       l.rotation.y -= dt * (u < 1.1 ? 5 : 1); l.material.opacity = u < 1.1 ? .85 : .25; });
     afficherBadge(u < 1.1 ? f(TX.diloco, { k: k + 1 }) : TX.miseEnCommun);
@@ -616,11 +637,24 @@ function dessinerEchanges() {
   const okS = false; puceSource.style.opacity = okS ? 1 : 0; if (okS) placer(puceSource, v1.copy(objets[C.roles.source].position).setY(objets[C.roles.source].position.y - .06));
   const okM = mon && modeCourant.startsWith('entrainement') && !(casCourant === 'ia' && tEtape > 6.0); puceModele.style.opacity = okM ? 1 : 0;
   if (okM) { tA.copy(centreRoom).setY(centreRoom.y - .3).project(camera); puceModele.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; puceModele.style.top = ((1 - tA.y) / 2 * H + off) + 'px'; }
+  // Influx de fond : la toile s'active doucement (plus discret quand une histoire se joue dehors).
+  if (m > .9 && !reduit && horloge > prochainInflux) { const N = noeudsToile.length; influer(Math.floor(Math.random() * N), Math.floor(Math.random() * N), COUL.encre, { dur: .7, force: .55 }); prochainInflux = horloge + .07; }
+  { let n = 0; const garde = [];
+    for (const f of influx) { const e = (horloge - f.t0) / f.dur; if (e >= 1.35) continue; garde.push(f); if (e < 0 || n >= MAXI) continue;
+      noeudMonde(f.i, tA); noeudMonde(f.j, tB); const tete = Math.min(1, e), queue = Math.max(0, e - .45);
+      tC.copy(tA).lerp(tB, queue).toArray(iPos, n * 6); v2.copy(tA).lerp(tB, tete).toArray(iPos, n * 6 + 3);
+      const fin = e > 1 ? 1 - (e - 1) / .35 : 1, ct = f.coul.clone().lerp(BLANC, 1 - .9 * f.force * fin), cq = f.coul.clone().lerp(BLANC, 1 - .15 * f.force * fin);
+      iCol.set([cq.r, cq.g, cq.b, ct.r, ct.g, ct.b], n * 6); n++; }
+    for (let k = n; k < MAXI; k++) { iPos.fill(0, k * 6, k * 6 + 6); iCol.fill(1, k * 6, k * 6 + 6); }
+    influx = garde; iGeo.setPositions(iPos); iGeo.setColors(iCol); }
   // Fils des éléments extérieurs
-  tousSat.forEach((s, k) => { if (s.vis < .02) { fPos.fill(0, k * 6, k * 6 + 6); fCol.fill(1, k * 6, k * 6 + 6); return; }
-    centreDe(s.g, tA); ancre(tA, tB); tA.toArray(fPos, k * 6); tB.toArray(fPos, k * 6 + 3);
-    const c = FIL.clone().lerp(s.coul.equals(COUL.neutre) ? COUL.encre : s.coul, .15 + .7 * s.actif).lerp(BLANC, 1 - s.vis * (s.g.scale.x / (s.cfg.echelle || 1)));
-    fCol.set([c.r, c.g, c.b, c.r, c.g, c.b], k * 6); });
+  tousSat.forEach((s, k) => { const vu = s.vis * (s.g.scale.x / (s.cfg.echelle || 1));
+    if (vu < .02) { for (let e = 0; e < EVENTAIL; e++) { const o = (k * EVENTAIL + e) * 6; fPos.fill(0, o, o + 6); fCol.fill(1, o, o + 6); } return; }
+    centreDe(s.g, tA); const proches = plusProches(tA, EVENTAIL);
+    proches.forEach((ni, e) => { const o = (k * EVENTAIL + e) * 6; noeudMonde(ni, tB); tA.toArray(fPos, o); tB.toArray(fPos, o + 3);
+      // Le premier fil (le plus court) porte la donnée ; les autres forment l'éventail, plus pâles.
+      const base = e === 0 ? .2 : .07, c = FIL.clone().lerp(s.coul.equals(COUL.neutre) ? COUL.encre : s.coul, base + (e === 0 ? .7 : .35) * s.actif).lerp(BLANC, 1 - vu);
+      const pale = c.clone().lerp(BLANC, .55); fCol.set([c.r, c.g, c.b, pale.r, pale.g, pale.b], o); }); });
   fGeo.setPositions(fPos); fGeo.setColors(fCol);
   puceEvt.style.opacity = evtTxt && evtSat && m > .97 ? 1 : 0; if (evtTxt && evtSat) { puceEvt.textContent = evtTxt; placer(puceEvt, v1.copy(evtSat.g.position).setY(evtSat.g.position.y + .45), -26); }
   puceSortie.classList.toggle('r3d-vert', resCouleur === 'vert'); puceSortie.classList.toggle('r3d-encre', resCouleur === 'encre');

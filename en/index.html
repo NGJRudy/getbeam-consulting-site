@@ -102,7 +102,7 @@ a:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid #235
         <div style="padding: 10px; border-radius: 40px; background: linear-gradient(160deg, rgba(255,255,255,0.55) 0%, rgba(170,190,255,0.22) 40%, rgba(255,255,255,0.10) 100%); border: 1px solid rgba(255,255,255,0.55); box-shadow: inset 0 2px 0 rgba(255,255,255,0.7), inset 0 -2px 0 rgba(35,80,216,0.25), 0 2px 0 rgba(255,255,255,0.35), 0 12px 24px -8px rgba(7,15,74,0.35), 0 40px 80px -24px rgba(7,15,74,0.55), 0 90px 140px -60px rgba(35,80,216,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);">
           <section class="r3d r3d-integre" id="rooms" aria-label="Rooms in action">
             <div class="r3d-legende" id="r3d-texte"><p class="r3d-sur" id="r3d-sur">Today</p><p class="r3d-titre" id="r3d-titre">Your machines each work in their own corner.</p></div>
-            <div class="r3d-scene" id="r3d-scene" role="img" aria-label="Animation: isolated machines join a Room, a private bubble where they exchange data directly; examples: training an AI, updating a truck fleet, inviting a partner and removing their access."><picture class="r3d-poster"><source media="(max-width:820px)" srcset="/assets/rooms/poster-hero-mobile.webp"><img src="/assets/rooms/poster-hero.webp" alt="" width="1020" height="638" decoding="async" fetchpriority="high"></picture></div>
+            <div class="r3d-scene" id="r3d-scene" role="img" aria-label="Animation: isolated machines join a Room, a private bubble where they exchange data directly; examples: training an AI, updating a truck fleet, inviting a partner and removing their access."><picture class="r3d-poster"><source media="(max-width:820px)" srcset="/assets/rooms/poster-hero-mobile.webp?v=2"><img src="/assets/rooms/poster-hero.webp?v=2" alt="" width="1020" height="638" decoding="async" fetchpriority="high"></picture></div>
             <div class="r3d-barre"><div class="r3d-nav" id="r3d-nav"><button class="r3d-pause" id="r3d-pause" type="button" aria-label="Pause the animation"></button></div></div>
             <div class="r3d-tip" id="r3d-tip"></div>
             <div class="r3d-badge" id="r3d-badge" aria-hidden="true"></div>
@@ -513,7 +513,7 @@ class Component extends DCLogic {
 /* Room 3D du héros : chargée juste après l'affichage de la page (l'image fixe est déjà là), sans retarder le premier rendu.
    Le corps de la page est rendu après coup par le moteur de composants : on attend que la scène existe hors du gabarit. */
 (function () { var fait = false;
-  function go() { var s = document.getElementById('rooms'); if (fait || !s || s.closest('x-dc')) return; fait = true; import('/assets/rooms/room-3d.js?v=9'); }
+  function go() { var s = document.getElementById('rooms'); if (fait || !s || s.closest('x-dc')) return; fait = true; import('/assets/rooms/room-3d.js?v=11'); }
   function plusTard() { (window.requestIdleCallback || function (f) { setTimeout(f, 200); })(go, { timeout: 1500 }); }
   var t = setInterval(function () { if (fait) return clearInterval(t); if (document.readyState === 'complete') plusTard(); }, 250); })();
 </script>
