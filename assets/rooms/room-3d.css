@@ -79,9 +79,3 @@
 .r3d-integre{background:transparent;border-radius:0;overflow:visible}
 .r3d-integre .r3d-scene{background:#fff;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 9%,#000 91%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 16%,#000 84%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0,#000 9%,#000 91%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 16%,#000 84%,transparent 100%);mask-composite:intersect}
 @media (max-width:820px){.r3d-integre .r3d-scene{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 10%,#000 90%,transparent 100%)}}
-/* Héros homogène : la légende parle la même langue typographique que le grand titre
-   (Open Sans léger, interlettrage serré), le journal n'est plus une carte mais une ligne d'encre. */
-.r3d-integre .r3d-legende .r3d-sur{font:600 13px/18px 'Open Sans',Arial,sans-serif;letter-spacing:.01em;color:var(--brand)}
-.r3d-integre .r3d-legende .r3d-titre{font:400 clamp(22px,2.3vw,32px)/1.15 'Open Sans',Arial,sans-serif;letter-spacing:-.025em;color:var(--ink);max-width:22ch}
-.r3d-integre .r3d-badge{background:transparent;border:0;border-left:2px solid var(--brand);border-radius:0;box-shadow:none;padding:2px 0 2px 12px;color:var(--muted);font-size:13px;line-height:20px;max-width:34rem}
-@media (max-width:820px){.r3d-integre .r3d-legende .r3d-titre{font-size:20px}}

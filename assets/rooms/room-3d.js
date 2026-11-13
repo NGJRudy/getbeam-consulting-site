@@ -55,8 +55,6 @@ const C = {
   echecs: [[0, 1], [1, 2], [2, 3], [5, 2], [0, 5]],
   rythmeEchecs: 0.6, // secondes entre deux tentatives
   room: { centre: [0.45, 1.85, -0.1], rayon: 1.5, finesse: 2, echelleMembres: 0.62 },
-  // Éclipse crépusculaire derrière la bulle (couleurs en RVB 0..1) : bord cobalt, milieu indigo-lilas, loin pêche.
-  eclipse: { etendue: 1.95, bord: [0.137, 0.314, 0.847], milieu: [0.43, 0.36, 0.96], loin: [0.98, 0.72, 0.58], force: 0.5 },
   transition: 1.8, // secondes pour passer d'une étape à l'autre
   // L'histoire : chaque étape = un texte + un état de la scène. Ajouter une étape = ajouter une entrée.
   etapes: [
@@ -337,26 +335,6 @@ const voile = new THREE.Mesh(new THREE.SphereGeometry(R.rayon * .99, 48, 32), ne
 }));
 // (style encre : pas de voile coloré, la densité des traits suffit)
 
-/* ── Éclipse crépusculaire : une couronne de lumière qui épouse la silhouette de la bulle.
-   Plan toujours face caméra, centré sur la Room. Centre transparent (les traits restent lisibles),
-   liseré cobalt au bord, puis dégradé crépuscule (indigo → lilas → pêche) qui s'éteint.
-   Réglages dans C.eclipse : ajouter une teinte = changer une valeur, pas le shader. */
-const EC = C.eclipse || { etendue: 1.95, bord: [0.137, 0.314, 0.847], milieu: [0.43, 0.36, 0.96], loin: [0.98, 0.72, 0.58], force: 0.5 };
-const uEclat = { value: 0 };
-const eclipse = new THREE.Mesh(new THREE.PlaneGeometry(2 * EC.etendue * R.rayon, 2 * EC.etendue * R.rayon), new THREE.ShaderMaterial({
-  transparent: true, depthWrite: false, depthTest: false,
-  uniforms: { uRevele, uEclat, uEt: { value: EC.etendue }, uF: { value: EC.force },
-    uA: { value: new THREE.Vector3(...EC.bord) }, uB: { value: new THREE.Vector3(...EC.milieu) }, uL: { value: new THREE.Vector3(...EC.loin) } },
-  vertexShader: `varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-  fragmentShader: `uniform float uRevele; uniform float uEclat; uniform float uEt; uniform float uF; uniform vec3 uA; uniform vec3 uB; uniform vec3 uL; varying vec2 vU;
-    void main(){ float d=length((vU-.5)*2.*uEt);
-      float dedans=smoothstep(.9,1.01,d), bord=exp(-pow((d-1.03)/.07,2.)), couronne=exp(-max(d-1.,0.)*1.7), fin=1.-smoothstep(uEt*.8,uEt,d);
-      vec3 c=mix(uA,uB,smoothstep(1.,1.35,d)); c=mix(c,uL,smoothstep(1.3,1.85,d));
-      float a=dedans*fin*(.5*bord+.5*couronne)*uF*smoothstep(.55,1.,uRevele)*(1.+.7*uEclat);
-      gl_FragColor=vec4(c,clamp(a,0.,1.)); }`
-}));
-eclipse.position.copy(new THREE.Vector3(...C.room.centre)); eclipse.renderOrder = -1; scene.add(eclipse);
-
 /* Place de chaque membre dans la bulle : répartis régulièrement, à différentes hauteurs. */
 membres.forEach((g, i) => {
   // Les gros objets et les petits cubes alternent, pour que les objets se répartissent sur toute la hauteur.
@@ -530,7 +508,7 @@ const iLignes = new LineSegments2(iGeo, iMat); iLignes.frustumCulled = false; sc
 let influx = [];
 function influer(i, j, coul, o = {}) { if (influx.length < MAXI) influx.push({ i, j, t0: horloge + (o.delai || 0), dur: o.dur || .45, coul, force: o.force || 1 }); }
 // Cascade : le nœud d'entrée excite plusieurs voisins, qui en excitent d'autres (deux vagues).
-function cascade(depuis, coul, n1 = 8, n2 = 3) { uEclat.value = 1; const N = noeudsToile.length; for (let a = 0; a < n1; a++) { const j = Math.floor(Math.random() * N); if (j === depuis) continue;
+function cascade(depuis, coul, n1 = 8, n2 = 3) { const N = noeudsToile.length; for (let a = 0; a < n1; a++) { const j = Math.floor(Math.random() * N); if (j === depuis) continue;
     influer(depuis, j, coul, { dur: .42 }); for (let b = 0; b < n2; b++) influer(j, Math.floor(Math.random() * N), coul, { delai: .42, dur: .42, force: .75 }); } }
 let prochainInflux = 0;
 let evtTxt = '', evtSat = null, resCouleur = 'bleu', etatsInfos = [];
@@ -772,7 +750,6 @@ renderer.setAnimationLoop(() => {
   tGeo.setPositions(tPos); tGeo.setColors(tCol);
 
   activite(dt); dessinerEchanges();
-  eclipse.quaternion.copy(camera.quaternion); uEclat.value = Math.max(0, uEclat.value - dt * 1.6);
   renderer.render(scene, camera);
 
   // Survol (après rendu) : met aussi l'histoire en pause le temps de lire.
