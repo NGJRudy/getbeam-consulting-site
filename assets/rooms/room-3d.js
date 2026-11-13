@@ -18,13 +18,20 @@ const TX = Object.assign({
   recus: '1 envoi → {n} reçus en même temps', camionRejoint: 'Le camion rejoint la Room', envoiEnCours: 'Envoi en cours…',
   donneesEntrent: 'Vos données entrent', iaPrete: 'Votre IA entraînée, prête à l’emploi', modeleSort: 'Le modèle sort de la Room',
   partDonnees: 'Chaque machine reçoit sa part des données', diloco: 'Méthode DiLoCo · tour {k} : chacun apprend de son côté',
-  miseEnCommun: 'Mise en commun → tout le monde reçoit le modèle à jour', chaine: 'Étape {k} / {n} · {nom}'
+  miseEnCommun: 'Mise en commun → tout le monde reçoit le modèle à jour', chaine: 'Étape {k} / {n} · {nom}',
+  reliesCamions: 'Chaque camion roule de son côté, tous restent reliés à la Room',
+  reliesDrones: 'Chaque drone vole de son côté, tous restent reliés à la Room',
+  bouchon: 'Bouchon signalé', itineraire: 'Toute la flotte reçoit le nouvel itinéraire',
+  livraison: 'Livraison terminée', planning: 'Le planning de tous est mis à jour',
+  anomalie: 'Anomalie repérée', position: 'Tous les drones reçoivent sa position',
+  zone: 'Zone inspectée', repartition: 'Les autres drones se répartissent la suite',
+  partage: '{evt} → partagé via la Room'
 }, L.libelles || {});
 const f = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 
 /* ═══════════ Configuration : changer la scène = changer ces données ═══════════ */
 const C = {
-  couleurs: { encre: '#14171c', bleu: '#2350d8', bleuClair: '#8aa6ff', argile: '#f4f5f7' },
+  couleurs: { encre: '#14171c', bleu: '#2350d8', bleuClair: '#8aa6ff', argile: '#f4f5f7', vert: '#16a34a', neutre: '#c9ced6' },
   // Où se place le centre de la scène dans la largeur de l'écran (0,66 = laisse la gauche au texte).
   centreEcran: { large: 0.71, etroit: 0.5 },
   camera: { fov: 22, distance: 15.5, hauteurDeg: 27, azimutDeg: -18 },
@@ -55,13 +62,29 @@ const C = {
     // Cas d'usage : toujours la même grammaire, de gauche à droite. Ça entre → la Room travaille → un résultat sort.
     { etat: 1, mode: 'entrainement', cas: 'ia', duree: 8.5, onglet: 'IA', sur: 'Cas d’usage · Intelligence artificielle', titre: 'Entraînez votre IA sur vos propres données.',
       texte: 'Vos données entrent, vos GPU, ordinateurs et même un navigateur apprennent ensemble. Le modèle en sort prêt à être utilisé.' },
-    { etat: 1, mode: 'multicast', cas: 'flotte', duree: 6.5, onglet: 'Flotte', sur: 'Cas d’usage · Flotte', titre: 'Mettez à jour toute votre flotte d’un seul envoi.',
-      texte: 'Un camion entre dans la Room, reçoit son itinéraire et ses mises à jour en même temps que toutes vos machines, puis repart.' },
+    // Éléments extérieurs : ils restent dehors, reliés à la Room par un fil ; l'info passe par la Room et change leur couleur.
+    { etat: 1, mode: 'hub', cas: 'flotte', duree: 10.5, onglet: 'Flotte', sur: 'Cas d’usage · Flotte connectée', titre: 'Vos camions restent reliés, où qu’ils roulent.',
+      texte: 'Chaque camion est connecté à la Room. Quand l’un apprend quelque chose, tous les autres le savent au même instant.' },
+    { etat: 1, mode: 'hub', cas: 'drones', duree: 10.5, onglet: 'Drones', sur: 'Cas d’usage · Drones', titre: 'Vos drones partagent ce qu’ils voient, en direct.',
+      texte: 'Chaque drone vole de son côté mais reste dans la Room : ce que l’un repère, tous les autres le reçoivent aussitôt.' },
     { etat: 1, mode: 'pair', cas: 'partenaires', duree: 6.5, onglet: 'Partenaires', sur: 'Cas d’usage · Partenaires', titre: 'Invitez un partenaire le temps d’un projet.',
       texte: 'Un expert, un client ou un financeur entre par invitation et échange en direct avec votre équipe. Projet terminé : son accès est retiré d’un coup.' }
   ],
   // Qui fait quoi dans chaque cas d'usage (numéros = ordre dans « objets »).
-  roles: { source: 5, entraineurs: [1, 2, 5, 7, 3], chaine: [3, 0, 1, 5, 2] },
+  roles: { source: 5, entraineurs: [1, 2, 5, 7, 3], chaine: [3, 0, 1, 5, 2], hub: [2, 3, 5, 6] },
+  /* Éléments extérieurs (satellites) : chacun reste hors de la bulle, relié à elle par un fil.
+     camions : voie (z), départ (x), vitesse (négative = vers la gauche). drones : rayon d'orbite, hauteur, vitesse angulaire, phase. */
+  satellites: {
+    flotte: { type: 'camion', echelle: .55, liste: [
+      { z: 1.75, x: -2.6, v: .17 }, { z: 1.75, x: .8, v: .17 }, { z: 2.35, x: -.4, v: -.13 }, { z: 2.35, x: 2.7, v: -.13 }, { z: 2.95, x: -1.8, v: .11 }, { z: 2.95, x: 1.6, v: .11 } ] },
+    drones: { type: 'drone', echelle: 1, liste: [
+      { r: 2.2, h: 2.55, w: .16, p: 0 }, { r: 2.55, h: 1.35, w: -.12, p: 1.3 }, { r: 2.05, h: 2.8, w: .1, p: 2.6 }, { r: 2.7, h: 2.0, w: .14, p: 3.9 }, { r: 2.35, h: .95, w: -.15, p: 5.0 } ] }
+  },
+  // Les nouvelles qui circulent : à quel instant, quel élément les apprend, leur couleur, et ce qui en résulte.
+  infos: {
+    flotte: [ { t: 1.2, source: 0, couleur: 'bleu', evt: 'bouchon', res: 'itineraire' }, { t: 6.0, source: 3, couleur: 'vert', evt: 'livraison', res: 'planning' } ],
+    drones: [ { t: 1.2, source: 1, couleur: 'bleu', evt: 'anomalie', res: 'position' }, { t: 6.0, source: 3, couleur: 'vert', evt: 'zone', res: 'repartition' } ]
+  },
   // Caméra pour chaque état (0 = écosystème, 1 = Room).
   cadrages: [ { cible: [0.25, 0.35, 0], distance: 15.5 }, { cible: [0.4, 1.4, 0], distance: 15.5 } ]
 };
@@ -181,7 +204,24 @@ const FORMES = {
     piece(new THREE.BoxGeometry(.012, .1, .24), ecran, g, .462, .3, 0, false); // pare-brise
     piece(new THREE.BoxGeometry(.86, .04, .26), argileSombre, g, .02, .08, 0, false);
     [[-.3, 1], [-.3, -1], [.05, 1], [.05, -1], [.34, 1], [.34, -1]].forEach(([x, z]) => piece(new THREE.CylinderGeometry(.06, .06, .05, 20).rotateX(Math.PI / 2), noir, g, x, .06, z * .15, false));
+    // Bande et toit peints : leur couleur montre la dernière information reçue.
+    const peinture = new THREE.MeshStandardMaterial({ color: C.couleurs.neutre, roughness: .5 }); g.userData.peinture = peinture;
+    piece(new THREE.BoxGeometry(.6, .07, .326), peinture, g, -.1, .37, 0, false);
+    piece(new THREE.BoxGeometry(.5, .012, .25), peinture, g, -.1, .446, 0, false);
+    piece(new THREE.BoxGeometry(.2, .012, .22), peinture, g, .34, .366, 0, false);
     ombre(g, 1.1, .55);
+  },
+  drone(g) { // corps, quatre bras, hélices (disques flous), plaque de statut colorée
+    const peinture = new THREE.MeshStandardMaterial({ color: C.couleurs.neutre, roughness: .45 }); g.userData.peinture = peinture;
+    const flou = new THREE.MeshBasicMaterial({ color: '#cfd5df', transparent: true, opacity: .55, depthWrite: false });
+    piece(bloc(.17, .05, .17, .018), argile, g, 0, 0, 0);
+    piece(new THREE.CylinderGeometry(.045, .045, .008, 24), peinture, g, 0, .03, 0, false);
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => {
+      const bras = piece(new THREE.BoxGeometry(.16, .018, .022), argile, g, a * .07, .005, b * .07, false); bras.rotation.y = Math.atan2(-b, a);
+      piece(new THREE.CylinderGeometry(.012, .012, .03, 10), argileSombre, g, a * .13, .02, b * .13, false);
+      piece(new THREE.CylinderGeometry(.075, .075, .003, 32), flou, g, a * .13, .038, b * .13, false);
+    });
+    piece(new THREE.SphereGeometry(.022, 12, 8), fente, g, 0, -.035, .04, false); // caméra
   },
   expert(g) { // une silhouette simple : la personne invitée
     piece(new THREE.CapsuleGeometry(.11, .2, 6, 16), argile, g, 0, .24, 0);
@@ -240,6 +280,12 @@ const membres = [...objets, ...cubes];
 // Acteurs des cas d'usage : ils viennent de l'extérieur, entrent dans la Room, puis ressortent.
 const ACTEURS = { camion: { nom: TX.camion, echelle: .6 }, expert: { nom: TX.expert, echelle: .85 }, production: { nom: TX.production, echelle: .8 } };
 Object.entries(ACTEURS).forEach(([type, a]) => { a.g = new THREE.Group(); FORMES[type](a.g); fusionner(a.g); a.g.scale.setScalar(.001); a.vis = 0; scene.add(a.g); });
+// Éléments extérieurs : créés une fois, cachés tant que leur cas d'usage n'est pas à l'écran.
+const COUL = { neutre: new THREE.Color(C.couleurs.neutre), bleu: new THREE.Color(C.couleurs.bleu), vert: new THREE.Color(C.couleurs.vert) };
+const SAT = {};
+Object.entries(C.satellites).forEach(([cas, cfg]) => SAT[cas] = cfg.liste.map((p, k) => { const g = new THREE.Group(); FORMES[cfg.type](g); fusionner(g); g.scale.setScalar(.001); scene.add(g);
+  const s = { g, p, k, cfg, vis: 0, cible: 0, actif: 0, x: p.x || 0, a: p.p || 0, coul: COUL.neutre.clone(), vise: COUL.neutre.clone() }; g.userData.satellite = s; return s; }));
+const tousSat = Object.values(SAT).flat();
 
 /* ══════════ La Room : sphère géodésique qui se dessine de bas en haut ══════════ */
 const R = C.room, centreRoom = new THREE.Vector3(...R.centre), room = new THREE.Group(); room.position.copy(centreRoom); scene.add(room);
@@ -300,6 +346,7 @@ function formation(mode, i) { // → [position, visible]
   if (estCube) return [centreRoom, false];
   if (mode === 'multicast') { if (i === C.roles.source) return [centreRoom.clone().setY(anneauY()), true]; const autres = objets.map((_, j) => j).filter(j => j !== C.roles.source); return [surAnneau(autres.indexOf(i), autres.length + (casCourant === 'flotte' ? 1 : 0), 1.02), true]; }
   if (mode === 'entrainement') { const W = C.roles.entraineurs, k = W.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + 1.6, W.length, 1.05), true]; }
+  if (mode === 'hub') { const Hb = C.roles.hub, k = Hb.indexOf(i); return k < 0 ? [centreRoom, false] : [surAnneau(k + .5, Hb.length, .62), true]; }
   if (mode === 'automatisation') { const Ch = C.roles.chaine, k = Ch.indexOf(i); if (k < 0) return [centreRoom, false];
     return [centreRoom.clone().addScaledVector(droiteEcran, -1.08 + k * 2.16 / (Ch.length - 1)).setY(anneauY() + Math.sin(k / (Ch.length - 1) * Math.PI) * .18), true]; }
   return [centreRoom, true];
@@ -333,13 +380,13 @@ function tenter() {
 const cible = new THREE.Vector3(); let W = 1, H = 1, etroit = false;
 function cadrer() {
   W = host.clientWidth; H = host.clientHeight; etroit = W < 820;
-  renderer.setSize(W, H, false); camera.aspect = W / H; tMat.resolution.set(W, H); lMat.resolution.set(W, H);
+  renderer.setSize(W, H, false); camera.aspect = W / H; tMat.resolution.set(W, H); lMat.resolution.set(W, H); if (window.__fMat) window.__fMat.resolution.set(W, H);
   membres.forEach(g => g.userData.surSol = new THREE.Vector3(g.userData.x * (etroit ? .62 : 1), 0, g.userData.z));
 }
-let zoom = 0, decal = 0; // decal : recentre la scène pendant les cas d'usage
+let zoom = 0, decal = 0, vueRoute = 0; // vueRoute : la caméra regarde les routes (cas « flotte ») // decal : recentre la scène pendant les cas d'usage
 function placerCamera(m) {
   const a = C.cadrages[0], b = C.cadrages[1];
-  cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m).lerp(centreRoom, zoom * .8);
+  cible.fromArray(a.cible).lerp(new THREE.Vector3(...b.cible), m).lerp(centreRoom, zoom * .8).add(v2.set(0, -.4, .85).multiplyScalar(vueRoute));
   const k = C.camera, base = (a.distance + (b.distance - a.distance) * m) * (1 - .24 * zoom);
   const dist = base * (etroit ? Math.max(1, 1.05 / (W / H)) * .82 : Math.max(1, 1.5 / (W / H))) * (INTEGRE ? (etroit ? 1.12 : .8) : 1);
   const el = THREE.MathUtils.degToRad(k.hauteurDeg), az = THREE.MathUtils.degToRad(k.azimutDeg);
@@ -386,7 +433,7 @@ const LIENS = {
   entrainement: C.roles.entraineurs.map(i => ['c', i]),
   automatisation: C.roles.chaine.slice(0, -1).map((a, k) => [a, C.roles.chaine[k + 1]])
 };
-LIENS.flotte = LIENS.multicast; LIENS.ia = LIENS.entrainement; LIENS.partenaires = LIENS.pair;
+LIENS.hub = C.roles.hub.map(i => ['c', i]); LIENS.flotte = LIENS.multicast; LIENS.ia = LIENS.entrainement; LIENS.partenaires = LIENS.pair;
 let liens = LIENS.pair;
 const liPos = new Float32Array(40 * 6), liGeo = new THREE.BufferGeometry(); liGeo.setAttribute('position', new THREE.BufferAttribute(liPos, 3));
 const liMat = new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false });
@@ -399,13 +446,22 @@ const puceEntree = puce('', 'r3d-chip'), puceSortie = puce('', 'r3d-chip r3d-sor
 const puceModele = document.createElement('div'); puceModele.className = 'r3d-chip r3d-c'; puceModele.textContent = TX.modele;
 const puceSource = puce(TX.source, 'r3d-chip r3d-c'); host.parentElement.appendChild(puceModele);
 // Paquets de données (tête + petite traînée) et anneaux d'arrivée.
-const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
+const MAXP = 420, paqMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }), MAXP); paqMesh.frustumCulled = false; scene.add(paqMesh);
+for (let i = 0; i < MAXP; i++) paqMesh.setColorAt(i, COUL.bleu); // couleur par paquet (bleu par défaut, vert pour la 2e nouvelle…)
 let paquets = [];
-function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin }); }
-function posPaquet(p, t, out) { centreDe(p.a, tA); centreDe(p.b, tB); tC.copy(tA).add(tB).multiplyScalar(.5).lerp(centreRoom, .3); const u = 1 - t;
+function envoyer(a, b, dur, o = {}) { paquets.push({ a, b, t0: horloge + (o.delai || 0), dur, taille: o.taille || .042, fin: o.fin, couleur: o.couleur || COUL.bleu }); }
+// Point d'attache du fil sur la bulle : là où la ligne élément → centre traverse la sphère.
+const ancre = (p, out) => out.copy(p).sub(centreRoom).normalize().multiplyScalar(R.rayon * .98).add(centreRoom);
+function posPaquet(p, t, out) {
+  const sa = p.a.isObject3D && p.a.userData.satellite, sb = p.b.isObject3D && p.b.userData.satellite;
+  if (sa || sb) { // le long du fil : élément extérieur → bord de la bulle → centre de la Room (ou l'inverse)
+    centreDe(sa ? p.a : p.b, tA); ancre(tA, tB); centreDe('c', tC); const tt = sa ? t : 1 - t;
+    const d1 = tA.distanceTo(tB), d2 = tB.distanceTo(tC), k = tt * (d1 + d2);
+    return k < d1 ? out.copy(tA).lerp(tB, k / d1) : out.copy(tB).lerp(tC, (k - d1) / d2); }
+  centreDe(p.a, tA); centreDe(p.b, tB); tC.copy(tA).add(tB).multiplyScalar(.5).lerp(centreRoom, .3); const u = 1 - t;
   return out.copy(tA).multiplyScalar(u * u).addScaledVector(tC, 2 * u * t).addScaledVector(tB, t * t); }
 const anneaux = Array.from({ length: 40 }, () => { const m = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 48), new THREE.MeshBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); m.visible = false; scene.add(m); return { m, t0: -9, x: 0, taille: .3 }; });
-function anneau(x, taille = .32) { const a = anneaux.find(r => horloge - r.t0 > .8) || anneaux[0]; a.t0 = horloge; a.x = x; a.taille = taille; a.m.visible = true; }
+function anneau(x, taille = .32, couleur = COUL.bleu) { const a = anneaux.find(r => horloge - r.t0 > .8) || anneaux[0]; a.t0 = horloge; a.x = x; a.taille = taille; a.m.visible = true; a.m.material.color.copy(couleur); }
 // Le modèle commun (entraînement IA) : un cristal au centre de la Room.
 const cristal = new THREE.Group(); cristal.position.copy(centreRoom); cristal.scale.setScalar(.001); scene.add(cristal);
 { const ico = new THREE.IcosahedronGeometry(.24, 0);
@@ -416,6 +472,15 @@ let cristalCible = 0, cristalPouls = 0;
 // Anneaux d'entraînement local : un cercle qui tourne autour de chaque machine qui apprend.
 const cerclesLocaux = C.roles.entraineurs.map(() => { const pts = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI * 1.6).getPoints(40).map(p => new THREE.Vector3(p.x, 0, p.y));
   const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.couleurs.bleu, transparent: true, opacity: 0 })); scene.add(l); return l; });
+// Fils : un trait fin de chaque élément extérieur jusqu'à la bulle ; il s'éclaire quand une donnée y passe.
+const MAXF = tousSat.length, fPos = new Float32Array(MAXF * 6), fCol = new Float32Array(MAXF * 6).fill(1);
+const fGeo = new LineSegmentsGeometry(); fGeo.setPositions(fPos); fGeo.setColors(fCol);
+const fMat = new LineMaterial({ vertexColors: true, linewidth: 1.6, worldUnits: false });
+window.__fMat = fMat; fMat.resolution.set(W, H);
+const fLignes = new LineSegments2(fGeo, fMat); fLignes.frustumCulled = false; scene.add(fLignes);
+const FIL = new THREE.Color(C.couleurs.bleuClair).lerp(BLANC, .45);
+const puceEvt = puce('', 'r3d-chip r3d-c');
+let evtTxt = '', evtSat = null, resCouleur = 'bleu', etatsInfos = [];
 const badge = document.getElementById('r3d-badge');
 if (INTEGRE) document.getElementById('r3d-texte').appendChild(badge);
 let modeCourant = null, evt = 0, recus = 0, tour = 0, sortieTxt = '', entreeTxt = '', donneesEnvoyees = false;
@@ -430,15 +495,35 @@ function trajet(t, tA1, tB, tB2) {
 function activite(dt) {
   const e = E[etape], actif = m > .97 ? e.mode : 'isole';
   const cas = m > .97 ? (e.cas || null) : null, cle = actif + '/' + cas;
-  if (cle !== modeCourant) { modeCourant = cle; casCourant = cas; evt = 0; donneesEnvoyees = false; recus = 0; tour = 0; badge.style.opacity = 0; liens = LIENS[actif] || []; paquets = []; cristal.position.copy(centreRoom); }
+  if (cle !== modeCourant) { modeCourant = cle; casCourant = cas; evt = 0; donneesEnvoyees = false; recus = 0; tour = 0; badge.style.opacity = 0; liens = LIENS[actif] || []; paquets = []; cristal.position.copy(centreRoom);
+    etatsInfos = []; evtSat = null; tousSat.forEach(s => { s.coul.copy(COUL.neutre); s.vise.copy(COUL.neutre); }); }
   const t = tEtape, tc = cas === 'ia' ? t - 1.2 : t; // l'entraînement démarre une fois les données arrivées
-  sortieTxt = ''; entreeTxt = '';
+  sortieTxt = ''; entreeTxt = ''; evtTxt = '';
+  tousSat.forEach(s => s.cible = 0);
   Object.values(ACTEURS).forEach(a => a.cible = 0);
   liMat.opacity = THREE.MathUtils.clamp((m - .9) / .1, 0, 1) * .45;
   // Hiérarchie : quand les échanges commencent, la bulle passe au second plan pour que les données ressortent.
   uAttenue.value += ((actif === 'isole' ? 1 : .3) - uAttenue.value) * Math.min(1, dt * 3);
   cristalCible = actif === 'entrainement' ? 1 : 0;
-  if (cas === 'partenaires') { // l'expert entre, échange avec l'équipe, puis son accès est retiré
+  if (SAT[cas]) { // éléments extérieurs reliés : les nouvelles passent par la Room et changent la couleur de chacun
+    const Ss = SAT[cas], infos = C.infos[cas] || [];
+    Ss.forEach(s => s.cible = 1);
+    // Bavardage de fond : un élément envoie à un autre, toujours en passant par la Room (lentement, discret).
+    if (t > evt) { const a = Ss[Math.floor(Math.random() * Ss.length)], b = Ss[(a.k + 1 + Math.floor(Math.random() * (Ss.length - 1))) % Ss.length];
+      envoyer(a.g, 'c', 1.1, { taille: .026 }); envoyer('c', b.g, 1.1, { delai: 1.1, taille: .026 }); evt = t + .55; }
+    let derniere = -1;
+    infos.forEach((inf, k) => { if (t < inf.t) return; derniere = k; const cl = COUL[inf.couleur], src = Ss[inf.source];
+      if (!etatsInfos[k]) { etatsInfos[k] = { recus: 0 }; src.vise.copy(cl); anneau(src.g, .42, cl);
+        // 1) la nouvelle monte vers la Room ; 2) la Room la renvoie à tous, en même temps (dehors et dedans)
+        envoyer(src.g, 'c', 1.2, { taille: .055, couleur: cl, fin: () => { anneau('c', .55, cl);
+          const cibles = [...Ss.filter(s => s !== src).map(s => s.g), ...C.roles.hub];
+          cibles.forEach(c => envoyer('c', c, 1.4, { taille: .05, couleur: cl, fin: () => { etatsInfos[k].recus++; anneau(c, c.isObject3D ? .38 : .3, cl); if (c.isObject3D) c.userData.satellite.vise.copy(cl); } })); } }); }
+    });
+    if (derniere < 0) afficherBadge(cas === 'flotte' ? TX.reliesCamions : TX.reliesDrones);
+    else { const inf = infos[derniere], st = etatsInfos[derniere], cl = inf.couleur; evtSat = Ss[inf.source]; evtTxt = TX[inf.evt];
+      afficherBadge(st.recus ? f(TX.recus, { n: st.recus }) : f(TX.partage, { evt: TX[inf.evt] }));
+      if (st.recus >= Ss.length - 1) { sortieTxt = TX[inf.res]; resCouleur = cl; } }
+  } else if (cas === 'partenaires') { // l'expert entre, échange avec l'équipe, puis son accès est retiré
     const X = ACTEURS.expert, dans = t > 1.0 && t < 4.0;
     X.cible = t < 5.2 ? 1 : 0; X.g.position.copy(trajet(t, 1.0, 4.0, 5.0));
     const voisinsX = [[X.g, 0], [X.g, objets.length - 1], [X.g, 2]];
@@ -481,6 +566,15 @@ function activite(dt) {
     if (evt <= k && k < Ch.length - 1) { evt = k + 1; anneau(Ch[k], .3); envoyer(Ch[k], Ch[k + 1], .7, { taille: .04, fin: () => anneau(Ch[k + 1], .34) }); }
     afficherBadge(f(TX.chaine, { k: Math.min(k + 1, Ch.length), n: Ch.length, nom: membres[Ch[Math.min(k, Ch.length - 1)]].userData.nom }));
   }
+  // Éléments extérieurs : roulent / volent lentement, apparaissent en douceur, prennent la couleur de la nouvelle reçue.
+  tousSat.forEach(s => { const g = s.g, p = s.p; s.vis += (s.cible - s.vis) * Math.min(1, dt * 3);
+    let bord = 1;
+    if (s.cfg.type === 'camion') { if (!reduit) s.x += p.v * dt; if (s.x > 3.6) s.x = -3.4; if (s.x < -3.4) s.x = 3.6;
+      bord = THREE.MathUtils.clamp(Math.min(3.6 - s.x, s.x + 3.4) / .6, 0, 1); g.position.set(s.x, 0, p.z); g.rotation.y = p.v > 0 ? 0 : Math.PI; }
+    else { if (!reduit) s.a += p.w * dt; g.position.set(centreRoom.x + Math.cos(s.a) * p.r, p.h + Math.sin(horloge * 1.7 + p.p) * .05, centreRoom.z + Math.sin(s.a) * p.r * .8); g.rotation.y = -s.a; }
+    g.scale.setScalar(Math.max(.001, s.vis * s.cfg.echelle * bord));
+    s.coul.lerp(s.vise, Math.min(1, dt * 6)); if (g.userData.peinture) g.userData.peinture.color.copy(s.coul);
+    s.actif = Math.max(0, s.actif - dt * 1.5); });
   // Acteurs : apparaissent / disparaissent en douceur.
   Object.values(ACTEURS).forEach(a => { a.vis += (a.cible - a.vis) * Math.min(1, dt * 5); a.g.scale.setScalar(Math.max(.001, a.vis * a.echelle)); a.g.rotation.y = Math.atan2(-droiteEcran.z, droiteEcran.x); });
   if (actif !== 'entrainement') cerclesLocaux.forEach(l => l.material.opacity = Math.max(0, l.material.opacity - dt * 3));
@@ -490,12 +584,15 @@ function activite(dt) {
 }
 function afficherBadge(txt) { if (badge.textContent !== txt) badge.textContent = txt; badge.style.opacity = 1; }
 function dessinerEchanges() {
+  const off = host.offsetTop, offL = host.offsetLeft;
+  const placer = (d, p, dy = 6) => { tA.copy(p).project(camera); const demi = d.offsetWidth / 2 + 8; d.style.left = (THREE.MathUtils.clamp((tA.x + 1) / 2 * W, demi, W - demi) + offL) + 'px'; // jamais coupée au bord de l'écran
+    d.style.top = ((1 - tA.y) / 2 * H + off + dy) + 'px'; };
   // Liens
   liens.forEach(([a, b], k) => { centreDe(a, tA).toArray(liPos, k * 6); centreDe(b, tB).toArray(liPos, k * 6 + 3); }); liGeo.setDrawRange(0, liens.length * 2); liGeo.attributes.position.needsUpdate = true;
   // Étiquettes directes
-  const mon = m > .97 && !modeCourant.startsWith('isole') && !(etroit && (modeCourant.startsWith('pair') || modeCourant.startsWith('multicast'))), off = host.offsetTop, offL = host.offsetLeft;
+  const mon = m > .97 && !modeCourant.startsWith('isole') && !(etroit && (modeCourant.startsWith('pair') || modeCourant.startsWith('multicast')));
   // Qui nommer : dans un cas d'usage, seulement les acteurs de l'histoire (sinon 8 étiquettes se disputent l'œil).
-  const utile = i => casCourant === 'flotte' ? i === C.roles.source : casCourant === 'partenaires' ? false : modeCourant.startsWith('entrainement') ? C.roles.entraineurs.includes(i) : true;
+  const utile = i => SAT[casCourant] ? false : casCourant === 'partenaires' ? false : modeCourant.startsWith('entrainement') ? C.roles.entraineurs.includes(i) : true;
   const pris = [];
   const libre = (x, y, w) => { if (pris.some(r => Math.abs(r[0] - x) < (r[2] + w) / 2 + 4 && Math.abs(r[1] - y) < 24)) return false; pris.push([x, y, w]); return true; };
   Object.values(ACTEURS).forEach(a => { if (a.vis > .7) { tA.copy(a.g.position).project(camera); pris.push([(tA.x + 1) / 2 * W, (1 - tA.y) / 2 * H + 6, a.nom.length * 7 + 16]); } });
@@ -503,20 +600,27 @@ function dessinerEchanges() {
     if (ok) { tA.copy(g.position).setY(g.position.y - .06).project(camera); const x = (tA.x + 1) / 2 * W, y = (1 - tA.y) / 2 * H + 6; ok = libre(x, y, g.userData.nom.length * 7 + 16);
       if (ok) { d.style.left = (x + offL) + 'px'; d.style.top = (y + off) + 'px'; } }
     d.style.opacity = ok ? 1 : 0; });
-  const placer = (d, p, dy = 6) => { tA.copy(p).project(camera); const demi = d.offsetWidth / 2 + 8; d.style.left = (THREE.MathUtils.clamp((tA.x + 1) / 2 * W, demi, W - demi) + offL) + 'px'; // jamais coupée au bord de l'écran
-    d.style.top = ((1 - tA.y) / 2 * H + off + dy) + 'px'; };
   Object.values(ACTEURS).forEach(a => { const ok = m > .97 && a.vis > .7; a.puce.style.opacity = ok ? 1 : 0; if (ok) placer(a.puce, v1.copy(a.g.position).setY(a.g.position.y - .04)); });
   puceEntree.style.opacity = entreeTxt && m > .97 ? 1 : 0; if (entreeTxt) { puceEntree.textContent = entreeTxt; placer(puceEntree, dehors(-1, v1).setY(v1.y + .35), 0); }
   puceSortie.style.opacity = sortieTxt && m > .97 ? 1 : 0; if (sortieTxt) { puceSortie.textContent = sortieTxt; placer(puceSortie, dehors(1, v1).setY(v1.y - .2), 10); }
-  const okS = m > .97 && casCourant === 'flotte'; puceSource.style.opacity = okS ? 1 : 0; if (okS) placer(puceSource, v1.copy(objets[C.roles.source].position).setY(objets[C.roles.source].position.y - .06));
+  const okS = false; puceSource.style.opacity = okS ? 1 : 0; if (okS) placer(puceSource, v1.copy(objets[C.roles.source].position).setY(objets[C.roles.source].position.y - .06));
   const okM = mon && modeCourant.startsWith('entrainement') && !(casCourant === 'ia' && tEtape > 6.0); puceModele.style.opacity = okM ? 1 : 0;
   if (okM) { tA.copy(centreRoom).setY(centreRoom.y - .3).project(camera); puceModele.style.left = ((tA.x + 1) / 2 * W + offL) + 'px'; puceModele.style.top = ((1 - tA.y) / 2 * H + off) + 'px'; }
+  // Fils des éléments extérieurs
+  tousSat.forEach((s, k) => { if (s.vis < .02) { fPos.fill(0, k * 6, k * 6 + 6); fCol.fill(1, k * 6, k * 6 + 6); return; }
+    centreDe(s.g, tA); ancre(tA, tB); tA.toArray(fPos, k * 6); tB.toArray(fPos, k * 6 + 3);
+    const c = FIL.clone().lerp(s.coul.equals(COUL.neutre) ? BLEU : s.coul, .25 + .6 * s.actif).lerp(BLANC, 1 - s.vis * (s.g.scale.x / (s.cfg.echelle || 1)));
+    fCol.set([c.r, c.g, c.b, c.r, c.g, c.b], k * 6); });
+  fGeo.setPositions(fPos); fGeo.setColors(fCol);
+  puceEvt.style.opacity = evtTxt && evtSat && m > .97 ? 1 : 0; if (evtTxt && evtSat) { puceEvt.textContent = evtTxt; placer(puceEvt, v1.copy(evtSat.g.position).setY(evtSat.g.position.y + .45), -26); }
+  puceSortie.classList.toggle('r3d-vert', resCouleur === 'vert');
   // Paquets
   let n = 0; const garde = [];
   for (const p of paquets) { const t = (horloge - p.t0) / p.dur;
     if (t >= 1) { p.fin && p.fin(); continue; } garde.push(p); if (t < 0) continue;
-    for (let q = 0; q < 4 && n < MAXP; q++, n++) { const tt = Math.max(0, t - q * .045), s = p.taille * (1 - q * .2); posPaquet(p, tt, v1); paqMesh.setMatrixAt(n, m4.compose(v1, q0, v2.set(s, s, s))); } }
-  paquets = garde; paqMesh.count = n; paqMesh.instanceMatrix.needsUpdate = true;
+    for (let q = 0; q < 4 && n < MAXP; q++, n++) { const tt = Math.max(0, t - q * .045), s = p.taille * (1 - q * .2); posPaquet(p, tt, v1); paqMesh.setMatrixAt(n, m4.compose(v1, q0, v2.set(s, s, s))); paqMesh.setColorAt(n, p.couleur); }
+    [p.a, p.b].forEach(x => { if (x.isObject3D && x.userData.satellite) x.userData.satellite.actif = 1; }); }
+  paquets = garde; paqMesh.count = n; paqMesh.instanceMatrix.needsUpdate = true; if (paqMesh.instanceColor) paqMesh.instanceColor.needsUpdate = true;
   // Anneaux : s'agrandissent et s'effacent, toujours face à la caméra
   anneaux.forEach(a => { const e = (horloge - a.t0) / .8; if (e > 1) { a.m.visible = false; return; } centreDe(a.x, a.m.position); a.m.quaternion.copy(camera.quaternion);
     a.m.scale.setScalar(a.taille * (.35 + e * .9)); a.m.material.opacity = (1 - e) * .9; });
@@ -541,8 +645,9 @@ renderer.setAnimationLoop(() => {
   // État de la scène : glisse doucement vers celui de l'étape.
   const viseM = E[etape].etat; m = reduit ? viseM : m + Math.sign(viseM - m) * Math.min(Math.abs(viseM - m), dt / C.transition);
   const me = facile(m);
-  decal += ((m > .97 && E[etape].cas ? 1 : 0) - decal) * Math.min(1, dt * 1.8);
-  zoom += ((m > .97 && E[etape].cas ? .35 : m > .97 && E[etape].mode !== 'pair' ? 1 : m > .97 ? .55 : 0) - zoom) * Math.min(1, dt * 1.8);
+  vueRoute += ((m > .97 && E[etape].cas === 'flotte' ? 1 : 0) - vueRoute) * Math.min(1, dt * 1.8);
+  decal += ((m > .97 && E[etape].cas && !SAT[E[etape].cas] ? 1 : 0) - decal) * Math.min(1, dt * 1.8);
+  zoom += ((m > .97 && SAT[E[etape].cas] ? -.12 : m > .97 && E[etape].cas ? .35 : m > .97 && E[etape].mode !== 'pair' ? 1 : m > .97 ? .55 : 0) - zoom) * Math.min(1, dt * 1.8);
   placerCamera(me);
 
   if (!reduit) {

@@ -66,3 +66,4 @@
 }
 .r3d-integre .r3d-badge{position:static;transform:none;display:inline-block;margin-top:10px;white-space:normal}
 @media (max-width:820px){.r3d-integre .r3d-badge{font-size:12px;line-height:16px;padding:4px 10px;margin-top:8px}}
+.r3d-chip.r3d-sortie.r3d-vert{background:#16a34a;border-color:#16a34a;box-shadow:0 8px 20px -8px rgba(22,163,74,.55)}
