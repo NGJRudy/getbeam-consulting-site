@@ -89,7 +89,7 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
       });
   }).catch(function(){
     try{ localStorage.removeItem(CLE); }catch(e){}
-    erreur('Ce lien n’est plus valable. Demandez un nouvel envoi depuis l’espace consultant.');
+    erreur('Ce lien n’est plus valable : il a expiré (30 jours) ou un e-mail plus récent l’a remplacé. Ouvrez le dernier e-mail reçu, ou demandez un nouvel envoi depuis l’espace consultant.');
   });
 })();
 </script>
