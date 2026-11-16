@@ -51,6 +51,17 @@ main{{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}}
   s.src='https://js.hsforms.net/forms/embed/{portal}.js'; s.defer=true;
   document.head.appendChild(s);
 }})();
+// Compteur de scans du QR code (tableau de bord du consultant) : une fois par visite, sans cookie,
+// envoi « sans attendre » (sendBeacon) : n'a aucun effet sur le formulaire si Make ne répond pas.
+(function(){{
+  var id={id_js}; if(!id) return;
+  try{{ if(sessionStorage.getItem('beam-scan-'+id)) return; sessionStorage.setItem('beam-scan-'+id,'1'); }}catch(e){{}}
+  fetch('/x/consultants.json',{{cache:'no-cache'}}).then(function(r){{ return r.json(); }}).then(function(c){{
+    if(!c||!c.webhook) return;
+    var b=new URLSearchParams({{action:'scan',a:id}});
+    if(navigator.sendBeacon) navigator.sendBeacon(c.webhook,b); else fetch(c.webhook,{{method:'POST',body:b,keepalive:true}});
+  }}).catch(function(){{}});
+}})();
 // Après l'envoi : la page entière part vers le calendrier, pré-rempli (prénom, nom, e-mail).
 // Pourquoi : le lien « Choisir mon créneau » est dans le cadre HubSpot et s'ouvre dans un nouvel
 // onglet, ce que les navigateurs intégrés (WhatsApp, Instagram, lecteurs de QR) bloquent souvent.

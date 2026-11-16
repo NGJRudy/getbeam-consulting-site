@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<title>BEAM · Mon QR code</title>
+<title>BEAM · Mon espace consultant</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
 <style>
@@ -23,6 +23,27 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
 .msg.err{color:var(--danger)}
 .conseils{text-align:left;font-size:14px;color:var(--muted);margin:16px 0 0;padding:0 0 0 18px}
 [hidden]{display:none!important}
+.bloc{text-align:left}
+.bloc h2{font-size:18px;line-height:26px;margin:0 0 4px}
+.chiffres{display:flex;gap:10px;margin:12px 0 4px}
+.chiffre{flex:1;background:var(--surface);border-radius:12px;padding:10px 12px}
+.chiffre b{display:block;font-size:24px;line-height:30px}
+.chiffre span{font-size:13px;color:var(--muted)}
+.ent{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0 0}
+.ent h3{font-size:16px;line-height:22px;margin:0}
+.ent .qui{font-size:13px;color:var(--muted);margin:2px 0 0}
+.etapes{list-style:none;margin:12px 0 4px;padding:0;display:flex;gap:4px}
+.etapes li{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.etapes li.fait{background:#1a7f4b}
+.etapes li.ici{background:var(--brand)}
+.etape{font-size:14px;margin:6px 0 0}
+.etape b{color:var(--brand)}
+.badge{display:inline-block;font-size:12px;line-height:18px;padding:1px 8px;border-radius:999px;background:var(--surface);color:var(--muted);margin:6px 6px 0 0}
+.badge.ko{background:#fbeceb;color:var(--danger)}
+.contact{font-size:14px;margin:10px 0 0;padding:10px 12px;background:var(--surface);border-radius:10px}
+.contact a{color:var(--brand)}
+.vide{font-size:14px;color:var(--muted);margin:12px 0 0}
+.ent .agir{display:inline-block;font-size:14px;margin:10px 0 0;color:var(--brand)}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
@@ -41,6 +62,28 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
       <li>Ne partagez pas le lien de cet e-mail : il donne accès à cette page. Le lien du QR code, lui, peut être partagé.</li>
     </ul>
   </div>
+</section>
+<section class="card bloc" id="invit" hidden>
+  <h2>Inviter des consultants dans mon équipe</h2>
+  <p class="sub">Envoyez ce lien aux personnes que vous recrutez. En s'inscrivant avec, elles sont rattachées à votre équipe : vous suivez leurs entreprises ici.</p>
+  <p class="lien" id="invit-lien"></p>
+  <button id="invit-cp" class="sec" type="button">Copier mon lien d'invitation</button>
+  <p class="msg" id="invit-m" role="status" aria-live="polite"></p>
+</section>
+<section class="card bloc" id="suivi" hidden>
+  <h2>Mon suivi</h2>
+  <div class="chiffres">
+    <div class="chiffre"><b id="n-scans">0</b><span>scans de mon QR code</span></div>
+    <div class="chiffre"><b id="n-ent">0</b><span>entreprises inscrites</span></div>
+    <div class="chiffre"><b id="n-rdv">0</b><span>avec rendez-vous</span></div>
+  </div>
+  <div id="liste"></div>
+  <p class="msg" style="font-size:13px">Mis à jour environ toutes les 30 minutes. Une entreprise apparaît ici dès qu'elle a rempli le formulaire avec votre QR code.</p>
+</section>
+<section class="card bloc" id="equipe" hidden>
+  <h2>Mon équipe</h2>
+  <p class="sub">Entreprises amenées par les consultants de votre équipe.</p>
+  <div id="liste-eq"></div>
 </section>
 <p class="msg" style="text-align:center">Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/">Espace consultant</a></p>
 </main>
@@ -66,6 +109,73 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
     for(var r=0;r<n;r++) for(var k=0;k<n;k++) if(q.isDark(r,k)) x.fillRect((k+marge)*px,(r+marge)*px,px,px);
   }
 
+  // ---------------------------------------------------------------- tableau de bord
+  // Étapes du pipeline HubSpot (identifiants internes → étape affichée). Ajouter une étape = une ligne.
+  var ETAPES=[
+    {id:'appointmentscheduled', nom:'Formulaire reçu'},
+    {id:'qualifiedtobuy',       nom:'Contactée par BEAM'},
+    {id:'presentationscheduled',nom:'Rendez-vous programmé'},
+    {id:'decisionmakerboughtin',nom:'Démonstration faite'},
+    {id:'contractsent',         nom:'Test en cours'},
+    {id:'1477967974',           nom:'Proposition envoyée'},
+    {id:'1477967975',           nom:'Validation par l’entreprise'},
+    {id:'closedwon',            nom:'Cliente BEAM'}
+  ];
+  function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+  function date(v){ if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+  function entreprise(d){ return String((d.properties||{}).dealname||'Entreprise').split(' — ')[0]; }
+  function rang(d){ var st=(d.properties||{}).dealstage; for(var i=0;i<ETAPES.length;i++) if(ETAPES[i].id===st) return i; return -1; }
+  function aRdv(d){ var p=d.properties||{}; return rang(d)>=2 || !!p.engagements_last_meeting_booked || p.statut_presentation==='rdv'; }
+  function carte(d, contact, consultant){
+    var p=d.properties||{}, r=rang(d), c=el('div','ent');
+    c.appendChild(el('h3',null,entreprise(d)));
+    if(consultant) c.appendChild(el('p','qui','Amenée par '+consultant));
+    c.appendChild(el('p','qui','Inscrite le '+date(p.createdate)));
+    var perdu=p.dealstage==='closedlost', refus=p.statut_reservation==='Refusée'||p.statut_reservation==='Expirée';
+    var ol=el('ol','etapes'); ol.setAttribute('aria-hidden','true');
+    ETAPES.forEach(function(_,i){ ol.appendChild(el('li', perdu||refus?'':(i<r?'fait':(i===r?'ici':'')))); });
+    c.appendChild(ol);
+    var e=el('p','etape'); e.appendChild(document.createTextNode('Étape : ')); e.appendChild(el('b',null, perdu?'Projet arrêté':(refus?'Réservation '+p.statut_reservation.toLowerCase():(r>=0?ETAPES[r].nom:'En cours'))));
+    c.appendChild(e);
+    if(p.engagements_last_meeting_booked) c.appendChild(el('span','badge','Rendez-vous réservé le '+date(p.engagements_last_meeting_booked)));
+    else if(p.statut_presentation==='rdv') c.appendChild(el('span','badge','A déjà pris rendez-vous'));
+    else if(r<=1 && !perdu && !refus) c.appendChild(el('span','badge','Pas encore de rendez-vous : aidez-la à en réserver un'));
+    if(p.statut_reservation==='En attente') c.appendChild(el('span','badge','Réservation en cours de validation'));
+    if(contact){
+      var q=contact.properties||{}, b=el('div','contact');
+      var nom=[q.firstname,q.lastname].filter(Boolean).join(' ');
+      if(nom) b.appendChild(el('div',null,nom+(q.jobtitle?' · '+q.jobtitle:'')));
+      [['email','mailto:'],['phone','tel:'],['mobilephone','tel:']].forEach(function(k){
+        var v=q[k[0]]; if(!v) return; var a=el('a',null,v); a.href=k[1]+String(v).replace(/\s/g,''); var d2=el('div'); d2.appendChild(a); b.appendChild(d2);
+      });
+      if(q.website){ var w=String(q.website); if(!/^https?:\/\//i.test(w)) w='https://'+w; var aw=el('a',null,q.website); aw.href=w; aw.target='_blank'; aw.rel='noopener'; var dw=el('div'); dw.appendChild(aw); b.appendChild(dw); }
+      if(b.childNodes.length) c.appendChild(b);
+    }
+    var m=el('a','agir','Écrire à l’équipe BEAM au sujet de cette entreprise');
+    m.href='mailto:team@getbeam-consulting.com?subject='+encodeURIComponent('Entreprise '+entreprise(d)+' (consultant '+a+')');
+    c.appendChild(m);
+    return c;
+  }
+  function tableau(j){
+    if(!j||j.ok!==true) return;
+    var mes=Array.isArray(j.mes)?j.mes:[], liens=Array.isArray(j.liens)?j.liens:[], contacts=Array.isArray(j.contacts)?j.contacts:[], eq=Array.isArray(j.equipe)?j.equipe:[];
+    var parId={}; contacts.forEach(function(c){ parId[String(c.id)]=c; });
+    var contactDe={}; liens.forEach(function(l){ var to=(l.to||[])[0]; if(l.from&&to) contactDe[String(l.from.id)]=parId[String(to.toObjectId)]; });
+    $('n-scans').textContent=String(Number(j.scans)||0);
+    $('n-ent').textContent=String(mes.length);
+    $('n-rdv').textContent=String(mes.filter(aRdv).length);
+    var L=$('liste');
+    if(!mes.length) L.appendChild(el('p','vide','Aucune entreprise pour l’instant. Dès qu’une entreprise remplit le formulaire avec votre QR code, elle apparaît ici.'));
+    mes.forEach(function(d){ L.appendChild(carte(d, contactDe[String(d.id)], null)); });
+    $('suivi').hidden=false;
+    if(j.chef===true){
+      var E=$('liste-eq');
+      if(!eq.length) E.appendChild(el('p','vide','Aucune entreprise amenée par votre équipe pour l’instant.'));
+      eq.forEach(function(d){ E.appendChild(carte(d, null, (d.properties||{}).apporteur_nom||'un consultant')); });
+      $('equipe').hidden=false;
+    }
+  }
+
   fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(cfg){
     if(!cfg.webhook) throw new Error('fermé');
     return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'verification',id:a,jeton:t})})
@@ -86,6 +196,16 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
           else $('m2').textContent=j.lien;
         };
         $('attente').hidden=true; $('pret').hidden=false;
+        if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
+          $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
+          $('invit-cp').onclick=function(){
+            var fin=function(){ $('invit-m').textContent='Lien d’invitation copié.'; };
+            if(navigator.clipboard) navigator.clipboard.writeText(j.invitation).then(fin,function(){ $('invit-m').textContent=j.invitation; });
+            else $('invit-m').textContent=j.invitation;
+          };
+        }
+        return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'tableau',id:a,jeton:t})})
+          .then(function(r){ return r.json(); }).then(tableau).catch(function(){});
       });
   }).catch(function(){
     try{ localStorage.removeItem(CLE); }catch(e){}
