@@ -6,6 +6,8 @@
  "_turnstile": "Clé publique Cloudflare Turnstile (anti-robot). La clé secrète reste dans Make, jamais ici. Vide = pas de widget (à ne pas laisser vide en production).",
  "conditions": { "version": "1.0", "url": "/consultants/conditions/v1/" },
  "_conditions": "Nouvelle version des Conditions = nouveau dossier conditions/vN/ (l'ancien reste en ligne, jamais modifié) + changer version et url ici.",
+ "programme": { "taux_consultant": 2.5, "taux_chef_equipe": 0.5, "duree_annees": 5 },
+ "_programme": "Taux de commission en %. Lus par Make (scénario Réservation v2) à chaque nouvelle réservation et FIGÉS sur la transaction HubSpot (Taux consultant / Taux chef d’équipe) : changer un taux ici ne touche que les réservations suivantes. Un seul niveau de chef payé (le chef direct du consultant), jamais de chaîne.",
  "lien_qr_autorise": "https://getbeam-consulting.com/go/",
  "_lien_qr_autorise": "La page mon-qr n'affiche un QR code que si le lien renvoyé par Make commence par ceci (protection contre un lien piégé).",
  "pays": ["Côte d'Ivoire", "France", "Belgique", "Suisse", "Canada", "Sénégal", "Cameroun", "Bénin", "Togo", "Burkina Faso", "Mali", "Niger", "Guinée", "Gabon", "Congo", "RD Congo", "Maroc", "Algérie", "Tunisie", "Madagascar", "Maurice", "Haïti", "Nigeria", "Ghana", "Kenya", "Afrique du Sud", "États-Unis", "Royaume-Uni", "Allemagne", "Espagne", "Italie", "Portugal", "Luxembourg", "Autre"],
