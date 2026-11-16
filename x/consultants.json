@@ -1,7 +1,7 @@
 {
  "_aide": "Réglages de l'espace consultant (getbeam-consulting.com/consultants/). Lu par les pages au chargement : changer une valeur ici suffit, sans toucher aux pages. Tant que « webhook » est vide, les inscriptions affichent « bientôt ouvertes » et rien n'est envoyé.",
- "webhook": "",
- "_webhook": "URL du webhook Make (zone eu1) du scénario « Consultants BEAM ». Un seul webhook, l'action est dans le champ « action » (voir _contrat).",
+ "webhook": "https://hook.eu1.make.com/397b1fmxn89snx4m4xsyqg6h9lrkwvow",
+ "_webhook": "Webhook Make (zone eu1) du scénario « BEAM consultants — Inscription, renvoi et vérification du QR (site) » (id 8611090). Magasin « BEAM consultants » (id 261081). Un seul webhook, l'action est dans le champ « action » (voir _contrat).",
  "turnstile_sitekey": "",
  "_turnstile": "Clé publique Cloudflare Turnstile (anti-robot). La clé secrète reste dans Make, jamais ici. Vide = pas de widget (à ne pas laisser vide en production).",
  "conditions": { "version": "1.0", "url": "/consultants/conditions/v1/" },
