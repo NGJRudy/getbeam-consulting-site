@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>BEAM · Mon QR code</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--danger:#c43d2e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{width:min(520px,100%);margin:0 auto;padding:16px 16px 48px}
+.brand{display:flex;align-items:center;gap:10px;margin:8px 4px 18px;color:var(--ink);text-decoration:none;font:600 20px/1 'Open Sans',Arial,sans-serif;letter-spacing:.14em}
+.card{background:var(--card);border-radius:16px;padding:22px 20px;margin:0 0 16px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35);text-align:center}
+h1{font-size:22px;line-height:30px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+canvas{width:min(320px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:12px}
+.lien{font-size:13px;color:var(--muted);word-break:break-all;margin:10px 0 0}
+button,.btn{display:block;width:100%;margin:12px 0 0;padding:13px 16px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:600 16px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;text-decoration:none}
+button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.msg{font-size:15px;margin:12px 0 0;color:var(--muted)}
+.msg.err{color:var(--danger)}
+.conseils{text-align:left;font-size:14px;color:var(--muted);margin:16px 0 0;padding:0 0 0 18px}
+[hidden]{display:none!important}
+</style></head>
+<body><main>
+<a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
+<section class="card">
+  <div id="attente"><h1>Votre QR code</h1><p class="msg" id="m">Vérification…</p></div>
+  <div id="pret" hidden>
+    <h1 id="titre">Votre QR code</h1>
+    <p class="sub">Faites-le scanner par les entreprises que vous rencontrez : elles arrivent sur le formulaire BEAM, à votre nom.</p>
+    <canvas id="qr" width="1024" height="1024" aria-label="QR code"></canvas>
+    <p class="lien" id="lien"></p>
+    <button id="dl" type="button">Télécharger le QR code (PNG)</button>
+    <button id="cp" class="sec" type="button">Copier mon lien</button>
+    <p class="msg" id="m2" role="status" aria-live="polite"></p>
+    <ul class="conseils">
+      <li>Gardez l'image dans votre téléphone pour la montrer en salon.</li>
+      <li>Ne partagez pas le lien de cet e-mail : il donne accès à cette page. Le lien du QR code, lui, peut être partagé.</li>
+    </ul>
+  </div>
+</section>
+<p class="msg" style="text-align:center">Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/">Espace consultant</a></p>
+</main>
+<script src="/vendor/qrcode-generator-2.0.4.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){ return document.getElementById(id); };
+  var ID=/^[a-z0-9]{2,30}$/, JETON=/^[A-Za-z0-9_-]{16,128}$/, CLE='beam-consultant';
+  var p=new URLSearchParams(location.search), a=(p.get('a')||'').toLowerCase(), t=p.get('t')||'';
+  // Sur son propre appareil : on se souvient de l'accès, pour revenir sans l'e-mail.
+  if(!a||!t){ try{ var s=JSON.parse(localStorage.getItem(CLE)||'null'); if(s){ a=s.a; t=s.t; } }catch(e){} }
+  // Retire le jeton de la barre d'adresse (historique, captures d'écran).
+  if(p.get('t')){ try{ history.replaceState(null,'',location.pathname); }catch(e){} }
+  function erreur(txt){ var m=$('m'); m.textContent=txt; m.className='msg err'; }
+  if(!ID.test(a)||!JETON.test(t)) return erreur('Lien incomplet. Ouvrez le bouton de votre e-mail, ou demandez un nouvel envoi depuis l’espace consultant.');
+
+  function dessine(url){
+    var q=qrcode(0,'M'); q.addData(url); q.make();
+    var n=q.getModuleCount(), marge=4, tot=n+marge*2, c=$('qr'), x=c.getContext('2d');
+    var px=Math.floor(1024/tot), taille=px*tot; c.width=taille; c.height=taille;
+    x.fillStyle='#fff'; x.fillRect(0,0,taille,taille); x.fillStyle='#000';
+    for(var r=0;r<n;r++) for(var k=0;k<n;k++) if(q.isDark(r,k)) x.fillRect((k+marge)*px,(r+marge)*px,px,px);
+  }
+
+  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(cfg){
+    if(!cfg.webhook) throw new Error('fermé');
+    return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'verification',id:a,jeton:t})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j||j.ok!==true||typeof j.lien!=='string'||j.lien.indexOf(cfg.lien_qr_autorise)!==0) throw new Error('refus');
+        try{ localStorage.setItem(CLE,JSON.stringify({a:a,t:t})); }catch(e){}
+        dessine(j.lien);
+        $('titre').textContent='QR code de '+[j.prenom,j.nom].filter(Boolean).join(' ');
+        $('lien').textContent=j.lien;
+        $('dl').onclick=function(){
+          var l=document.createElement('a'); l.download='QR-BEAM-'+a+'.png'; l.href=$('qr').toDataURL('image/png');
+          document.body.appendChild(l); l.click(); l.remove();
+        };
+        $('cp').onclick=function(){
+          var fin=function(){ $('m2').textContent='Lien copié.'; };
+          if(navigator.clipboard) navigator.clipboard.writeText(j.lien).then(fin,function(){ $('m2').textContent=j.lien; });
+          else $('m2').textContent=j.lien;
+        };
+        $('attente').hidden=true; $('pret').hidden=false;
+      });
+  }).catch(function(){
+    try{ localStorage.removeItem(CLE); }catch(e){}
+    erreur('Ce lien n’est plus valable. Demandez un nouvel envoi depuis l’espace consultant.');
+  });
+})();
+</script>
+</body></html>

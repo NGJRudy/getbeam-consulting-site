@@ -1,0 +1,18 @@
+{
+ "_aide": "Réglages de l'espace consultant (getbeam-consulting.com/consultants/). Lu par les pages au chargement : changer une valeur ici suffit, sans toucher aux pages. Tant que « webhook » est vide, les inscriptions affichent « bientôt ouvertes » et rien n'est envoyé.",
+ "webhook": "",
+ "_webhook": "URL du webhook Make (zone eu1) du scénario « Consultants BEAM ». Un seul webhook, l'action est dans le champ « action » (voir _contrat).",
+ "turnstile_sitekey": "",
+ "_turnstile": "Clé publique Cloudflare Turnstile (anti-robot). La clé secrète reste dans Make, jamais ici. Vide = pas de widget (à ne pas laisser vide en production).",
+ "conditions": { "version": "1.0", "url": "/consultants/conditions/v1/" },
+ "_conditions": "Nouvelle version des Conditions = nouveau dossier conditions/vN/ (l'ancien reste en ligne, jamais modifié) + changer version et url ici.",
+ "lien_qr_autorise": "https://getbeam-consulting.com/go/",
+ "_lien_qr_autorise": "La page mon-qr n'affiche un QR code que si le lien renvoyé par Make commence par ceci (protection contre un lien piégé).",
+ "pays": ["Côte d'Ivoire", "France", "Belgique", "Suisse", "Canada", "Sénégal", "Cameroun", "Bénin", "Togo", "Burkina Faso", "Mali", "Niger", "Guinée", "Gabon", "Congo", "RD Congo", "Maroc", "Algérie", "Tunisie", "Madagascar", "Maurice", "Haïti", "Nigeria", "Ghana", "Kenya", "Afrique du Sud", "États-Unis", "Royaume-Uni", "Allemagne", "Espagne", "Italie", "Portugal", "Luxembourg", "Autre"],
+ "_contrat": {
+  "envoi": "POST application/x-www-form-urlencoded (pas de pré-vérification CORS). Make doit répondre en JSON avec l'en-tête Access-Control-Allow-Origin: https://getbeam-consulting.com.",
+  "inscription": "action=inscription, prenom, nom, email, telephone, pays, parrain (facultatif), conditions_version, conditions_url, accepte=oui, turnstile, page. IP et navigateur : lus par Make dans les en-têtes. Réponse : {ok:true} (toujours le même message, l'e-mail fait le reste).",
+  "renvoi": "action=renvoi, email, turnstile. Réponse : {ok:true} toujours, inscrit ou non (on ne révèle pas qui est inscrit).",
+  "verification": "action=verification, id, jeton. Réponse : {ok:true, prenom, nom, id, lien} ou {ok:false}. Make note alors « e-mail vérifié »."
+ }
+}

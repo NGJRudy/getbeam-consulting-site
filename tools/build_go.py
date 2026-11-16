@@ -127,6 +127,19 @@ def main():
             os.makedirs(qr_dir, exist_ok=True)
             img.save(os.path.join(qr_dir, f'QR-BEAM-{aid}.png'))
         print(aid, url, '' if a.get('actif', True) else '(inactif)')
+    # Page commune /go/?a=<id> : consultants inscrits depuis l'espace consultant (identifiant créé
+    # par Make, pas de page à eux dans le dépôt). Même gabarit, l'identifiant est lu dans l'adresse ;
+    # le nom n'est pas connu ici (Make le retrouve à partir de l'identifiant).
+    generique = PAGE.format(nom='un consultant', id_js='BEAM_ID',
+                            rdv_js=json.dumps({k: v for k, v in reg['rendez_vous'].items() if not k.startswith('_')}, ensure_ascii=False),
+                            nom_js='BEAM_ID', region=f['region'], form_id=f['form_id'], portal=f['portal'])
+    lecture_id = ("<script>\n// Identifiant du consultant lu dans l'adresse (?a=), refusé s'il n'a pas la forme attendue.\n"
+                  "var BEAM_ID=(function(){ var a=(new URLSearchParams(location.search).get('a')||'').toLowerCase();"
+                  " return /^[a-z0-9]{2,30}$/.test(a)?a:''; })();\n</script>\n")
+    assert generique.count('<script>\n// Champ caché') == 1
+    generique = generique.replace('<script>\n// Champ caché', lecture_id + '<script>\n// Champ caché', 1)
+    open(os.path.join(GO, 'index.html'), 'w', encoding='utf-8').write(generique)
+    print('go/ (page commune ?a=<id>)')
     # Retire les pages des apporteurs supprimés du registre.
     for old in os.listdir(GO):
         if old not in ids and os.path.isdir(os.path.join(GO, old)):

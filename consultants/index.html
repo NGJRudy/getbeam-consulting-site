@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BEAM · Espace consultant</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--brand-soft:#e6ecfd;--ok:#1a7f4b;--danger:#c43d2e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{width:min(640px,100%);margin:0 auto;padding:16px 16px 48px}
+.brand{display:flex;align-items:center;gap:10px;margin:8px 4px 18px;color:var(--ink);text-decoration:none;font:600 20px/1 'Open Sans',Arial,sans-serif;letter-spacing:.14em}
+.card{background:var(--card);border-radius:16px;padding:22px 20px;margin:0 0 16px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+h1{font-size:24px;line-height:32px;margin:0 0 6px}
+h2{font-size:18px;line-height:26px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 16px}
+ul.points{margin:0 0 4px;padding:0;list-style:none}
+ul.points li{position:relative;padding:6px 0 6px 26px;border-top:1px solid var(--line);font-size:15px}
+ul.points li:first-child{border-top:0}
+ul.points li:before{content:"";position:absolute;left:4px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--brand)}
+a{color:var(--brand)}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;color:var(--ink);background:#fff}
+input:focus,select:focus{outline:2px solid var(--brand-soft);border-color:var(--brand)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:480px){.row{grid-template-columns:1fr}}
+.check{display:flex;gap:10px;align-items:flex-start;margin:18px 0 4px;font-weight:400;font-size:15px}
+.check input{width:20px;height:20px;margin:2px 0 0;flex:0 0 auto}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+button{display:block;width:100%;margin:18px 0 0;padding:13px 16px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:600 16px/22px 'Open Sans',Arial,sans-serif;cursor:pointer}
+button[disabled]{opacity:.45;cursor:not-allowed}
+.ts{margin:16px 0 0;min-height:0}
+.msg{font-size:15px;margin:14px 0 0}
+.msg.err{color:var(--danger)}
+.ok{border-left:4px solid var(--ok);padding:4px 0 4px 14px}
+.small{font-size:13px;color:var(--muted);margin:12px 0 0}
+.invite{background:var(--brand-soft);border-radius:10px;padding:10px 12px;font-size:14px;margin:0 0 6px}
+[hidden]{display:none!important}
+</style></head>
+<body><main>
+<a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
+
+<section class="card">
+  <h1>Devenez consultant BEAM</h1>
+  <p class="sub">Vous présentez BEAM à des entreprises. Quand l'une d'elles devient cliente et paie, vous touchez une commission.</p>
+  <ul class="points">
+    <li><b>2,5 %</b> de ce que paie chaque entreprise que vous apportez, pendant <b>5 ans</b>.</li>
+    <li>Commission versée seulement quand le client a réellement payé.</li>
+    <li>Vous êtes indépendant : vous vous organisez comme vous voulez, sans objectif imposé.</li>
+    <li>Vous présentez BEAM, vous ne signez et ne négociez rien en son nom.</li>
+    <li>Vos frais (transport, repas, salons non pris en charge par BEAM) restent à votre charge.</li>
+  </ul>
+  <p class="small">Ce résumé ne remplace pas les <a id="lien-cond-1" href="/consultants/conditions/v1/" target="_blank" rel="noopener">Conditions du programme</a>, seules applicables.</p>
+</section>
+
+<section class="card" id="inscription">
+  <h2>Inscription</h2>
+  <p id="invite" class="invite" hidden>Vous avez été invité par un chef d'équipe BEAM.</p>
+  <form id="f-ins" novalidate>
+    <div class="row">
+      <div><label for="prenom">Prénom</label><input id="prenom" name="prenom" autocomplete="given-name" maxlength="80" required></div>
+      <div><label for="nom">Nom</label><input id="nom" name="nom" autocomplete="family-name" maxlength="80" required></div>
+    </div>
+    <label for="email">Adresse e-mail</label>
+    <input id="email" name="email" type="email" autocomplete="email" maxlength="160" required>
+    <div class="row">
+      <div><label for="telephone">Téléphone</label><input id="telephone" name="telephone" type="tel" autocomplete="tel" maxlength="30" placeholder="+225 07 00 00 00 00" required></div>
+      <div><label for="pays">Pays d'exercice</label><select id="pays" name="pays" required><option value="">Choisir…</option></select></div>
+    </div>
+    <div class="hp" aria-hidden="true"><label for="site_web">Site web</label><input id="site_web" name="site_web" tabindex="-1" autocomplete="off"></div>
+    <label class="check"><input id="accepte" type="checkbox"> <span>J'ai lu et j'accepte les <a id="lien-cond-2" href="/consultants/conditions/v1/" target="_blank" rel="noopener">Conditions du programme Consultants BEAM</a> (version <span class="v">1.0</span>).</span></label>
+    <div id="ts-ins" class="ts"></div>
+    <button id="b-ins" type="submit">J'accepte et je reçois mon QR code</button>
+    <p id="m-ins" class="msg" role="status" aria-live="polite"></p>
+  </form>
+  <div id="ok-ins" class="ok" hidden>
+    <h2>Vérifiez votre boîte e-mail</h2>
+    <p>Nous venons d'envoyer votre QR code à <b id="ok-email"></b>, depuis team@getbeam-consulting.com. Ouvrez l'e-mail et cliquez sur le bouton pour l'afficher et le télécharger.</p>
+    <p class="small">Rien reçu après quelques minutes ? Regardez dans les indésirables, ou demandez un nouvel envoi ci-dessous.</p>
+  </div>
+</section>
+
+<section class="card" id="renvoi">
+  <h2>Déjà consultant ?</h2>
+  <p class="sub">Entrez votre adresse e-mail : nous vous renvoyons votre QR code.</p>
+  <form id="f-ren" novalidate>
+    <label for="email2">Adresse e-mail</label>
+    <input id="email2" name="email" type="email" autocomplete="email" maxlength="160" required>
+    <div id="ts-ren" class="ts"></div>
+    <button id="b-ren" type="submit">Recevoir mon QR code</button>
+    <p id="m-ren" class="msg" role="status" aria-live="polite"></p>
+  </form>
+</section>
+
+<p class="small">Une question ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a></p>
+</main>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){ return document.getElementById(id); };
+  var CFG=null, TS={ins:null, ren:null};
+  var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  var ID=/^[a-z0-9]{2,30}$/;
+  var parrain=(new URLSearchParams(location.search).get('parrain')||'').toLowerCase();
+  if(!ID.test(parrain)) parrain='';
+  if(parrain) $('invite').hidden=false;
+
+  function msg(el,t,err){ el.textContent=t||''; el.className='msg'+(err?' err':''); }
+  function ferme(raison){
+    ['b-ins','b-ren'].forEach(function(b){ $(b).disabled=true; });
+    msg($('m-ins'),raison,false); msg($('m-ren'),raison,false);
+  }
+
+  function chargeTurnstile(cle){
+    window.beamTs=function(){
+      TS.ins=turnstile.render('#ts-ins',{sitekey:cle,language:'fr'});
+      TS.ren=turnstile.render('#ts-ren',{sitekey:cle,language:'fr',appearance:'interaction-only'});
+    };
+    var s=document.createElement('script');
+    s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?onload=beamTs&render=explicit';
+    s.async=true; s.defer=true; document.head.appendChild(s);
+  }
+  function jeton(k){
+    if(!CFG.turnstile_sitekey) return '';
+    try{ return turnstile.getResponse(TS[k])||''; }catch(e){ return ''; }
+  }
+  function reset(k){ if(CFG.turnstile_sitekey){ try{ turnstile.reset(TS[k]); }catch(e){} } }
+
+  function envoyer(data){
+    return fetch(CFG.webhook,{method:'POST',body:new URLSearchParams(data)}).then(function(r){
+      return r.json().catch(function(){ return null; }).then(function(j){
+        if(!r.ok||!j||j.ok!==true) throw new Error((j&&j.erreur)||('HTTP '+r.status));
+        return j;
+      });
+    });
+  }
+
+  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
+    CFG=c;
+    var sel=$('pays');
+    (c.pays||[]).forEach(function(p){ var o=document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+    var cond=c.conditions||{};
+    ['lien-cond-1','lien-cond-2'].forEach(function(id){ $(id).href=cond.url; });
+    Array.prototype.forEach.call(document.querySelectorAll('.v'),function(e){ e.textContent=cond.version; });
+    if(!c.webhook){ ferme('Les inscriptions ouvrent très bientôt.'); return; }
+    if(c.turnstile_sitekey) chargeTurnstile(c.turnstile_sitekey);
+  }).catch(function(){ ferme('Page momentanément indisponible. Réessayez dans un instant.'); });
+
+  $('f-ins').addEventListener('submit',function(e){
+    e.preventDefault();
+    var m=$('m-ins'), b=$('b-ins');
+    if(!CFG||!CFG.webhook) return;
+    var d={
+      action:'inscription',
+      prenom:$('prenom').value.trim(), nom:$('nom').value.trim(),
+      email:$('email').value.trim().toLowerCase(), telephone:$('telephone').value.trim(),
+      pays:$('pays').value, parrain:parrain,
+      conditions_version:CFG.conditions.version, conditions_url:'https://getbeam-consulting.com'+CFG.conditions.url,
+      accepte:$('accepte').checked?'oui':'', site_web:$('site_web').value,
+      page:location.href.split('#')[0]
+    };
+    if(!d.prenom||!d.nom) return msg(m,'Indiquez votre prénom et votre nom.',true);
+    if(!EMAIL.test(d.email)) return msg(m,'Adresse e-mail invalide.',true);
+    if(d.telephone.replace(/\D/g,'').length<6) return msg(m,'Numéro de téléphone invalide.',true);
+    if(!d.pays) return msg(m,'Choisissez votre pays d’exercice.',true);
+    if(d.accepte!=='oui') return msg(m,'Cochez la case pour accepter les Conditions.',true);
+    if(d.site_web) return; // robot : on ne dit rien
+    d.turnstile=jeton('ins');
+    if(CFG.turnstile_sitekey&&!d.turnstile) return msg(m,'Merci de valider la vérification anti-robot.',true);
+    b.disabled=true; msg(m,'Envoi…');
+    envoyer(d).then(function(){
+      $('f-ins').hidden=true; $('ok-email').textContent=d.email; $('ok-ins').hidden=false;
+      $('ok-ins').scrollIntoView({behavior:'smooth',block:'start'});
+    }).catch(function(){
+      b.disabled=false; reset('ins');
+      msg(m,'L’envoi n’a pas abouti. Réessayez, ou écrivez à team@getbeam-consulting.com.',true);
+    });
+  });
+
+  $('f-ren').addEventListener('submit',function(e){
+    e.preventDefault();
+    var m=$('m-ren'), b=$('b-ren');
+    if(!CFG||!CFG.webhook) return;
+    var email=$('email2').value.trim().toLowerCase();
+    if(!EMAIL.test(email)) return msg(m,'Adresse e-mail invalide.',true);
+    var t=jeton('ren');
+    if(CFG.turnstile_sitekey&&!t) return msg(m,'Merci de valider la vérification anti-robot.',true);
+    b.disabled=true; msg(m,'Envoi…');
+    envoyer({action:'renvoi',email:email,turnstile:t,page:location.href.split('#')[0]}).then(function(){
+      msg(m,'Si cette adresse est inscrite, un e-mail avec votre QR code vient de partir.');
+    }).catch(function(){
+      b.disabled=false; reset('ren');
+      msg(m,'L’envoi n’a pas abouti. Réessayez dans un instant.',true);
+    });
+  });
+})();
+</script>
+</body></html>
