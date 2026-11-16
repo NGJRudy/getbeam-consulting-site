@@ -57,6 +57,7 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 <section class="card" id="inscription">
   <h2>Inscription</h2>
   <p id="invite" class="invite" hidden>Vous avez été invité par un chef d'équipe BEAM.</p>
+  <p id="activation" class="invite" hidden>Activation de votre compte consultant BEAM : votre équipe et votre QR code sont déjà enregistrés. Complétez vos informations et acceptez les Conditions pour recevoir votre QR code par e-mail.</p>
   <form id="f-ins" novalidate>
     <div class="row">
       <div><label for="prenom">Prénom</label><input id="prenom" name="prenom" autocomplete="given-name" maxlength="80" required></div>
@@ -104,7 +105,12 @@ button[disabled]{opacity:.45;cursor:not-allowed}
   var ID=/^[a-z0-9]{2,30}$/;
   var parrain=(new URLSearchParams(location.search).get('parrain')||'').toLowerCase();
   if(!ID.test(parrain)) parrain='';
-  if(parrain) $('invite').hidden=false;
+  // Lien d'activation personnel envoyé par BEAM (consultant préchargé) : ?activer=<identifiant>.<code>
+  var act=(new URLSearchParams(location.search).get('activer')||'').split('.');
+  var activerId=(act[0]||'').toLowerCase(), activerCode=act[1]||'';
+  if(!ID.test(activerId)||!/^[a-f0-9]{16,64}$/.test(activerCode)){ activerId=''; activerCode=''; }
+  if(activerId){ parrain=''; $('activation').hidden=false; }
+  else if(parrain) $('invite').hidden=false;
 
   function msg(el,t,err){ el.textContent=t||''; el.className='msg'+(err?' err':''); }
   function ferme(raison){
@@ -155,7 +161,7 @@ button[disabled]{opacity:.45;cursor:not-allowed}
       action:'inscription',
       prenom:$('prenom').value.trim(), nom:$('nom').value.trim(),
       email:$('email').value.trim().toLowerCase(), telephone:$('telephone').value.trim(),
-      pays:$('pays').value, parrain:parrain,
+      pays:$('pays').value, parrain:parrain, activer_id:activerId, activer_code:activerCode,
       conditions_version:CFG.conditions.version, conditions_url:'https://getbeam-consulting.com'+CFG.conditions.url,
       accepte:$('accepte').checked?'oui':'', site_web:$('site_web').value,
       page:location.href.split('#')[0]
