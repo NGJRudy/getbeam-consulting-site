@@ -22,6 +22,8 @@
     { "id": "astrid",      "nom": "Astrid Rilcy",            "actif": true, "ancienne_valeur": "Astrid" },
     { "id": "jimmy",       "nom": "Jimmy Baltase",           "actif": true, "ancienne_valeur": "Jimmy Baltase" },
     { "id": "anderson",    "nom": "Anderson Kouassi",        "actif": true, "ancienne_valeur": "Anderson Kouassi" },
-    { "id": "marienoelle", "nom": "Diby Marie Noëlle Koffi", "actif": true, "ancienne_valeur": "Diby Marie Noelle Koffi" }
+    { "id": "marienoelle", "nom": "Diby Marie Noëlle Koffi", "actif": true, "ancienne_valeur": "Diby Marie Noelle Koffi" },
+    { "id": "oriane",      "nom": "Oriane",                  "actif": true, "ancienne_valeur": "Oriane" },
+    { "id": "olivier",     "nom": "Olivier Vestris",         "actif": true, "ancienne_valeur": "Olivier Vestris" }
   ]
 }
