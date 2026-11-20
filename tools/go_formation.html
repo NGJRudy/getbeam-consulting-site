@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BEAM · Formulaire d'essai (formation)</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
+<style>
+html,body{margin:0;background:#f4f5f7;color:#14171c;font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{box-sizing:border-box;width:min(600px,100%);margin:0 auto;padding:16px}
+.brand{display:flex;align-items:center;gap:10px;margin:8px 4px 14px;font:700 18px/1 'Open Sans',Arial,sans-serif;letter-spacing:.02em;color:#14171c;text-decoration:none}
+.essai{background:#fff4d6;border:1px solid #f0d58a;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:21px}
+.essai b{display:block;font-size:15px;margin-bottom:2px}
+.from{margin:4px 4px 12px;font-size:14px;color:#5b6270}
+.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+label,.q{display:block;font-weight:600;font-size:14px;margin:16px 0 6px}
+label:first-child{margin-top:0}
+.req:after{content:" *";color:#c2352b}
+input[type=text],input[type=email],input[type=tel],select,textarea{box-sizing:border-box;width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid #cfd3da;border-radius:8px;background:#fff;color:#14171c}
+textarea{min-height:92px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #2350d8;outline-offset:1px;border-color:#2350d8}
+.opts label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:15px;margin:6px 0}
+.opts input{width:18px;height:18px;margin:0;accent-color:#2350d8}
+button{font:600 16px/1 'Open Sans',Arial,sans-serif;background:#2350d8;color:#fff;border:0;border-radius:10px;padding:14px 20px;cursor:pointer;margin-top:20px;width:100%}
+button:focus-visible{outline:3px solid #14171c;outline-offset:2px}
+.err{color:#c2352b;font-size:13px;margin-top:4px;display:none}
+.bad .err{display:block}
+.bad input,.bad select{border-color:#c2352b}
+.hide{display:none}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.day{flex:0 0 auto;border:1px solid #cfd3da;border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:14px;text-align:center;color:#14171c;margin:0;width:auto}
+.day[aria-pressed=true],.slot[aria-pressed=true]{border-color:#2350d8;background:#eaf0ff;color:#14171c}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px}
+.slot{border:1px solid #cfd3da;border-radius:10px;padding:10px;background:#fff;cursor:pointer;font-size:15px;color:#14171c;margin:0;width:auto}
+h2{font-size:20px;line-height:28px;margin:0 0 6px}
+.sub{color:#5b6270;font-size:14px;margin:0 0 14px}
+.recap{margin:14px 0 0;padding:0;list-style:none;font-size:14px}
+.recap li{display:flex;gap:10px;padding:7px 0;border-top:1px solid #eef0f3}
+.recap li span:first-child{flex:0 0 46%;color:#5b6270}
+.recap li.vide span:last-child{color:#c2352b}
+.score{margin-top:14px;padding:12px 14px;border-radius:10px;background:#f3f5fb;font-size:14px}
+</style></head>
+<body><main>
+<a class="brand" href="https://getbeam-consulting.com/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
+<div class="essai" role="note"><b>Mode formation · rien n’est envoyé</b>Cette page est un essai réservé à {prenom}. Le formulaire et le créneau sont factices : aucune donnée ne quitte cette page, aucun rendez-vous n’est créé.</div>
+<p class="from">Vous avez rencontré <strong>{nom}</strong> de l’équipe BEAM.</p>
+
+<div class="card" id="etape1">
+<form id="f" novalidate>
+  <label for="firstname" class="req">Prénom</label><input id="firstname" name="firstname" type="text" autocomplete="off" required><div class="err">Ce champ est obligatoire.</div>
+  <label for="lastname">Nom</label><input id="lastname" name="lastname" type="text" autocomplete="off">
+  <label for="email" class="req">E-mail professionnel</label><input id="email" name="email" type="email" autocomplete="off" required><div class="err">Indiquez une adresse e-mail valide.</div>
+  <label for="phone">Numéro de téléphone</label><input id="phone" name="phone" type="tel" autocomplete="off">
+  <label for="company" class="req">Entreprise</label><input id="company" name="company" type="text" autocomplete="off" required><div class="err">Ce champ est obligatoire.</div>
+  <label for="domain">Site web de l’entreprise</label><input id="domain" name="domain" type="text" autocomplete="off">
+  <label for="jobtitle">Votre poste</label><input id="jobtitle" name="jobtitle" type="text" autocomplete="off">
+  <label for="role">Votre rôle dans la décision</label>
+  <select id="role" name="role_dans_la_decision"><option value="">Choisir</option><option>Décideur principal</option><option>Je participe à la décision</option><option>Intermédiaire : je transmets à la bonne personne</option><option>Je ne sais pas</option></select>
+  <label for="besoin">Votre besoin principal</label>
+  <select id="besoin" name="besoin_principal"><option value="">Choisir</option><option>Transfert / migration</option><option>Rooms — entraînement IA</option><option>Rooms — agents IA</option><option>Flux et médias temps réel</option><option>Pas encore clair</option></select>
+  <label for="objectif">Votre objectif, en quelques mots</label><textarea id="objectif" name="besoin_exprime"></textarea>
+  <fieldset style="border:0;padding:0;margin:0"><legend class="q">Où sont vos données aujourd’hui ?</legend><div class="opts" data-name="destinations__stockage">
+    <label><input type="checkbox" value="Amazon S3">Amazon S3</label><label><input type="checkbox" value="Cloudflare R2">Cloudflare R2</label><label><input type="checkbox" value="Hugging Face">Hugging Face</label><label><input type="checkbox" value="Serveurs / nœuds GPU">Serveurs / nœuds GPU</label><label><input type="checkbox" value="Google Cloud / Azure">Google Cloud / Azure</label><label><input type="checkbox" value="Autre stockage S3">Autre stockage S3 (Wasabi, B2, MinIO…)</label>
+  </div></fieldset>
+  <fieldset style="border:0;padding:0;margin:0" data-req="echeance_projet"><legend class="q req">Quand souhaitez-vous avancer ?</legend><div class="opts">
+    <label><input type="radio" name="echeance_projet" value="Ce mois-ci">Ce mois-ci</label><label><input type="radio" name="echeance_projet" value="D'ici 3 mois">D'ici 3 mois</label><label><input type="radio" name="echeance_projet" value="D'ici 6 mois">D'ici 6 mois</label><label><input type="radio" name="echeance_projet" value="Plus tard / pas de projet précis">Plus tard / pas de projet précis</label><label><input type="radio" name="echeance_projet" value="Je ne sais pas">Je ne sais pas</label>
+  </div><div class="err">Choisissez une réponse.</div></fieldset>
+  <fieldset style="border:0;padding:0;margin:0" data-req="volume_mensuel"><legend class="q req">Combien de données déplacez-vous par mois ?</legend><div class="opts">
+    <label><input type="radio" name="volume_mensuel" value="Moins de 1 To">Moins de 1 To</label><label><input type="radio" name="volume_mensuel" value="1 à 10 To">1 à 10 To</label><label><input type="radio" name="volume_mensuel" value="10 à 100 To">10 à 100 To</label><label><input type="radio" name="volume_mensuel" value="Plus de 100 To">Plus de 100 To</label><label><input type="radio" name="volume_mensuel" value="Je ne sais pas">Je ne sais pas</label>
+  </div><div class="err">Choisissez une réponse.</div></fieldset>
+  <button type="submit">Envoyer</button>
+</form>
+</div>
+
+<div class="card hide" id="etape2">
+  <h2>Choisissez votre créneau</h2>
+  <p class="sub">Visio de 15 minutes avec un expert BEAM. Heure d’Abidjan (GMT). Créneaux factices, pour l’essai.</p>
+  <div class="days" id="days" role="group" aria-label="Jour"></div>
+  <div class="slots" id="slots" role="group" aria-label="Heure"></div>
+  <button type="button" id="confirmer" disabled>Confirmer le rendez-vous</button>
+</div>
+
+<div class="card hide" id="etape3" tabindex="-1">
+  <h2>Rendez-vous d’essai confirmé</h2>
+  <p class="sub" id="quand"></p>
+  <p class="sub">En vrai, l’entreprise recevrait maintenant un e-mail de confirmation avec le lien de la visio, et vous seriez prévenu pour l’appeler. Ici, rien n’a été envoyé.</p>
+  <div class="score" id="score"></div>
+  <ul class="recap" id="recap"></ul>
+  <button type="button" id="recommencer">Recommencer un essai</button>
+</div>
+</main>
+<script>
+// Page d'ESSAI (formation) : aucun script HubSpot, aucun appel réseau, aucune donnée stockée.
+(function(){
+  var f=document.getElementById('f'), rep={};
+  var CHAMPS=[['firstname','Prénom'],['lastname','Nom'],['email','E-mail professionnel'],['phone','Téléphone'],['company','Entreprise'],['domain','Site web'],['jobtitle','Poste'],['role_dans_la_decision','Rôle dans la décision'],['besoin_principal','Besoin principal'],['besoin_exprime','Objectif'],['destinations__stockage','Où sont les données'],['echeance_projet','Échéance'],['volume_mensuel','Volume par mois']];
+  function val(n){
+    if(n==='destinations__stockage') return [].map.call(document.querySelectorAll('[data-name=destinations__stockage] input:checked'),function(i){return i.value;}).join(', ');
+    var r=f.querySelector('input[name="'+n+'"]:checked'); if(r) return r.value;
+    var e=f.elements[n]; return e&&e.value?String(e.value).trim():'';
+  }
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault(); var ok=true, premier=null;
+    ['firstname','company'].forEach(function(id){ var i=document.getElementById(id), b=!i.value.trim(); i.parentNode; mark(i,b); if(b){ok=false; premier=premier||i;} });
+    var em=document.getElementById('email'), be=!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim()); mark(em,be); if(be){ok=false; premier=premier||em;}
+    [].forEach.call(f.querySelectorAll('[data-req]'),function(fs){ var b=!fs.querySelector('input:checked'); fs.classList.toggle('bad',b); if(b){ok=false; premier=premier||fs.querySelector('input');} });
+    if(!ok){ premier.focus(); return; }
+    CHAMPS.forEach(function(c){ rep[c[0]]=val(c[0]); });
+    show('etape2'); jours();
+  });
+  function mark(i,b){ i.classList.toggle('x',b); var e=i.nextElementSibling; if(e&&e.classList.contains('err')) e.style.display=b?'block':'none'; i.style.borderColor=b?'#c2352b':''; i.setAttribute('aria-invalid',b?'true':'false'); }
+  function show(id){ ['etape1','etape2','etape3'].forEach(function(x){ document.getElementById(x).classList.toggle('hide',x!==id); }); window.scrollTo(0,0); }
+  var choixJour=null, choixHeure=null, btn=document.getElementById('confirmer');
+  function jours(){
+    var d=new Date(), box=document.getElementById('days'); box.innerHTML='';
+    var n=0; while(n<5){ d.setDate(d.getDate()+1); if(d.getDay()===0||d.getDay()===6) continue; n++;
+      var b=document.createElement('button'); b.type='button'; b.className='day'; b.setAttribute('aria-pressed','false');
+      b.textContent=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+      b.dataset.label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      b.onclick=function(){ press('#days .day',this); choixJour=this.dataset.label; heures(); }; box.appendChild(b); }
+  }
+  function heures(){
+    var box=document.getElementById('slots'); box.innerHTML=''; choixHeure=null; btn.disabled=true;
+    ['9h00','10h30','11h00','14h00','15h30','16h00'].forEach(function(h){ var b=document.createElement('button'); b.type='button'; b.className='slot'; b.textContent=h; b.setAttribute('aria-pressed','false');
+      b.onclick=function(){ press('#slots .slot',this); choixHeure=h; btn.disabled=false; }; box.appendChild(b); });
+  }
+  function press(sel,el){ [].forEach.call(document.querySelectorAll(sel),function(x){ x.setAttribute('aria-pressed','false'); }); el.setAttribute('aria-pressed','true'); }
+  btn.onclick=function(){
+    document.getElementById('quand').textContent='Le '+choixJour+' à '+choixHeure+' (heure d’Abidjan), avec '+(rep.firstname||'')+' (entreprise '+(rep.company||'')+').';
+    var ul=document.getElementById('recap'); ul.innerHTML=''; var remplis=0;
+    CHAMPS.forEach(function(c){ var v=rep[c[0]]; if(v) remplis++; var li=document.createElement('li'); if(!v) li.className='vide';
+      var a=document.createElement('span'); a.textContent=c[1]; var b=document.createElement('span'); b.textContent=v||'non renseigné'; li.appendChild(a); li.appendChild(b); ul.appendChild(li); });
+    var s=document.getElementById('score');
+    s.textContent='Contexte transmis à l’expert : '+remplis+' réponses sur '+CHAMPS.length+'. '+(remplis===CHAMPS.length?'Parfait : l’expert arrive préparé.':'Les réponses en rouge manquent : en vrai, aidez l’entreprise à les compléter, c’est ce qui rend la visio efficace.');
+    show('etape3'); document.getElementById('etape3').focus();
+  };
+  document.getElementById('recommencer').onclick=function(){ f.reset(); rep={}; [].forEach.call(f.querySelectorAll('[data-req]'),function(x){x.classList.remove('bad');}); show('etape1'); };
+})();
+</script>
+</body></html>

@@ -17,6 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REG_PATH = os.path.join(ROOT, 'x', 'apporteurs.json')
 SEQ_PATH = os.path.join(ROOT, 'x', 'seq-fr.json')
 GO = os.path.join(ROOT, 'go')
+FORMATION_TPL = os.path.join(ROOT, 'tools', 'go_formation.html')
 DOMAIN = 'https://getbeam-consulting.com'
 ID_RE = re.compile(r'^[a-z0-9]{2,30}$')
 
@@ -125,7 +126,12 @@ def main():
         ids.add(aid)
         d = os.path.join(GO, aid)
         os.makedirs(d, exist_ok=True)
-        page = PAGE.format(nom=html.escape(a['nom']), id_js=json.dumps(aid),
+        if a.get('formation'):
+            # Mode formation : page d'essai factice (tools/go_formation.html), sans HubSpot ni Make.
+            # Retirer « formation » du registre puis relancer ce script = le lien devient réel.
+            page = open(FORMATION_TPL, encoding='utf-8').read().replace('{nom}', html.escape(a['nom'])).replace('{prenom}', html.escape(a['nom'].split()[0]))
+        else:
+          page = PAGE.format(nom=html.escape(a['nom']), id_js=json.dumps(aid),
                            rdv_js=json.dumps({k: v for k, v in reg['rendez_vous'].items() if not k.startswith('_')}, ensure_ascii=False),
                            nom_js=json.dumps(a['nom'], ensure_ascii=False),
                            region=f['region'], form_id=f['form_id'], portal=f['portal'])
@@ -137,7 +143,7 @@ def main():
         if qr_dir:
             os.makedirs(qr_dir, exist_ok=True)
             img.save(os.path.join(qr_dir, f'QR-BEAM-{aid}.png'))
-        print(aid, url, '' if a.get('actif', True) else '(inactif)')
+        print(aid, url, '(formation)' if a.get('formation') else ('' if a.get('actif', True) else '(inactif)'))
     # Page commune /go/?a=<id> : consultants inscrits depuis l'espace consultant (identifiant créé
     # par Make, pas de page à eux dans le dépôt). Même gabarit, l'identifiant est lu dans l'adresse ;
     # le nom n'est pas connu ici (Make le retrouve à partir de l'identifiant).
