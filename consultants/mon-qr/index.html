@@ -215,15 +215,12 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
     return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact')+' de BEAM. Merci pour votre inscription. '+
       'Il ne reste qu’à choisir votre créneau de 15 minutes en visio avec un expert BEAM, cela se fait en quelques clics.\n\n'+lienCourt(q);
   }
-  // Téléphone : wa.me ouvre directement l'application. Ordinateur : l'application WhatsApp si elle est installée, sinon WhatsApp Web (sans page intermédiaire).
+  // Téléphone : wa.me ouvre directement l'application. Ordinateur : WhatsApp Web directement (pas de page intermédiaire, pas de fenêtre « ouvrir l'application ? » du navigateur).
   var MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   function ouvrirWhatsApp(num,txt){
     var t=encodeURIComponent(txt);
-    if(MOBILE){ location.href='https://wa.me/'+num+'?text='+t; return; }
-    var parti=false, f=function(){ parti=true; };
-    window.addEventListener('blur',f,{once:true});
-    location.href='whatsapp://send?'+(num?'phone='+num+'&':'')+'text='+t;
-    setTimeout(function(){ window.removeEventListener('blur',f); if(!parti&&!document.hidden) window.open('https://web.whatsapp.com/send?'+(num?'phone='+num+'&':'')+'text='+t,'_blank','noopener'); },1200);
+    if(MOBILE) location.href='https://wa.me/'+num+'?text='+t;
+    else window.open('https://web.whatsapp.com/send?'+(num?'phone='+num+'&':'')+'text='+t,'_blank','noopener');
   }
 
   function carte(d, contact, consultant){
