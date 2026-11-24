@@ -205,13 +205,25 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
   function aRelancer(d){ return !aRdv(d) && !arrete(d) && (d.properties||{}).statut_reservation!=='En attente'; }
   function telWa(v){ var s=String(v||'').replace(/[^\d+]/g,''); if(s.indexOf('00')===0) s='+'+s.slice(2); return /^\+\d{8,15}$/.test(s)?s.slice(1):''; }
 
+  // Lien court sur notre domaine (aperçu BEAM dans WhatsApp) ; prénom, nom et e-mail voyagent dans le fragment #, jamais en clair.
+  function lienCourt(q){
+    var brut=[q.firstname||'',q.lastname||'',q.email||''].join('|');
+    var b64=btoa(unescape(encodeURIComponent(brut))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    return 'https://getbeam-consulting.com/reserver/#'+b64;
+  }
   function relance(d,q){
-    var u=new URL(RESA);
-    if(q.firstname) u.searchParams.set('firstName',q.firstname);
-    if(q.lastname) u.searchParams.set('lastName',q.lastname);
-    if(q.email) u.searchParams.set('email',q.email);
-    return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact BEAM')+'. Merci pour votre inscription auprès de BEAM. '+
-      'Il reste une étape : choisir votre créneau de 15 minutes en visio avec un expert BEAM. C’est ici : '+u.toString();
+    return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact')+' de BEAM. Merci pour votre inscription. '+
+      'Il ne reste qu’à choisir votre créneau de 15 minutes en visio avec un expert BEAM, cela se fait en quelques clics.\n\n'+lienCourt(q);
+  }
+  // Téléphone : wa.me ouvre directement l'application. Ordinateur : l'application WhatsApp si elle est installée, sinon WhatsApp Web (sans page intermédiaire).
+  var MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  function ouvrirWhatsApp(num,txt){
+    var t=encodeURIComponent(txt);
+    if(MOBILE){ location.href='https://wa.me/'+num+'?text='+t; return; }
+    var parti=false, f=function(){ parti=true; };
+    window.addEventListener('blur',f,{once:true});
+    location.href='whatsapp://send?'+(num?'phone='+num+'&':'')+'text='+t;
+    setTimeout(function(){ window.removeEventListener('blur',f); if(!parti&&!document.hidden) window.open('https://web.whatsapp.com/send?'+(num?'phone='+num+'&':'')+'text='+t,'_blank','noopener'); },1200);
   }
 
   function carte(d, contact, consultant){
@@ -237,8 +249,8 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
     if(relancer){
       c.appendChild(el('p','note','Elle n’a pas encore choisi son créneau. Une relance de votre part, aujourd’hui, fait souvent la différence.'));
       var txt=relance(d,q), num=telWa(q.mobilephone||q.phone);
-      var wa=el('a','btn wa', num?'Relancer '+(q.firstname||'')+' sur WhatsApp':'Relancer sur WhatsApp');
-      wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(txt); wa.target='_blank'; wa.rel='noopener';
+      var wa=el('button','btn wa', num?'Relancer '+(q.firstname||'')+' sur WhatsApp':'Relancer sur WhatsApp (choisir le contact)'); wa.type='button';
+      wa.onclick=function(){ ouvrirWhatsApp(num,txt); };
       c.appendChild(wa);
       var box=el('p','msg'); box.setAttribute('role','status');
       var cp=el('button','sec','Copier le message de relance'); cp.type='button';

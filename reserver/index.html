@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Choisissez votre créneau · BEAM</title>
+<meta name="description" content="15 minutes en visio avec un expert BEAM. Choisissez le créneau qui vous convient, la confirmation est immédiate.">
+<meta property="og:title" content="Choisissez votre créneau avec un expert BEAM">
+<meta property="og:description" content="15 minutes en visio. Choisissez le créneau qui vous convient, la confirmation est immédiate.">
+<meta property="og:image" content="https://getbeam-consulting.com/reserver/apercu.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://getbeam-consulting.com/reserver/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BEAM">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+html,body{margin:0;background:#f4f5f7;color:#14171c;font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{width:min(520px,100%);margin:0 auto;padding:48px 16px;text-align:center}
+a.btn{display:block;margin:20px 0 0;padding:13px 16px;border-radius:12px;background:#14171c;color:#fff;font-weight:600;text-decoration:none}
+</style></head>
+<body><main>
+<img src="/assets/email/beam-logo-96.png" width="40" height="40" alt="BEAM">
+<p>Ouverture de l’agenda BEAM…</p>
+<a class="btn" id="go" href="https://meetings.hubspot.com/rudy-savy">Choisir mon créneau</a>
+</main>
+<script>
+(function(){
+  'use strict';
+  // Lien court envoyé par un consultant : getbeam-consulting.com/reserver/#<prénom|nom|e-mail en base64url>.
+  // Le fragment (#) n'est jamais envoyé au serveur ni aux aperçus de lien : l'e-mail n'apparaît nulle part en clair.
+  // Agenda de destination : le même que le parcours normal après le formulaire (go/ → RDV.defaut).
+  var AGENDA='https://meetings.hubspot.com/rudy-savy';
+  var u=new URL(AGENDA);
+  try{
+    var h=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');
+    if(h){
+      var t=decodeURIComponent(escape(atob(h))).split('|');
+      if(t[0]) u.searchParams.set('firstName',t[0].slice(0,60));
+      if(t[1]) u.searchParams.set('lastName',t[1].slice(0,60));
+      if(t[2]&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t[2])) u.searchParams.set('email',t[2].slice(0,120));
+    }
+  }catch(e){}
+  document.getElementById('go').href=u.toString();
+  location.replace(u.toString());
+})();
+</script>
+</body></html>
