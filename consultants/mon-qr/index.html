@@ -3,119 +3,189 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f4f5f7">
 <title>BEAM · Mon espace consultant</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
 <style>
-:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--danger:#c43d2e}
+:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--danger:#c43d2e;--ok:#1a7f4b;--wa:#128c4a}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--surface);color:var(--ink);font:400 16px/24px 'Open Sans',Arial,sans-serif}
 main{width:min(520px,100%);margin:0 auto;padding:16px 16px 48px}
+a{color:var(--brand)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 .brand{display:flex;align-items:center;gap:10px;margin:8px 4px 18px;color:var(--ink);text-decoration:none;font:600 20px/1 'Open Sans',Arial,sans-serif;letter-spacing:.14em}
-.card{background:var(--card);border-radius:16px;padding:22px 20px;margin:0 0 16px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35);text-align:center}
+.card{background:var(--card);border-radius:16px;padding:22px 20px;margin:0 0 16px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+.centre{text-align:center}
 h1{font-size:22px;line-height:30px;margin:0 0 4px}
+h2{font-size:18px;line-height:26px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:15px;margin:0 0 16px}
-canvas{width:min(320px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:12px}
+canvas{width:min(300px,100%);height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:12px}
 .lien{font-size:13px;color:var(--muted);word-break:break-all;margin:10px 0 0}
-button,.btn{display:block;width:100%;margin:12px 0 0;padding:13px 16px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:600 16px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;text-decoration:none}
-button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button,.btn{display:block;width:100%;min-height:48px;margin:10px 0 0;padding:12px 16px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:600 16px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;text-decoration:none;text-align:center}
+.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.duo{display:flex;gap:8px}
+.duo>*{flex:1}
 .msg{font-size:15px;margin:12px 0 0;color:var(--muted)}
 .msg.err{color:var(--danger)}
+.msg.ok{color:var(--ok)}
 .conseils{text-align:left;font-size:14px;color:var(--muted);margin:16px 0 0;padding:0 0 0 18px}
 [hidden]{display:none!important}
-.bloc{text-align:left}
-.bloc h2{font-size:18px;line-height:26px;margin:0 0 4px}
-.chiffres{display:flex;gap:10px;margin:12px 0 4px}
+input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 16px/22px 'Open Sans',Arial,sans-serif}
+.chiffres{display:flex;gap:8px;margin:12px 0 4px}
 .chiffre{flex:1;background:var(--surface);border-radius:12px;padding:10px 12px}
 .chiffre b{display:block;font-size:24px;line-height:30px}
-.chiffre span{font-size:13px;color:var(--muted)}
-.ent{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0 0}
+.chiffre span{display:block;font-size:13px;line-height:18px;color:var(--muted)}
+.groupe{font-size:15px;font-weight:600;margin:20px 0 0}
+.ent{border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0 0}
+.ent.urgent{border-color:#f0c36a;background:#fffbf2}
 .ent h3{font-size:16px;line-height:22px;margin:0}
 .ent .qui{font-size:13px;color:var(--muted);margin:2px 0 0}
-.etapes{list-style:none;margin:12px 0 4px;padding:0;display:flex;gap:4px}
-.etapes li{flex:1;height:6px;border-radius:3px;background:var(--line)}
-.etapes li.fait{background:#1a7f4b}
-.etapes li.ici{background:var(--brand)}
+.barre{display:flex;gap:3px;margin:12px 0 0}
+.barre span{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.barre .fait{background:var(--ok)}
+.barre .ici{background:var(--brand)}
 .etape{font-size:14px;margin:6px 0 0}
 .etape b{color:var(--brand)}
-.badge{display:inline-block;font-size:12px;line-height:18px;padding:1px 8px;border-radius:999px;background:var(--surface);color:var(--muted);margin:6px 6px 0 0}
-.badge.ko{background:#fbeceb;color:var(--danger)}
-.contact{font-size:14px;margin:10px 0 0;padding:10px 12px;background:var(--surface);border-radius:10px}
-.contact a{color:var(--brand)}
+.note{font-size:14px;margin:10px 0 0}
+.contact{font-size:14px;margin:10px 0 0;padding:10px 12px;background:var(--surface);border-radius:10px;overflow-wrap:anywhere}
+.ent button,.ent .btn{min-height:44px;font-size:15px;margin-top:8px}
+.btn.wa{background:var(--wa)}
 .vide{font-size:14px;color:var(--muted);margin:12px 0 0}
-.ent .agir{display:inline-block;font-size:14px;margin:10px 0 0;color:var(--brand)}
+/* Plein écran : le QR seul, sur blanc, pour le faire scanner en salon */
+#plein{position:fixed;inset:0;z-index:10;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#plein canvas{width:min(88vw,70vh);border:0}
+#plein p{margin:16px 0 0;font-size:18px;font-weight:600}
+#plein small{display:block;margin:8px 0 0;color:var(--muted);font-size:14px}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
-<section class="card">
-  <div id="attente"><h1>Votre QR code</h1><p class="msg" id="m">Vérification…</p></div>
+
+<section class="card centre">
+  <div id="attente"><h1>Mon espace consultant</h1><p class="msg" id="m" role="status">Vérification…</p>
+    <form id="renvoi" hidden novalidate>
+      <input id="r-mail" type="email" autocomplete="email" inputmode="email" placeholder="Votre adresse e-mail" aria-label="Votre adresse e-mail" required>
+      <button type="submit" id="r-go">Recevoir un nouveau lien</button>
+      <p class="msg" id="r-m" role="status" aria-live="polite"></p>
+    </form>
+  </div>
   <div id="pret" hidden>
-    <h1 id="titre">Votre QR code</h1>
+    <h1 id="titre">Mon QR code</h1>
     <p class="sub">Faites-le scanner par les entreprises que vous rencontrez : elles arrivent sur le formulaire BEAM, à votre nom.</p>
-    <canvas id="qr" width="1024" height="1024" aria-label="QR code"></canvas>
+    <canvas id="qr" width="1024" height="1024" role="img" aria-label="QR code vers votre formulaire BEAM"></canvas>
     <p class="lien" id="lien"></p>
-    <button id="dl" type="button">Télécharger le QR code (PNG)</button>
-    <button id="cp" class="sec" type="button">Copier mon lien</button>
+    <button id="grand" type="button">Afficher en grand pour le faire scanner</button>
+    <div class="duo"><button id="cp" class="sec" type="button">Partager mon lien</button><button id="dl" class="sec" type="button">Enregistrer l’image</button></div>
     <p class="msg" id="m2" role="status" aria-live="polite"></p>
     <ul class="conseils">
-      <li>Gardez l'image dans votre téléphone pour la montrer en salon.</li>
-      <li>Ne partagez pas le lien de cet e-mail : il donne accès à cette page. Le lien du QR code, lui, peut être partagé.</li>
+      <li>Enregistrez l’image dans votre téléphone : elle s’affiche même sans réseau.</li>
+      <li>Cette page est personnelle : ne transférez pas l’e-mail qui l’ouvre. Le lien du QR code, lui, se partage librement.</li>
     </ul>
   </div>
 </section>
-<section class="card bloc" id="rdv-lien" hidden>
-  <h2>Mes rendez-vous</h2>
-  <p class="sub">Déplacez vous-même le rendez-vous d’une de vos entreprises : vous choisissez un créneau libre, l’entreprise et la personne qui mène la visio sont prévenues automatiquement.</p>
-  <a class="btn" href="/consultants/rendez-vous/">Voir et reporter mes rendez-vous</a>
-</section>
-<section class="card bloc" id="invit" hidden>
-  <h2>Inviter des consultants dans mon équipe</h2>
-  <p class="sub">Envoyez ce lien aux personnes que vous recrutez. En s'inscrivant avec, elles sont rattachées à votre équipe : vous suivez leurs entreprises ici.</p>
-  <p class="lien" id="invit-lien"></p>
-  <button id="invit-cp" class="sec" type="button">Copier mon lien d'invitation</button>
-  <p class="msg" id="invit-m" role="status" aria-live="polite"></p>
-</section>
-<section class="card bloc" id="suivi" hidden>
-  <h2>Mon suivi</h2>
+
+<section class="card" id="suivi" hidden>
+  <h2>Mes entreprises</h2>
   <div class="chiffres">
     <div class="chiffre"><b id="n-scans">0</b><span>scans de mon QR code</span></div>
     <div class="chiffre"><b id="n-ent">0</b><span>entreprises inscrites</span></div>
     <div class="chiffre"><b id="n-rdv">0</b><span>avec rendez-vous</span></div>
   </div>
   <div id="liste"></div>
-  <p class="msg" style="font-size:13px">Mis à jour environ toutes les 30 minutes. Une entreprise apparaît ici dès qu'elle a rempli le formulaire avec votre QR code.</p>
+  <p class="msg" style="font-size:13px">Une entreprise apparaît ici dès qu’elle a rempli le formulaire avec votre QR code. Mis à jour environ toutes les 30 minutes.</p>
 </section>
-<section class="card bloc" id="equipe" hidden>
+
+<section class="card" id="rdv-lien" hidden>
+  <h2>Mes rendez-vous</h2>
+  <p class="sub">Une entreprise vous demande de changer l’horaire ? Choisissez vous-même un créneau libre : l’entreprise et l’expert BEAM sont prévenus automatiquement.</p>
+  <a class="btn" href="/consultants/rendez-vous/">Voir et reporter mes rendez-vous</a>
+</section>
+
+<section class="card" id="invit" hidden>
+  <h2>Inviter des consultants dans mon équipe</h2>
+  <p class="sub">Envoyez ce lien aux personnes que vous recrutez. En s’inscrivant avec, elles sont rattachées à votre équipe : vous suivez leurs entreprises ici.</p>
+  <p class="lien" id="invit-lien"></p>
+  <button id="invit-cp" class="sec" type="button">Partager mon lien d’invitation</button>
+  <p class="msg" id="invit-m" role="status" aria-live="polite"></p>
+</section>
+
+<section class="card" id="equipe" hidden>
   <h2>Mon équipe</h2>
   <p class="sub">Entreprises amenées par les consultants de votre équipe.</p>
   <div id="liste-eq"></div>
 </section>
-<p class="msg" style="text-align:center">Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/">Espace consultant</a></p>
+<p class="msg" style="text-align:center">Besoin d’aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a></p>
 </main>
+
+<div id="plein" hidden role="dialog" aria-modal="true" aria-label="QR code en grand">
+  <canvas id="qr-grand" width="1024" height="1024" role="img" aria-label="QR code"></canvas>
+  <p id="plein-nom"></p>
+  <small>Touchez l’écran pour revenir</small>
+</div>
+
 <script src="/vendor/qrcode-generator-2.0.4.js"></script>
 <script>
 (function(){
   'use strict';
   var $=function(id){ return document.getElementById(id); };
   var ID=/^[a-z0-9]{2,30}$/, JETON=/^[A-Za-z0-9_-]{16,128}$/, CLE='beam-consultant';
+  // Page de réservation que reçoit une entreprise après le formulaire (même lien que le parcours normal, prérempli).
+  var RESA='https://meetings.hubspot.com/rudy-savy';
   var p=new URLSearchParams(location.search), a=(p.get('a')||'').toLowerCase(), t=p.get('t')||'';
-  // Sur son propre appareil : on se souvient de l'accès, pour revenir sans l'e-mail.
   if(!a||!t){ try{ var s=JSON.parse(localStorage.getItem(CLE)||'null'); if(s){ a=s.a; t=s.t; } }catch(e){} }
-  // Retire le jeton de la barre d'adresse (historique, captures d'écran).
   if(p.get('t')){ try{ history.replaceState(null,'',location.pathname); }catch(e){} }
-  function erreur(txt){ var m=$('m'); m.textContent=txt; m.className='msg err'; }
-  if(!ID.test(a)||!JETON.test(t)) return erreur('Lien incomplet. Ouvrez le bouton de votre e-mail, ou demandez un nouvel envoi depuis l’espace consultant.');
+  var cfg=null, moi={prenom:'',nom:''};
 
-  function dessine(url){
+  function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+  function partager(texte,zone,okTxt){
+    if(navigator.share){ navigator.share({text:texte}).catch(function(){}); return; }
+    var fin=function(){ $(zone).textContent=okTxt; };
+    if(navigator.clipboard) navigator.clipboard.writeText(texte).then(fin,function(){ $(zone).textContent=texte; });
+    else $(zone).textContent=texte;
+  }
+
+  // ---------------------------------------------------------------- accès refusé : renvoi du lien sur place
+  function erreur(txt){
+    var m=$('m'); m.textContent=txt; m.className='msg err';
+    $('renvoi').hidden=false;
+  }
+  $('renvoi').onsubmit=function(e){
+    e.preventDefault();
+    var mail=$('r-mail').value.trim(), m=$('r-m');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){ m.textContent='Indiquez l’adresse e-mail de votre inscription.'; m.className='msg err'; return; }
+    var go=$('r-go'); go.disabled=true; m.textContent='Envoi…'; m.className='msg';
+    var envoi=function(c){ return fetch(c.webhook,{method:'POST',body:new URLSearchParams({action:'renvoi',email:mail,turnstile:'',page:location.href.split('?')[0]})}); };
+    (cfg?Promise.resolve(cfg):fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }))
+      .then(envoi).then(function(){
+        m.textContent='C’est envoyé. Si cette adresse est inscrite, un e-mail avec votre nouveau lien arrive dans quelques minutes. Pensez à regarder les indésirables.'; m.className='msg ok';
+      }).catch(function(){ m.textContent='L’envoi n’a pas marché. Réessayez dans un instant.'; m.className='msg err'; go.disabled=false; });
+  };
+
+  // ---------------------------------------------------------------- QR
+  function dessine(c,url){
     var q=qrcode(0,'M'); q.addData(url); q.make();
-    var n=q.getModuleCount(), marge=4, tot=n+marge*2, c=$('qr'), x=c.getContext('2d');
+    var n=q.getModuleCount(), marge=4, tot=n+marge*2, x=c.getContext('2d');
     var px=Math.floor(1024/tot), taille=px*tot; c.width=taille; c.height=taille;
     x.fillStyle='#fff'; x.fillRect(0,0,taille,taille); x.fillStyle='#000';
     for(var r=0;r<n;r++) for(var k=0;k<n;k++) if(q.isDark(r,k)) x.fillRect((k+marge)*px,(r+marge)*px,px,px);
   }
+  var verrou=null;
+  function pleinEcran(ouvrir){
+    var P=$('plein'); P.hidden=!ouvrir;
+    if(ouvrir){
+      try{ if(P.requestFullscreen) P.requestFullscreen().catch(function(){}); }catch(e){}
+      try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(function(v){ verrou=v; }).catch(function(){}); }catch(e){}
+    } else {
+      try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+      try{ if(verrou){ verrou.release(); verrou=null; } }catch(e){}
+      $('grand').focus();
+    }
+  }
+  $('plein').onclick=function(){ pleinEcran(false); };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!$('plein').hidden) pleinEcran(false); });
+  document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement&&!$('plein').hidden) pleinEcran(false); });
 
-  // ---------------------------------------------------------------- tableau de bord
-  // Étapes du pipeline HubSpot (identifiants internes → étape affichée). Ajouter une étape = une ligne.
+  // ---------------------------------------------------------------- entreprises
   var ETAPES=[
     {id:'appointmentscheduled', nom:'Formulaire reçu'},
     {id:'qualifiedtobuy',       nom:'Contactée par BEAM'},
@@ -126,41 +196,77 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
     {id:'1477967975',           nom:'Validation par l’entreprise'},
     {id:'closedwon',            nom:'Cliente BEAM'}
   ];
-  function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
-  function date(v){ if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+  function date(v){ if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}); }
+  function ilya(v){ var d=new Date(v); if(isNaN(d)) return ''; var j=Math.floor((Date.now()-d)/864e5); return j<=0?'aujourd’hui':(j===1?'hier':'il y a '+j+' jours'); }
   function entreprise(d){ return String((d.properties||{}).dealname||'Entreprise').split(' — ')[0]; }
   function rang(d){ var st=(d.properties||{}).dealstage; for(var i=0;i<ETAPES.length;i++) if(ETAPES[i].id===st) return i; return -1; }
+  function arrete(d){ var p=d.properties||{}; return p.dealstage==='closedlost'||p.statut_reservation==='Refusée'||p.statut_reservation==='Expirée'; }
   function aRdv(d){ var p=d.properties||{}; return rang(d)>=2 || !!p.engagements_last_meeting_booked || p.statut_presentation==='rdv'; }
+  function aRelancer(d){ return !aRdv(d) && !arrete(d) && (d.properties||{}).statut_reservation!=='En attente'; }
+  function telWa(v){ var s=String(v||'').replace(/[^\d+]/g,''); if(s.indexOf('00')===0) s='+'+s.slice(2); return /^\+\d{8,15}$/.test(s)?s.slice(1):''; }
+
+  function relance(d,q){
+    var u=new URL(RESA);
+    if(q.firstname) u.searchParams.set('firstName',q.firstname);
+    if(q.lastname) u.searchParams.set('lastName',q.lastname);
+    if(q.email) u.searchParams.set('email',q.email);
+    return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact BEAM')+'. Merci pour votre inscription auprès de BEAM. '+
+      'Il reste une étape : choisir votre créneau de 15 minutes en visio avec un expert BEAM. C’est ici : '+u.toString();
+  }
+
   function carte(d, contact, consultant){
-    var p=d.properties||{}, r=rang(d), c=el('div','ent');
+    var p=d.properties||{}, r=rang(d), stop=arrete(d), c=el('div','ent'), q=(contact&&contact.properties)||{};
+    var relancer=!consultant && aRelancer(d);
+    if(relancer) c.className='ent urgent';
     c.appendChild(el('h3',null,entreprise(d)));
-    if(consultant) c.appendChild(el('p','qui','Amenée par '+consultant));
-    c.appendChild(el('p','qui','Inscrite le '+date(p.createdate)));
-    var perdu=p.dealstage==='closedlost', refus=p.statut_reservation==='Refusée'||p.statut_reservation==='Expirée';
-    var ol=el('ol','etapes'); ol.setAttribute('aria-hidden','true');
-    ETAPES.forEach(function(_,i){ ol.appendChild(el('li', perdu||refus?'':(i<r?'fait':(i===r?'ici':'')))); });
-    c.appendChild(ol);
-    var e=el('p','etape'); e.appendChild(document.createTextNode('Étape : ')); e.appendChild(el('b',null, perdu?'Projet arrêté':(refus?'Réservation '+p.statut_reservation.toLowerCase():(r>=0?ETAPES[r].nom:'En cours'))));
+    var nom=[q.firstname,q.lastname].filter(Boolean).join(' ');
+    c.appendChild(el('p','qui',(consultant?'Amenée par '+consultant+' · ':'')+(nom?nom+(q.jobtitle?', '+q.jobtitle:'')+' · ':'')+'inscrite '+ilya(p.createdate)));
+    var barre=el('div','barre'); barre.setAttribute('aria-hidden','true');
+    ETAPES.forEach(function(_,i){ barre.appendChild(el('span', stop?'':(i<r?'fait':(i===r?'ici':'')))); });
+    c.appendChild(barre);
+    var e=el('p','etape');
+    if(stop) e.appendChild(el('b',null, p.dealstage==='closedlost'?'Projet arrêté':'Réservation '+String(p.statut_reservation).toLowerCase()));
+    else { e.appendChild(document.createTextNode('Étape '+(r>=0?r+1:1)+' sur '+ETAPES.length+' : ')); e.appendChild(el('b',null, r>=0?ETAPES[r].nom:'En cours')); }
     c.appendChild(e);
-    if(p.engagements_last_meeting_booked) c.appendChild(el('span','badge','Rendez-vous réservé le '+date(p.engagements_last_meeting_booked)));
-    else if(p.statut_presentation==='rdv') c.appendChild(el('span','badge','A déjà pris rendez-vous'));
-    else if(r<=1 && !perdu && !refus) c.appendChild(el('span','badge','Pas encore de rendez-vous : aidez-la à en réserver un'));
-    if(p.statut_reservation==='En attente') c.appendChild(el('span','badge','Réservation en cours de validation'));
+
+    if(p.statut_reservation==='En attente') c.appendChild(el('p','note','Sa réservation est en cours de validation par BEAM.'));
+    else if(aRdv(d)){
+      c.appendChild(el('p','note', p.engagements_last_meeting_booked?'Rendez-vous pris le '+date(p.engagements_last_meeting_booked)+'.':'Rendez-vous pris.'));
+      if(!consultant && r<=2){ var lr=el('a','btn sec','Voir ou reporter son rendez-vous'); lr.href='/consultants/rendez-vous/'; c.appendChild(lr); }
+    }
+    if(relancer){
+      c.appendChild(el('p','note','Elle n’a pas encore choisi son créneau. Une relance de votre part, aujourd’hui, fait souvent la différence.'));
+      var txt=relance(d,q), num=telWa(q.mobilephone||q.phone);
+      var wa=el('a','btn wa', num?'Relancer '+(q.firstname||'')+' sur WhatsApp':'Relancer sur WhatsApp');
+      wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(txt); wa.target='_blank'; wa.rel='noopener';
+      c.appendChild(wa);
+      var box=el('p','msg'); box.setAttribute('role','status');
+      var cp=el('button','sec','Copier le message de relance'); cp.type='button';
+      cp.onclick=function(){
+        var fin=function(){ box.textContent='Message copié : collez-le dans un SMS ou un e-mail.'; };
+        if(navigator.clipboard) navigator.clipboard.writeText(txt).then(fin,function(){ box.textContent=txt; }); else box.textContent=txt;
+      };
+      c.appendChild(cp); c.appendChild(box);
+    }
     if(contact){
-      var q=contact.properties||{}, b=el('div','contact');
-      var nom=[q.firstname,q.lastname].filter(Boolean).join(' ');
-      if(nom) b.appendChild(el('div',null,nom+(q.jobtitle?' · '+q.jobtitle:'')));
-      [['email','mailto:'],['phone','tel:'],['mobilephone','tel:']].forEach(function(k){
-        var v=q[k[0]]; if(!v) return; var a=el('a',null,v); a.href=k[1]+String(v).replace(/\s/g,''); var d2=el('div'); d2.appendChild(a); b.appendChild(d2);
+      var b=el('div','contact');
+      [['email','mailto:'],['mobilephone','tel:'],['phone','tel:']].forEach(function(k){
+        var v=q[k[0]]; if(!v) return; var l=el('a',null,v); l.href=k[1]+String(v).replace(/\s/g,''); var d2=el('div'); d2.appendChild(l); b.appendChild(d2);
       });
       if(q.website){ var w=String(q.website); if(!/^https?:\/\//i.test(w)) w='https://'+w; var aw=el('a',null,q.website); aw.href=w; aw.target='_blank'; aw.rel='noopener'; var dw=el('div'); dw.appendChild(aw); b.appendChild(dw); }
       if(b.childNodes.length) c.appendChild(b);
     }
-    var m=el('a','agir','Écrire à l’équipe BEAM au sujet de cette entreprise');
-    m.href='mailto:team@getbeam-consulting.com?subject='+encodeURIComponent('Entreprise '+entreprise(d)+' (consultant '+a+')');
-    c.appendChild(m);
     return c;
   }
+
+  function trier(liste){
+    var poids=function(d){ return aRelancer(d)?0:(arrete(d)?2:1); };
+    return liste.slice().sort(function(x,y){
+      var dp=poids(x)-poids(y); if(dp) return dp;
+      return new Date((y.properties||{}).createdate)-new Date((x.properties||{}).createdate);
+    });
+  }
+
   function tableau(j){
     if(!j||j.ok!==true) return;
     var mes=Array.isArray(j.mes)?j.mes:[], liens=Array.isArray(j.liens)?j.liens:[], contacts=Array.isArray(j.contacts)?j.contacts:[], eq=Array.isArray(j.equipe)?j.equipe:[];
@@ -170,51 +276,56 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
     $('n-ent').textContent=String(mes.length);
     $('n-rdv').textContent=String(mes.filter(aRdv).length);
     var L=$('liste');
-    if(!mes.length) L.appendChild(el('p','vide','Aucune entreprise pour l’instant. Dès qu’une entreprise remplit le formulaire avec votre QR code, elle apparaît ici.'));
-    mes.forEach(function(d){ L.appendChild(carte(d, contactDe[String(d.id)], null)); });
+    if(!mes.length) L.appendChild(el('p','vide','Aucune entreprise pour l’instant. Montrez votre QR code en grand à la prochaine entreprise rencontrée : elle apparaîtra ici dès qu’elle aura rempli le formulaire.'));
+    var tri=trier(mes), n=tri.filter(aRelancer).length, groupeFait=false;
+    if(n) L.appendChild(el('p','groupe', n===1?'1 entreprise à relancer':n+' entreprises à relancer'));
+    tri.forEach(function(d){
+      if(!aRelancer(d) && !groupeFait && n){ L.appendChild(el('p','groupe','Les autres')); groupeFait=true; }
+      L.appendChild(carte(d, contactDe[String(d.id)], null));
+    });
     $('suivi').hidden=false;
     if(j.chef===true){
       var E=$('liste-eq');
       if(!eq.length) E.appendChild(el('p','vide','Aucune entreprise amenée par votre équipe pour l’instant.'));
-      eq.forEach(function(d){ E.appendChild(carte(d, null, (d.properties||{}).apporteur_nom||'un consultant')); });
+      trier(eq).forEach(function(d){ E.appendChild(carte(d, null, (d.properties||{}).apporteur_nom||'un consultant')); });
       $('equipe').hidden=false;
     }
   }
 
-  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(cfg){
+  // ---------------------------------------------------------------- démarrage
+  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
+    cfg=c;
+    if(!ID.test(a)||!JETON.test(t)){ erreur('Cette page s’ouvre avec le bouton de votre e-mail BEAM. Vous ne le retrouvez pas ? Recevez un nouveau lien :'); return; }
     if(!cfg.webhook) throw new Error('fermé');
     return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'verification',id:a,jeton:t})})
       .then(function(r){ return r.json(); })
       .then(function(j){
         if(!j||j.ok!==true||typeof j.lien!=='string'||j.lien.indexOf(cfg.lien_qr_autorise)!==0) throw new Error('refus');
         try{ localStorage.setItem(CLE,JSON.stringify({a:a,t:t})); }catch(e){}
-        dessine(j.lien);
-        $('titre').textContent='QR code de '+[j.prenom,j.nom].filter(Boolean).join(' ');
+        moi={prenom:j.prenom||'',nom:j.nom||''};
+        var qui=[j.prenom,j.nom].filter(Boolean).join(' ');
+        dessine($('qr'),j.lien); dessine($('qr-grand'),j.lien);
+        $('titre').textContent='QR code de '+qui;
+        $('plein-nom').textContent=qui+' · BEAM';
         $('lien').textContent=j.lien;
+        $('grand').onclick=function(){ pleinEcran(true); };
         $('dl').onclick=function(){
           var l=document.createElement('a'); l.download='QR-BEAM-'+a+'.png'; l.href=$('qr').toDataURL('image/png');
           document.body.appendChild(l); l.click(); l.remove();
+          $('m2').textContent='Image enregistrée dans vos téléchargements.';
         };
-        $('cp').onclick=function(){
-          var fin=function(){ $('m2').textContent='Lien copié.'; };
-          if(navigator.clipboard) navigator.clipboard.writeText(j.lien).then(fin,function(){ $('m2').textContent=j.lien; });
-          else $('m2').textContent=j.lien;
-        };
+        $('cp').onclick=function(){ partager(j.lien,'m2','Lien copié.'); };
         $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false;
         if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
           $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
-          $('invit-cp').onclick=function(){
-            var fin=function(){ $('invit-m').textContent='Lien d’invitation copié.'; };
-            if(navigator.clipboard) navigator.clipboard.writeText(j.invitation).then(fin,function(){ $('invit-m').textContent=j.invitation; });
-            else $('invit-m').textContent=j.invitation;
-          };
+          $('invit-cp').onclick=function(){ partager(j.invitation,'invit-m','Lien d’invitation copié.'); };
         }
         return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'tableau',id:a,jeton:t})})
           .then(function(r){ return r.json(); }).then(tableau).catch(function(){});
       });
   }).catch(function(){
     try{ localStorage.removeItem(CLE); }catch(e){}
-    erreur('Ce lien n’est plus valable : il a expiré (30 jours) ou un e-mail plus récent l’a remplacé. Ouvrez le dernier e-mail reçu, ou demandez un nouvel envoi depuis l’espace consultant.');
+    erreur('Ce lien n’est plus valable : il a expiré (30 jours) ou un e-mail plus récent l’a remplacé. Recevez un nouveau lien :');
   });
 })();
 </script>

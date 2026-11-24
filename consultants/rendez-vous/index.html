@@ -23,11 +23,11 @@ h2{font-size:18px;line-height:26px;margin:0}
 .rdv .qui{font-size:14px;color:var(--muted);margin:2px 0 0}
 .rdv .quand{font-size:15px;margin:8px 0 0;font-weight:600}
 button{font:600 15px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;border-radius:12px}
-.prim{display:block;width:100%;margin:12px 0 0;padding:12px 16px;border:0;background:var(--ink);color:#fff}
-.sec{display:block;width:100%;margin:10px 0 0;padding:11px 16px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.prim{display:block;width:100%;min-height:48px;margin:16px 0 0;padding:12px 16px;border:0;background:var(--ink);color:#fff}
+.sec{display:block;width:100%;min-height:48px;margin:10px 0 0;padding:11px 16px;border:1px solid var(--line);background:#fff;color:var(--ink)}
 .prim[disabled]{opacity:.5;cursor:default}
 .puces{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
-.puce{padding:7px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:400;font-size:14px}
+.puce{min-height:44px;padding:10px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:400;font-size:14px}
 .puce[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
 .creneaux{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0}
 .creneaux .puce{text-align:center}
@@ -35,13 +35,16 @@ button{font:600 15px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;border-rad
 .etiquette{font-size:14px;color:var(--muted);margin:14px 0 0}
 [hidden]{display:none!important}
 a{color:var(--brand)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.motifs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
+.motifs .puce{text-align:left;line-height:20px}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
 
 <section class="card" id="haut">
   <h1>Mes rendez-vous</h1>
-  <p class="sub" id="fuseau">Chargement…</p>
+  <p class="sub" id="fuseau">Chargement de vos rendez-vous…</p>
   <p class="msg" id="m" role="status" aria-live="polite"></p>
   <div id="liste"></div>
 </section>
@@ -49,13 +52,18 @@ a{color:var(--brand)}
 <section class="card" id="report" hidden>
   <h2 id="r-titre">Reporter</h2>
   <p class="sub" id="r-avant"></p>
+  <p class="etiquette">Pourquoi ce report ?</p>
+  <div class="motifs" id="motifs">
+    <button class="puce" type="button" data-m="entreprise" aria-pressed="true">L’entreprise me l’a demandé</button>
+    <button class="puce" type="button" data-m="imprevu" aria-pressed="false">Un imprévu de notre côté</button>
+  </div>
   <p class="etiquette">Choisissez un jour</p>
   <div class="puces" id="jours"></div>
   <p class="etiquette" id="c-titre" hidden>Créneaux libres de 15 minutes</p>
   <div class="creneaux" id="creneaux"></div>
   <p class="vide" id="c-vide" hidden>Plus aucun créneau libre ce jour-là. Choisissez un autre jour.</p>
   <button class="prim" id="valider" type="button" disabled>Choisissez un créneau</button>
-  <button class="sec" id="annuler" type="button">Annuler</button>
+  <button class="sec" id="annuler" type="button">Garder l’horaire actuel</button>
   <p class="msg" id="r-m" role="status" aria-live="polite"></p>
 </section>
 
@@ -77,11 +85,12 @@ a{color:var(--brand)}
     pas_a_vous:'Ce rendez-vous ne fait pas partie de vos entreprises.',
     introuvable:'Ce rendez-vous n’a pas d’invitation d’agenda : écrivez à l’équipe BEAM.',
     agenda:'L’agenda n’a pas répondu. Rien n’a été modifié : réessayez dans un instant.',
-    acces:'Votre lien a expiré. Ouvrez le dernier e-mail BEAM reçu ou demandez un nouvel envoi depuis l’espace consultant.'
+    acces:'Votre accès a expiré. Ouvrez Mon espace pour recevoir un nouveau lien par e-mail.'
   };
   var a='', t='';
   try{ var s=JSON.parse(localStorage.getItem(CLE)||'null'); if(s){ a=s.a; t=s.t; } }catch(e){}
-  var cfg=null, tz='Europe/Paris', choix=null, rdvEnCours=null;
+  var cfg=null, tz='Europe/Paris', choix=null, rdvEnCours=null, motif='entreprise';
+  [].forEach.call(document.querySelectorAll('#motifs .puce'),function(b){ b.onclick=function(){ [].forEach.call(b.parentNode.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); motif=b.getAttribute('data-m'); }; });
 
   function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
   function msg(id,txt,cls){ var m=$(id); m.textContent=txt||''; m.className='msg'+(cls?' '+cls:''); }
@@ -89,6 +98,7 @@ a{color:var(--brand)}
     var corps=new URLSearchParams(champs); corps.set('id',a); corps.set('jeton',t);
     return fetch(cfg.webhook_rdv,{method:'POST',body:corps}).then(function(r){ return r.json(); });
   }
+  function lienEspace(){ var l=el('a','sec','Ouvrir Mon espace'); l.href='/consultants/mon-qr/'; l.style.textAlign='center'; l.style.textDecoration='none'; l.style.lineHeight='24px'; $('liste').appendChild(l); }
   function heure(ms,zone){ return new Date(ms).toLocaleTimeString('fr-FR',{timeZone:zone||tz,hour:'2-digit',minute:'2-digit'}).replace(':',' h '); }
   function jourTxt(ms,zone){ var s=new Date(ms).toLocaleDateString('fr-FR',{timeZone:zone||tz,weekday:'long',day:'numeric',month:'long'}); return s.charAt(0).toUpperCase()+s.slice(1); }
   function nomFuseau(z){ return z==='Europe/Paris'?'heure de Paris':(z==='Africa/Abidjan'?'heure d’Abidjan':'heure des Antilles'); }
@@ -120,7 +130,7 @@ a{color:var(--brand)}
       tz=j.tz||'Europe/Paris';
       $('fuseau').textContent='Horaires affichés en '+nomFuseau(tz)+'.';
       var L=$('liste'), rdv=Array.isArray(j.rdv)?j.rdv:[];
-      if(!rdv.length){ L.appendChild(el('p','vide','Aucun rendez-vous à venir pour vos entreprises.')); return; }
+      if(!rdv.length){ var v=el('p','vide','Aucun rendez-vous à venir pour vos entreprises. Celles qui n’ont pas encore réservé sont dans '); var l=el('a',null,'Mon espace'); l.href='/consultants/mon-qr/'; v.appendChild(l); v.appendChild(document.createTextNode(', avec un bouton pour les relancer.')); L.appendChild(v); return; }
       rdv.forEach(function(r){
         var c=el('div','rdv');
         c.appendChild(el('h2',null,r.e||'Entreprise'));
@@ -134,13 +144,13 @@ a{color:var(--brand)}
       });
     }).catch(function(e){
       var r=String(e&&e.message||'');
-      msg('m', RAISONS[r]||'Impossible de charger vos rendez-vous. Réessayez dans un instant.', 'err');
+      msg('m', RAISONS[r]||'Impossible de charger vos rendez-vous. Réessayez dans un instant.', 'err'); if(r==='acces') lienEspace();
       $('fuseau').textContent='';
     });
   }
 
   function ouvrir(r){
-    rdvEnCours=r; choix=null;
+    rdvEnCours=r; choix=null; motif='entreprise'; [].forEach.call(document.querySelectorAll('#motifs .puce'),function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-m')==='entreprise'?'true':'false'); });
     $('r-titre').textContent='Reporter '+(r.e||'le rendez-vous');
     $('r-avant').textContent='Actuellement : '+jourTxt(r.d)+' à '+heure(r.d)+' ('+nomFuseau(tz)+').';
     var J=$('jours'); J.textContent=''; $('creneaux').textContent=''; $('c-titre').hidden=true; $('c-vide').hidden=true;
@@ -179,16 +189,16 @@ a{color:var(--brand)}
 
   function majBouton(){
     var b=$('valider');
-    if(choix){ b.disabled=false; b.textContent='Confirmer le '+jourTxt(choix).toLowerCase()+' à '+heure(choix); }
+    if(choix){ b.disabled=false; b.textContent='Confirmer : '+jourTxt(choix).toLowerCase()+' à '+heure(choix); }
     else { b.disabled=true; b.textContent='Choisissez un créneau'; }
   }
 
   $('valider').onclick=function(){
     if(!choix||!rdvEnCours) return;
     var b=$('valider'); b.disabled=true; b.textContent='Report en cours…'; msg('r-m','');
-    appel({action:'reporter',meeting:rdvEnCours.k,debut:String(choix)}).then(function(rep){
+    appel({action:'reporter',meeting:rdvEnCours.k,debut:String(choix),motif:motif}).then(function(rep){
       if(!rep||rep.ok!==true) throw new Error(rep&&rep.raison||'agenda');
-      msg('r-m','C’est fait : rendez-vous déplacé au '+String(rep.nouveau||'').toLowerCase()+'. L’entreprise et la personne qui mène la visio sont prévenues.','ok');
+      msg('r-m','C’est fait : rendez-vous déplacé au '+String(rep.nouveau||'').toLowerCase()+'. L’entreprise a reçu un e-mail et son invitation d’agenda est à jour ; l’expert BEAM est prévenu.','ok');
       b.textContent='Rendez-vous reporté';
       setTimeout(function(){ $('report').hidden=true; charger(); },2500);
     }).catch(function(e){
@@ -202,7 +212,7 @@ a{color:var(--brand)}
 
   if(!ID.test(a)||!JETON.test(t)){
     $('fuseau').textContent='';
-    msg('m','Ouvrez d’abord votre espace depuis le bouton de votre dernier e-mail BEAM, puis revenez ici.','err');
+    msg('m','Ouvrez d’abord Mon espace (bouton de votre e-mail BEAM), puis revenez ici.','err'); lienEspace();
     return;
   }
   fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
