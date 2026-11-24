@@ -212,8 +212,8 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
     return 'https://getbeam-consulting.com/reserver/#'+b64;
   }
   function relance(d,q){
-    return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact')+' de BEAM. Merci pour votre inscription. '+
-      'Il ne reste qu’à choisir votre créneau de 15 minutes en visio avec un expert BEAM, cela se fait en quelques clics.\n\n'+lienCourt(q);
+    return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact')+' de BEAM. '+
+      'Pour votre échange de 15 minutes avec un expert BEAM, il ne reste qu’à choisir votre créneau. Vous le trouverez aussi par e-mail.\n\n'+lienCourt(q);
   }
   // Téléphone : wa.me ouvre directement l'application. Ordinateur : WhatsApp Web directement (pas de page intermédiaire, pas de fenêtre « ouvrir l'application ? » du navigateur).
   var MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -244,18 +244,40 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
       if(!consultant && r<=2){ var lr=el('a','btn sec','Voir ou reporter son rendez-vous'); lr.href='/consultants/rendez-vous/'; c.appendChild(lr); }
     }
     if(relancer){
-      c.appendChild(el('p','note','Elle n’a pas encore choisi son créneau. Une relance de votre part, aujourd’hui, fait souvent la différence.'));
-      var txt=relance(d,q), num=telWa(q.mobilephone||q.phone);
-      var wa=el('button','btn wa', num?'Relancer '+(q.firstname||'')+' sur WhatsApp':'Relancer sur WhatsApp (choisir le contact)'); wa.type='button';
-      wa.onclick=function(){ ouvrirWhatsApp(num,txt); };
-      c.appendChild(wa);
-      var box=el('p','msg'); box.setAttribute('role','status');
-      var cp=el('button','sec','Copier le message de relance'); cp.type='button';
-      cp.onclick=function(){
-        var fin=function(){ box.textContent='Message copié : collez-le dans un SMS ou un e-mail.'; };
-        if(navigator.clipboard) navigator.clipboard.writeText(txt).then(fin,function(){ box.textContent=txt; }); else box.textContent=txt;
-      };
-      c.appendChild(cp); c.appendChild(box);
+      c.appendChild(el('p','note','Elle n’a pas encore choisi son créneau.'));
+      var box=el('p','msg'); box.setAttribute('role','status'); box.setAttribute('aria-live','polite');
+      if(q.email){
+        // 1. Relance officielle : l'e-mail part de team@getbeam-consulting.com, signé BEAM, avec le lien de réservation prérempli.
+        var em=el('button','btn','Envoyer un rappel par e-mail (signé BEAM)'); em.type='button';
+        em.onclick=function(){
+          em.disabled=true; em.textContent='Envoi…'; box.className='msg'; box.textContent='';
+          fetch(cfg.webhook_relance,{method:'POST',body:new URLSearchParams({id:a,jeton:t,deal:String(d.id)})})
+            .then(function(r){ return r.json(); }).then(function(j){
+              if(j&&j.ok===true){ em.textContent='Rappel envoyé'; box.className='msg ok'; box.textContent='BEAM vient d’envoyer à '+q.email+' un e-mail avec le lien pour réserver. Vous pourrez renvoyer un rappel dans 2 jours si besoin.'; return; }
+              throw j||{};
+            }).catch(function(j){
+              var r=(j&&j.raison)||'', quand=j&&j.le?new Date(j.le).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';
+              var M={deja:'Un rappel est déjà parti'+(quand?' '+quand:'')+'. Pour ne pas la lasser, le prochain sera possible 2 jours après.',
+                     max:'Elle a déjà reçu 3 rappels : BEAM n’en enverra plus. Un appel de votre part sera plus efficace.',
+                     pas_email:'Pas d’adresse e-mail pour cette entreprise : appelez-la ou écrivez-lui sur WhatsApp.',
+                     pas_a_vous:'Cette entreprise ne fait pas partie des vôtres.',
+                     acces:'Votre accès a expiré : rechargez la page depuis votre dernier e-mail BEAM.',
+                     envoi:'L’e-mail n’est pas parti. Réessayez dans un instant.'};
+              box.className='msg err'; box.textContent=M[r]||'Le rappel n’a pas pu partir. Réessayez dans un instant.';
+              em.disabled=(r==='deja'||r==='max'||r==='pas_a_vous'); em.textContent=em.disabled?'Rappel déjà envoyé':'Envoyer un rappel par e-mail (signé BEAM)';
+            });
+        };
+        c.appendChild(em);
+      }
+      // 2. Facultatif : un mot personnel sur WhatsApp, seulement si on a son numéro (deux canaux répondent mieux qu'un).
+      var num=telWa(q.mobilephone||q.phone);
+      if(num){
+        var wa=el('button','sec','Ajouter un mot sur WhatsApp'); wa.type='button';
+        wa.onclick=function(){ ouvrirWhatsApp(num,relance(d,q)); };
+        c.appendChild(wa);
+      }
+      if(!q.email&&!num) c.appendChild(el('p','note','Ni e-mail ni téléphone : écrivez à team@getbeam-consulting.com pour qu’on la retrouve.'));
+      c.appendChild(box);
     }
     if(contact){
       var b=el('div','contact');
