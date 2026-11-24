@@ -38,6 +38,16 @@ a{color:var(--brand)}
 :focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 .motifs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
 .motifs .puce{text-align:left;line-height:20px}
+.groupe{font-size:14px;font-weight:600;color:var(--muted);margin:22px 0 0}
+.rdv.passe{background:var(--surface);border-style:dashed}
+.etat{display:inline-block;font-size:13px;line-height:20px;padding:0 8px;border-radius:999px;background:var(--line);color:var(--ink);margin:0 0 0 6px;font-weight:600;vertical-align:1px}
+.aide{font-size:14px;color:var(--muted);margin:6px 0 0}
+textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 16px/22px 'Open Sans',Arial,sans-serif;resize:vertical;color:var(--ink)}
+.compte{font-size:13px;color:var(--muted);text-align:right;margin:4px 0 0}
+.apercu{white-space:pre-wrap;font-size:14px;line-height:21px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 0}
+.apercu mark{background:#fff3c4;color:inherit;border-radius:4px;padding:0 2px}
+.puce[disabled]{opacity:.45;cursor:default}
+.wa{display:block;width:100%;min-height:48px;margin:10px 0 0;padding:11px 16px;border:1px solid #128c4b;background:#fff;color:#128c4b}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
@@ -52,22 +62,39 @@ a{color:var(--brand)}
 <section class="card" id="report" hidden>
   <h2 id="r-titre">Reporter</h2>
   <p class="sub" id="r-avant"></p>
-  <p class="etiquette">Pourquoi ce report ?</p>
-  <div class="motifs" id="motifs">
-    <button class="puce" type="button" data-m="entreprise" aria-pressed="true">L’entreprise me l’a demandé</button>
-    <button class="puce" type="button" data-m="imprevu" aria-pressed="false">Un imprévu de notre côté</button>
+  <div id="bloc-motif">
+    <p class="etiquette">Pourquoi ce report ?</p>
+    <div class="motifs" id="motifs">
+      <button class="puce" type="button" data-m="entreprise" aria-pressed="true">L’entreprise me l’a demandé</button>
+      <button class="puce" type="button" data-m="imprevu" aria-pressed="false">Un imprévu de notre côté</button>
+    </div>
   </div>
+  <p class="aide" id="aide-manque" hidden>Ce rendez-vous n’a pas eu lieu. Appelez d’abord la personne et convenez ensemble d’un nouveau créneau, puis choisissez-le ici.</p>
   <p class="etiquette">Choisissez un jour</p>
   <div class="puces" id="jours"></div>
   <p class="etiquette" id="c-titre" hidden>Créneaux libres de 15 minutes</p>
   <div class="creneaux" id="creneaux"></div>
   <p class="vide" id="c-vide" hidden>Plus aucun créneau libre ce jour-là. Choisissez un autre jour.</p>
+  <div id="bloc-msg" hidden>
+    <p class="etiquette">Comment prévenir la personne ?</p>
+    <div class="motifs" id="canaux">
+      <button class="puce" type="button" data-c="email" aria-pressed="true">Par e-mail, envoyé par BEAM</button>
+      <button class="puce" type="button" data-c="whatsapp" aria-pressed="false">Par WhatsApp, depuis mon téléphone</button>
+    </div>
+    <p class="aide" id="aide-canal"></p>
+    <p class="etiquette"><label for="note">Votre phrase personnelle (facultatif)</label></p>
+    <textarea id="note" maxlength="300" placeholder="Par exemple : Comme évoqué au téléphone, pensez à inviter votre responsable infrastructure."></textarea>
+    <p class="compte" id="compte">0 / 300</p>
+    <p class="etiquette">Le message qui sera envoyé</p>
+    <div class="apercu" id="apercu" aria-live="polite"></div>
+    <p class="aide">Le reste du message est fixe, pour que BEAM parle toujours de la même façon. Pas de prix dans votre phrase.</p>
+  </div>
   <button class="prim" id="valider" type="button" disabled>Choisissez un créneau</button>
   <button class="sec" id="annuler" type="button">Garder l’horaire actuel</button>
   <p class="msg" id="r-m" role="status" aria-live="polite"></p>
 </section>
 
-<p class="msg" style="text-align:center">Les entreprises sont prévenues automatiquement. Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/mon-qr/">Mon espace</a></p>
+<p class="msg" style="text-align:center">L’invitation d’agenda de l’entreprise est mise à jour automatiquement. Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/mon-qr/">Mon espace</a></p>
 </main>
 <script>
 (function(){
@@ -85,12 +112,48 @@ a{color:var(--brand)}
     pas_a_vous:'Ce rendez-vous ne fait pas partie de vos entreprises.',
     introuvable:'Ce rendez-vous n’a pas d’invitation d’agenda : écrivez à l’équipe BEAM.',
     agenda:'L’agenda n’a pas répondu. Rien n’a été modifié : réessayez dans un instant.',
-    acces:'Votre accès a expiré. Ouvrez Mon espace pour recevoir un nouveau lien par e-mail.'
+    acces:'Votre accès a expiré. Ouvrez Mon espace pour recevoir un nouveau lien par e-mail.',
+    trop_ancien:'Ce rendez-vous date de plus de 90 jours : écrivez à l’équipe BEAM pour le relancer.'
   };
   var a='', t='';
   try{ var s=JSON.parse(localStorage.getItem(CLE)||'null'); if(s){ a=s.a; t=s.t; } }catch(e){}
-  var cfg=null, tz='Europe/Paris', choix=null, rdvEnCours=null, motif='entreprise';
-  [].forEach.call(document.querySelectorAll('#motifs .puce'),function(b){ b.onclick=function(){ [].forEach.call(b.parentNode.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); motif=b.getAttribute('data-m'); }; });
+  var cfg=null, msgs=null, tz='Europe/Paris', choix=null, rdvEnCours=null, motif='entreprise', canal='email', MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  function presser(groupe,b){ [].forEach.call(groupe.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); }
+  [].forEach.call(document.querySelectorAll('#motifs .puce'),function(b){ b.onclick=function(){ presser(b.parentNode,b); motif=b.getAttribute('data-m'); apercu(); }; });
+  [].forEach.call(document.querySelectorAll('#canaux .puce'),function(b){ b.onclick=function(){ if(b.disabled) return; presser(b.parentNode,b); canal=b.getAttribute('data-c'); aideCanal(); majBouton(); }; });
+  $('note').oninput=function(){ $('compte').textContent=$('note').value.length+' / '+$('note').maxLength; apercu(); };
+
+  // Message : le même modèle (x/messages-rdv.json) sert à l'aperçu, à WhatsApp et à l'e-mail envoyé par Make.
+  function prenomDe(p){ var w=String(p||'').trim().split(/\s+/)[0]||''; return w? w.charAt(0).toUpperCase()+w.slice(1).toLowerCase() : ''; }
+  function dateMsg(ms){ return jourTxt(ms,'Europe/Paris').toLowerCase()+' à '+new Date(ms).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'numeric',minute:'2-digit'}).replace(':',' h '); }
+  function noteTxt(){ return $('note').value.replace(/[<>]/g,'').replace(/\s*\n\s*/g,' ').trim(); }
+  function modeleCle(){ return rdvEnCours&&rdvEnCours.d<Date.now()?'manque':motif; }
+  function texte(lien,marque){
+    if(!msgs||!rdvEnCours) return '';
+    var m=msgs.modeles[modeleCle()]||msgs.modeles.entreprise, n=noteTxt();
+    return m.corps.replace('{prenom}',prenomDe(rdvEnCours.p)).replace('{date}',choix?dateMsg(choix):'[nouvelle date]')
+      .replace('{note}',n?'\n\n'+(marque?'\u0001'+n+'\u0002':n):'').replace('{lien}',lien||'[lien de la visio]');
+  }
+  function apercu(){
+    var A=$('apercu'); A.textContent='';
+    var t=texte('',true), i=t.indexOf('\u0001'), j=t.indexOf('\u0002');
+    if(i<0){ A.textContent=t; return; }
+    A.appendChild(document.createTextNode(t.slice(0,i)));
+    A.appendChild(el('mark',null,t.slice(i+1,j)));
+    A.appendChild(document.createTextNode(t.slice(j+1)));
+  }
+  function aideCanal(){
+    var r=rdvEnCours||{};
+    $('aide-canal').textContent= canal==='email'
+      ? 'BEAM l’envoie depuis team@getbeam-consulting.com, signé « L’équipe BEAM ».'
+      : 'WhatsApp s’ouvre avec le message prêt'+(numero(r)?'':' (choisissez le contact)')+'. Vous n’avez plus qu’à appuyer sur Envoyer.';
+  }
+  function numero(r){ var t=String(r&&r.t||''); return t.charAt(0)==='+'? t.slice(1) : ''; }
+  function ouvrirWhatsApp(num,txt){
+    var t=encodeURIComponent(txt);
+    if(MOBILE){ location.href='https://wa.me/'+(num||'')+'?text='+t; return true; }
+    return !!window.open('https://web.whatsapp.com/send?'+(num?'phone='+num+'&':'')+'text='+t,'_blank','noopener');
+  }
 
   function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
   function msg(id,txt,cls){ var m=$(id); m.textContent=txt||''; m.className='msg'+(cls?' '+cls:''); }
@@ -129,19 +192,26 @@ a{color:var(--brand)}
       if(!j||j.ok!==true) throw new Error(j&&j.raison||'acces');
       tz=j.tz||'Europe/Paris';
       $('fuseau').textContent='Horaires affichés en '+nomFuseau(tz)+'.';
-      var L=$('liste'), rdv=Array.isArray(j.rdv)?j.rdv:[];
+      var L=$('liste'), rdv=Array.isArray(j.rdv)?j.rdv:[], now=Date.now();
       if(!rdv.length){ var v=el('p','vide','Aucun rendez-vous à venir pour vos entreprises. Celles qui n’ont pas encore réservé sont dans '); var l=el('a',null,'Mon espace'); l.href='/consultants/mon-qr/'; v.appendChild(l); v.appendChild(document.createTextNode(', avec un bouton pour les relancer.')); L.appendChild(v); return; }
-      rdv.forEach(function(r){
-        var c=el('div','rdv');
-        c.appendChild(el('h2',null,r.e||'Entreprise'));
+      var avenir=rdv.filter(function(r){ return r.d>=now; }).sort(function(a,b){ return a.d-b.d; });
+      var passes=rdv.filter(function(r){ return r.d<now; }).sort(function(a,b){ return b.d-a.d; });
+      function carte(r,passe){
+        var c=el('div','rdv'+(passe?' passe':''));
+        var h=el('h2',null,r.e||'Entreprise'); if(passe) h.appendChild(el('span','etat','Passé')); c.appendChild(h);
         c.appendChild(el('p','qui',r.p||''));
         c.appendChild(el('p','quand',jourTxt(r.d)+' · '+heure(r.d)));
         if(r.c) c.appendChild(el('p','qui','Visio avec '+r.c));
-        var b=el('button','sec','Reporter'); b.type='button';
+        if(passe) c.appendChild(el('p','aide','Il n’a pas eu lieu ? Appelez la personne, convenez d’une nouvelle date, puis replanifiez.'));
+        var b=el('button','sec',passe?'Replanifier':'Reporter'); b.type='button';
         b.onclick=function(){ ouvrir(r); };
         c.appendChild(b);
         L.appendChild(c);
-      });
+      }
+      L.appendChild(el('p','groupe','À venir'));
+      if(!avenir.length) L.appendChild(el('p','vide','Aucun rendez-vous à venir.'));
+      avenir.forEach(function(r){ carte(r,false); });
+      if(passes.length){ L.appendChild(el('p','groupe','Passés, '+((msgs&&msgs.historique_jours)||90)+' derniers jours')); passes.forEach(function(r){ carte(r,true); }); }
     }).catch(function(e){
       var r=String(e&&e.message||'');
       msg('m', RAISONS[r]||'Impossible de charger vos rendez-vous. Réessayez dans un instant.', 'err'); if(r==='acces') lienEspace();
@@ -151,8 +221,14 @@ a{color:var(--brand)}
 
   function ouvrir(r){
     rdvEnCours=r; choix=null; motif='entreprise'; [].forEach.call(document.querySelectorAll('#motifs .puce'),function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-m')==='entreprise'?'true':'false'); });
-    $('r-titre').textContent='Reporter '+(r.e||'le rendez-vous');
-    $('r-avant').textContent='Actuellement : '+jourTxt(r.d)+' à '+heure(r.d)+' ('+nomFuseau(tz)+').';
+    var passe=r.d<Date.now();
+    $('bloc-motif').hidden=passe; $('aide-manque').hidden=!passe;
+    $('r-titre').textContent=(passe?'Replanifier ':'Reporter ')+(r.e||'le rendez-vous');
+    $('r-avant').textContent=(passe?'Prévu le ':'Actuellement : ')+jourTxt(r.d)+' à '+heure(r.d)+' ('+nomFuseau(tz)+').';
+    var e=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='email'; })[0], w=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='whatsapp'; })[0];
+    e.disabled=!r.m; e.textContent=r.m?'Par e-mail, envoyé par BEAM':'Par e-mail (pas d’adresse connue)';
+    canal=r.m?'email':'whatsapp'; presser($('canaux'), canal==='email'?e:w);
+    $('note').value=''; $('compte').textContent='0 / '+$('note').maxLength; $('bloc-msg').hidden=true; aideCanal();
     var J=$('jours'); J.textContent=''; $('creneaux').textContent=''; $('c-titre').hidden=true; $('c-vide').hidden=true;
     majBouton(); msg('r-m','');
     joursOuvres().forEach(function(j){
@@ -179,7 +255,7 @@ a{color:var(--brand)}
         if(occ.some(function(o){ return deb<o[1] && fin>o[0]; })) continue;
         (function(deb){
           var b=el('button','puce',heure(deb)); b.type='button'; b.setAttribute('aria-pressed','false');
-          b.onclick=function(){ [].forEach.call(C.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); choix=deb; majBouton(); };
+          b.onclick=function(){ presser(C,b); choix=deb; $('bloc-msg').hidden=false; apercu(); majBouton(); };
           C.appendChild(b);
         })(deb); n++;
       }
@@ -189,18 +265,29 @@ a{color:var(--brand)}
 
   function majBouton(){
     var b=$('valider');
-    if(choix){ b.disabled=false; b.textContent='Confirmer : '+jourTxt(choix).toLowerCase()+' à '+heure(choix); }
+    if(choix){ b.disabled=false; b.textContent=(canal==='whatsapp'?'Confirmer et ouvrir WhatsApp : ':'Confirmer et envoyer l’e-mail : ')+jourTxt(choix).toLowerCase()+' à '+heure(choix); }
     else { b.disabled=true; b.textContent='Choisissez un créneau'; }
   }
 
   $('valider').onclick=function(){
     if(!choix||!rdvEnCours) return;
     var b=$('valider'); b.disabled=true; b.textContent='Report en cours…'; msg('r-m','');
-    appel({action:'reporter',meeting:rdvEnCours.k,debut:String(choix),motif:motif}).then(function(rep){
+    var r=rdvEnCours, c=canal;
+    appel({action:'reporter',meeting:r.k,debut:String(choix),motif:modeleCle(),canal:c,note:noteTxt()}).then(function(rep){
       if(!rep||rep.ok!==true) throw new Error(rep&&rep.raison||'agenda');
-      msg('r-m','C’est fait : rendez-vous déplacé au '+String(rep.nouveau||'').toLowerCase()+'. L’entreprise a reçu un e-mail et son invitation d’agenda est à jour ; l’expert BEAM est prévenu.','ok');
-      b.textContent='Rendez-vous reporté';
-      setTimeout(function(){ $('report').hidden=true; charger(); },2500);
+      b.textContent='Rendez-vous replanifié';
+      var base='C’est fait : rendez-vous placé au '+String(rep.nouveau||'').toLowerCase()+'. Son invitation d’agenda est à jour et l’expert BEAM est prévenu.';
+      if(c==='whatsapp'){
+        var t=texte(rep.lien||''), num=numero(r);
+        msg('r-m',base+' Envoyez maintenant le message WhatsApp.','ok');
+        var w=el('button','wa','Ouvrir WhatsApp avec le message'); w.type='button'; w.onclick=function(){ ouvrirWhatsApp(num,t); };
+        $('r-m').appendChild(w);
+        ouvrirWhatsApp(num,t);
+        setTimeout(charger,1500);
+      } else {
+        msg('r-m',base+' BEAM lui a envoyé le message par e-mail.','ok');
+        setTimeout(function(){ $('report').hidden=true; charger(); },3000);
+      }
     }).catch(function(e){
       var r=String(e&&e.message||'');
       msg('r-m', RAISONS[r]||RAISONS.agenda, 'err');
@@ -215,8 +302,12 @@ a{color:var(--brand)}
     msg('m','Ouvrez d’abord Mon espace (bouton de votre e-mail BEAM), puis revenez ici.','err'); lienEspace();
     return;
   }
-  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
-    cfg=c; if(!cfg.webhook_rdv) throw new Error('ferme');
+  Promise.all([
+    fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }),
+    fetch('/x/messages-rdv.json',{cache:'no-cache'}).then(function(r){ return r.json(); })
+  ]).then(function(v){
+    cfg=v[0]; msgs=v[1]; if(!cfg.webhook_rdv||!msgs||!msgs.modeles) throw new Error('ferme');
+    $('note').maxLength=msgs.note_max||300;
     return charger();
   }).catch(function(){ msg('m','Le service est momentanément indisponible.','err'); $('fuseau').textContent=''; });
 })();

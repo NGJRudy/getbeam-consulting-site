@@ -1,0 +1,22 @@
+{
+  "_aide": "Messages envoyés à une entreprise quand un consultant replanifie son rendez-vous depuis « Mes rendez-vous ». Lus par la page (aperçu + WhatsApp) ET par Make (scénario 8785803, e-mail depuis team@) : une seule source, le texte est donc identique sur les deux canaux. Repères : {prenom} = prénom du contact, {date} = nouvelle date (heure de Paris), {lien} = lien de la visio, {note} = la phrase personnelle du consultant (mise sur sa propre ligne, ou rien si vide). Pas de prix, pas d'émoji.",
+  "note_max": 300,
+  "historique_jours": 90,
+  "modeles": {
+    "entreprise": {
+      "titre": "L’entreprise me l’a demandé",
+      "objet": "Votre échange avec BEAM est déplacé au {date}",
+      "corps": "Bonjour {prenom},\n\nComme convenu, votre échange avec BEAM est déplacé au {date} (heure de Paris), pour 15 minutes en visio.{note}\n\nLe lien de la visio ne change pas : {lien}\nL’invitation de votre agenda est mise à jour.\n\nUn empêchement ? Répondez simplement à ce message.\n\nÀ très vite,\nL’équipe BEAM"
+    },
+    "imprevu": {
+      "titre": "Un imprévu de notre côté",
+      "objet": "Votre échange avec BEAM est déplacé au {date}",
+      "corps": "Bonjour {prenom},\n\nNous devons déplacer votre échange avec BEAM, toutes nos excuses. Il a désormais lieu le {date} (heure de Paris), pour 15 minutes en visio.{note}\n\nLe lien de la visio ne change pas : {lien}\nL’invitation de votre agenda est mise à jour.\n\nCe nouvel horaire ne vous convient pas ? Répondez simplement à ce message.\n\nÀ très vite,\nL’équipe BEAM"
+    },
+    "manque": {
+      "titre": "Rendez-vous manqué, replanifié après un appel",
+      "objet": "Votre nouvel échange avec BEAM : {date}",
+      "corps": "Bonjour {prenom},\n\nMerci pour notre échange au téléphone. Comme convenu, votre rendez-vous avec BEAM est replanifié au {date} (heure de Paris), pour 15 minutes en visio.{note}\n\nLe lien de la visio ne change pas : {lien}\nL’invitation de votre agenda est mise à jour.\n\nUn empêchement ? Répondez simplement à ce message.\n\nÀ très vite,\nL’équipe BEAM"
+    }
+  }
+}
