@@ -52,6 +52,20 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
 .ent button,.ent .btn{min-height:44px;font-size:15px;margin-top:8px}
 .btn.wa{background:var(--wa)}
 .vide{font-size:14px;color:var(--muted);margin:12px 0 0}
+textarea{width:100%;min-height:96px;margin:12px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 16px/22px 'Open Sans',Arial,sans-serif;resize:vertical}
+label.ch{display:block;font-size:14px;font-weight:600;margin:14px 0 0}
+label.ch input,label.ch textarea{margin-top:6px;font-weight:400}
+.fiche{border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0 0;font-size:15px}
+.fiche h3{font-size:16px;line-height:22px;margin:0 0 6px}
+.fiche p{margin:8px 0 0}
+.fiche ul{margin:6px 0 0;padding:0 0 0 18px}
+.fiche li{margin:4px 0 0}
+.etat{display:inline-block;font-size:13px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--surface);color:var(--muted)}
+.etat.valide{background:#e6f4ec;color:var(--ok)}
+.etat.refuse{background:#fbeceb;color:var(--danger)}
+details.fiche summary{cursor:pointer;list-style:none}
+details.fiche summary::-webkit-details-marker{display:none}
+.wa-sec{background:#fff;color:var(--wa);border:1px solid var(--wa)}
 /* Plein écran : le QR seul, sur blanc, pour le faire scanner en salon */
 #plein{position:fixed;inset:0;z-index:10;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
 #plein canvas{width:min(88vw,70vh);border:0}
@@ -75,6 +89,7 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
     <canvas id="qr" width="1024" height="1024" role="img" aria-label="QR code vers votre formulaire BEAM"></canvas>
     <p class="lien" id="lien"></p>
     <button id="grand" type="button">Afficher en grand pour le faire scanner</button>
+    <button id="wa-qr" class="wa-sec" type="button">Envoyer mon lien sur WhatsApp</button>
     <div class="duo"><button id="cp" class="sec" type="button">Partager mon lien</button><button id="dl" class="sec" type="button">Enregistrer l’image</button></div>
     <p class="msg" id="m2" role="status" aria-live="polite"></p>
     <ul class="conseils">
@@ -82,6 +97,22 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
       <li>Cette page est personnelle : ne transférez pas l’e-mail qui l’ouvre. Le lien du QR code, lui, se partage librement.</li>
     </ul>
   </div>
+</section>
+
+<section class="card" id="prep" hidden>
+  <h2>Préparer une entreprise</h2>
+  <p class="sub">Avant d’approcher une entreprise, demandez le feu vert de BEAM. Vous recevez en 30 secondes une fiche : ce qu’elle fait, qui viser, les pistes BEAM et quoi dire. La réponse de BEAM arrive par e-mail.</p>
+  <form id="f-prep" novalidate>
+    <label class="ch">Nom de l’entreprise<input id="p-ent" maxlength="100" autocomplete="organization" required></label>
+    <label class="ch">Site internet (si vous l’avez)<input id="p-site" maxlength="200" inputmode="url" placeholder="exemple.com"></label>
+    <label class="ch">Pays<input id="p-pays" maxlength="60" autocomplete="country-name"></label>
+    <label class="ch">Ce que vous en savez<textarea id="p-note" maxlength="600" placeholder="Par exemple : je connais le DSI, ils ouvrent un bureau à Dakar."></textarea></label>
+    <button type="submit" id="p-go">Préparer la fiche et demander le feu vert</button>
+    <p class="msg" id="p-m" role="status" aria-live="polite"></p>
+  </form>
+  <div id="p-res"></div>
+  <p class="groupe" id="dem-titre" hidden>Mes demandes</p>
+  <div id="dem"></div>
 </section>
 
 <section class="card" id="suivi" hidden>
@@ -213,13 +244,13 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
   }
   function relance(d,q){
     return 'Bonjour'+(q.firstname?' '+q.firstname:'')+', c’est '+(moi.prenom||'votre contact')+' de BEAM. '+
-      'Pour votre échange de 15 minutes avec un expert BEAM, il ne reste qu’à choisir votre créneau. Vous le trouverez aussi par e-mail.\n\n'+lienCourt(q);
+      'Pour votre échange de 15 minutes avec un expert BEAM, il ne reste qu’à choisir votre créneau'+(q.email?' (le lien est aussi dans votre e-mail)':'')+' :\n\n'+lienCourt(q);
   }
   // Téléphone : wa.me ouvre directement l'application. Ordinateur : WhatsApp Web directement (pas de page intermédiaire, pas de fenêtre « ouvrir l'application ? » du navigateur).
   var MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   function ouvrirWhatsApp(num,txt){
     var t=encodeURIComponent(txt);
-    if(MOBILE) location.href='https://wa.me/'+num+'?text='+t;
+    if(MOBILE) location.href='https://wa.me/'+(num||'')+'?text='+t;
     else window.open('https://web.whatsapp.com/send?'+(num?'phone='+num+'&':'')+'text='+t,'_blank','noopener');
   }
 
@@ -269,14 +300,11 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
         };
         c.appendChild(em);
       }
-      // 2. Facultatif : un mot personnel sur WhatsApp, seulement si on a son numéro (deux canaux répondent mieux qu'un).
+      // 2. Un mot personnel sur WhatsApp (canal principal en Afrique) : avec son numéro si on l'a, sinon WhatsApp propose de choisir le contact.
       var num=telWa(q.mobilephone||q.phone);
-      if(num){
-        var wa=el('button','sec','Ajouter un mot sur WhatsApp'); wa.type='button';
-        wa.onclick=function(){ ouvrirWhatsApp(num,relance(d,q)); };
-        c.appendChild(wa);
-      }
-      if(!q.email&&!num) c.appendChild(el('p','note','Ni e-mail ni téléphone : écrivez à team@getbeam-consulting.com pour qu’on la retrouve.'));
+      var wa=el('button','wa-sec',num?'Lui écrire sur WhatsApp':'Lui écrire sur WhatsApp (choisir le contact)'); wa.type='button';
+      wa.onclick=function(){ ouvrirWhatsApp(num,relance(d,q)); };
+      c.appendChild(wa);
       c.appendChild(box);
     }
     if(contact){
@@ -323,6 +351,66 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
     }
   }
 
+  // ---------------------------------------------------------------- fiche entreprise et feu vert
+  function txt(v){ return Array.isArray(v)?v.join(', '):String(v==null?'':v); }
+  function liste(arr,fn){ var u=el('ul'); (Array.isArray(arr)?arr:[]).forEach(function(x){ u.appendChild(el('li',null,fn?fn(x):txt(x))); }); return u; }
+  function blocFiche(f){
+    var b=document.createDocumentFragment();
+    var ligne=function(t,v){ if(!v) return; var p=el('p'); p.appendChild(el('b',null,t+' : ')); p.appendChild(document.createTextNode(txt(v))); b.appendChild(p); };
+    ligne('Ce qu’elle fait',f.activite); ligne('Taille',f.taille); ligne('Qui viser',f.interlocuteurs);
+    if(Array.isArray(f.cas_usage)&&f.cas_usage.length){ var p=el('p'); p.appendChild(el('b',null,'Pistes BEAM à vérifier avec elle')); b.appendChild(p); b.appendChild(liste(f.cas_usage,function(c){ return txt(c.titre)+(c.produit?' ('+txt(c.produit)+')':''); })); }
+    ligne('Pour ouvrir la conversation',f.accroche);
+    if(Array.isArray(f.questions)&&f.questions.length){ var q=el('p'); q.appendChild(el('b',null,'Questions à poser')); b.appendChild(q); b.appendChild(liste(f.questions)); }
+    ligne('Point de vigilance',f.vigilance);
+    return b;
+  }
+  var ETAT={attente:['En attente du feu vert',''],valide:['Feu vert','valide'],refuse:['Pas de feu vert','refuse']};
+  function demandes(){
+    if(!cfg.webhook_fiche) return;
+    fetch(cfg.webhook_fiche,{method:'POST',body:new URLSearchParams({action:'mes',id:a,jeton:t})})
+      .then(function(r){ return r.json(); }).then(function(j){
+        var D=$('dem'); D.textContent='';
+        var L=(j&&j.ok===true&&Array.isArray(j.demandes)?j.demandes:[]).filter(function(x){ return x&&x.k; });
+        $('dem-titre').hidden=!L.length;
+        L.forEach(function(x){
+          var e=ETAT[x.s]||ETAT.attente, d=el('details','fiche'), s=el('summary');
+          s.appendChild(el('h3',null,x.e||'Entreprise'));
+          s.appendChild(el('span','etat '+e[1],e[0]+(x.s==='refuse'&&x.r?' : '+x.r:'')));
+          if(x.d) s.appendChild(el('span','qui',' · demandée le '+date(Number(x.d))));
+          d.appendChild(s);
+          if(x.f&&typeof x.f==='object') d.appendChild(blocFiche(x.f));
+          if(x.s==='valide') d.appendChild(el('p','note','Quand vous la rencontrez, faites-lui scanner votre QR code : elle sera rattachée à vous. Ne donnez pas de prix, l’expert BEAM s’en charge.'));
+          D.appendChild(d);
+        });
+      }).catch(function(){});
+  }
+  $('f-prep').onsubmit=function(ev){
+    ev.preventDefault();
+    var ent=$('p-ent').value.trim(), m=$('p-m'), go=$('p-go');
+    if(ent.length<2){ m.textContent='Indiquez le nom de l’entreprise.'; m.className='msg err'; $('p-ent').focus(); return; }
+    go.disabled=true; go.textContent='Recherche en cours…'; m.className='msg'; m.textContent='BEAM cherche les informations publiques sur '+ent+'. Comptez 30 secondes à 1 minute.';
+    $('p-res').textContent='';
+    var ctl=window.AbortController?new AbortController():null, minuteur=setTimeout(function(){ if(ctl) ctl.abort(); },150000);
+    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim()})})
+      .then(function(r){ return r.json(); }).then(function(j){
+        if(!j||j.ok!==true) throw j||{};
+        var f=j.fiche||{}, box=el('div','fiche');
+        box.appendChild(el('h3',null,j.entreprise||ent));
+        box.appendChild(el('span','etat','En attente du feu vert'));
+        if(j.deja) box.appendChild(el('p','note','Déjà connue de BEAM : '+j.deja+'. BEAM vérifie qui la suit avant de répondre.'));
+        box.appendChild(blocFiche(f));
+        $('p-res').appendChild(box);
+        m.className='msg ok'; m.textContent='Demande envoyée à BEAM. Vous recevrez le feu vert ou la réponse par e-mail. Attendez-la avant d’approcher l’entreprise.';
+        $('f-prep').reset(); demandes();
+      }).catch(function(j){
+        var r=j&&j.raison;
+        m.className='msg err';
+        m.textContent=r==='acces'?'Votre accès a expiré : rechargez la page depuis votre dernier e-mail BEAM.':
+          r==='ia'?'La recherche n’a pas abouti. Ajoutez le site internet de l’entreprise et réessayez.':
+          'La demande n’a pas pu partir. Réessayez dans un instant.';
+      }).then(function(){ clearTimeout(minuteur); go.disabled=false; go.textContent='Préparer la fiche et demander le feu vert'; });
+  };
+
   // ---------------------------------------------------------------- démarrage
   fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
     cfg=c;
@@ -347,6 +435,11 @@ input{width:100%;min-height:48px;margin:12px 0 0;padding:12px 14px;border:1px so
           $('m2').textContent='Image enregistrée dans vos téléchargements.';
         };
         $('cp').onclick=function(){ partager(j.lien,'m2','Lien copié.'); };
+        $('wa-qr').onclick=function(){
+          ouvrirWhatsApp('','Bonjour, c’est '+(moi.prenom||'moi')+'. Je travaille avec BEAM, qui aide les entreprises à transférer et partager de gros volumes de données entre leurs sites et leurs clouds. '+
+            'Si le sujet vous parle, présentez votre besoin en 1 minute ici, un expert BEAM vous rappelle pour un échange de 15 minutes :\n\n'+j.lien);
+        };
+        if(cfg.webhook_fiche){ $('prep').hidden=false; demandes(); }
         $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false;
         if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
           $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
