@@ -420,6 +420,9 @@ legend{font-size:14px;font-weight:600;padding:0}
     if(ent.length<2){ m.textContent='Indiquez le nom de l’entreprise.'; m.className='msg err'; $('p-ent').focus(); return; }
     var niv=(document.querySelector('input[name=niveau]:checked')||{}).value||'';
     if(!niv){ m.textContent='Indiquez votre lien avec cette entreprise.'; m.className='msg err'; return; }
+    var ct=$('p-contact').value.trim().toLowerCase(), moiNom=((moi&&moi.prenom)||'').trim().toLowerCase();
+    if(niv!=='aucun'&&ct.length<3){ m.textContent='Indiquez le nom et le poste de votre contact dans cette entreprise.'; m.className='msg err'; $('p-contact').focus(); return; }
+    if(niv!=='aucun'&&moiNom&&ct.indexOf(moiNom)===0){ m.textContent='Indiquez le nom de votre contact dans l’entreprise, pas le vôtre.'; m.className='msg err'; $('p-contact').focus(); return; }
     go.disabled=true; go.textContent='Recherche en cours…'; m.className='msg'; m.textContent='BEAM cherche les informations publiques sur '+ent+'. Comptez 30 secondes à 1 minute.';
     $('p-res').textContent='';
     var ctl=window.AbortController?new AbortController():null, minuteur=setTimeout(function(){ if(ctl) ctl.abort(); },150000);
