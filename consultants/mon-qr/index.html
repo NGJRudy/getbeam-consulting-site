@@ -63,6 +63,11 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
     </ul>
   </div>
 </section>
+<section class="card bloc" id="rdv-lien" hidden>
+  <h2>Mes rendez-vous</h2>
+  <p class="sub">Déplacez vous-même le rendez-vous d’une de vos entreprises : vous choisissez un créneau libre, l’entreprise et la personne qui mène la visio sont prévenues automatiquement.</p>
+  <a class="btn" href="/consultants/rendez-vous/">Voir et reporter mes rendez-vous</a>
+</section>
 <section class="card bloc" id="invit" hidden>
   <h2>Inviter des consultants dans mon équipe</h2>
   <p class="sub">Envoyez ce lien aux personnes que vous recrutez. En s'inscrivant avec, elles sont rattachées à votre équipe : vous suivez leurs entreprises ici.</p>
@@ -195,7 +200,7 @@ button.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
           if(navigator.clipboard) navigator.clipboard.writeText(j.lien).then(fin,function(){ $('m2').textContent=j.lien; });
           else $('m2').textContent=j.lien;
         };
-        $('attente').hidden=true; $('pret').hidden=false;
+        $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false;
         if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
           $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
           $('invit-cp').onclick=function(){

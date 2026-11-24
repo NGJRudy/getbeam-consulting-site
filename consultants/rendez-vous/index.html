@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>BEAM · Mes rendez-vous</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#14171c;--muted:#5b6270;--line:#e3e6ea;--surface:#f4f5f7;--card:#fff;--brand:#2350d8;--danger:#c43d2e;--ok:#1a7f4b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--surface);color:var(--ink);font:400 16px/24px 'Open Sans',Arial,sans-serif}
+main{width:min(520px,100%);margin:0 auto;padding:16px 16px 48px}
+.brand{display:flex;align-items:center;gap:10px;margin:8px 4px 18px;color:var(--ink);text-decoration:none;font:600 20px/1 'Open Sans',Arial,sans-serif;letter-spacing:.14em}
+.card{background:var(--card);border-radius:16px;padding:22px 20px;margin:0 0 16px;box-shadow:0 12px 32px -20px rgba(20,23,28,.35)}
+h1{font-size:22px;line-height:30px;margin:0 0 4px}
+h2{font-size:18px;line-height:26px;margin:0}
+.sub{color:var(--muted);font-size:15px;margin:0 0 8px}
+.msg{font-size:15px;margin:12px 0 0;color:var(--muted)}
+.msg.err{color:var(--danger)}
+.msg.ok{color:var(--ok)}
+.rdv{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0 0}
+.rdv .qui{font-size:14px;color:var(--muted);margin:2px 0 0}
+.rdv .quand{font-size:15px;margin:8px 0 0;font-weight:600}
+button{font:600 15px/22px 'Open Sans',Arial,sans-serif;cursor:pointer;border-radius:12px}
+.prim{display:block;width:100%;margin:12px 0 0;padding:12px 16px;border:0;background:var(--ink);color:#fff}
+.sec{display:block;width:100%;margin:10px 0 0;padding:11px 16px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.prim[disabled]{opacity:.5;cursor:default}
+.puces{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.puce{padding:7px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:400;font-size:14px}
+.puce[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.creneaux{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0}
+.creneaux .puce{text-align:center}
+.vide{font-size:14px;color:var(--muted);margin:12px 0 0}
+.etiquette{font-size:14px;color:var(--muted);margin:14px 0 0}
+[hidden]{display:none!important}
+a{color:var(--brand)}
+</style></head>
+<body><main>
+<a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
+
+<section class="card" id="haut">
+  <h1>Mes rendez-vous</h1>
+  <p class="sub" id="fuseau">Chargement…</p>
+  <p class="msg" id="m" role="status" aria-live="polite"></p>
+  <div id="liste"></div>
+</section>
+
+<section class="card" id="report" hidden>
+  <h2 id="r-titre">Reporter</h2>
+  <p class="sub" id="r-avant"></p>
+  <p class="etiquette">Choisissez un jour</p>
+  <div class="puces" id="jours"></div>
+  <p class="etiquette" id="c-titre" hidden>Créneaux libres de 15 minutes</p>
+  <div class="creneaux" id="creneaux"></div>
+  <p class="vide" id="c-vide" hidden>Plus aucun créneau libre ce jour-là. Choisissez un autre jour.</p>
+  <button class="prim" id="valider" type="button" disabled>Choisissez un créneau</button>
+  <button class="sec" id="annuler" type="button">Annuler</button>
+  <p class="msg" id="r-m" role="status" aria-live="polite"></p>
+</section>
+
+<p class="msg" style="text-align:center">Les entreprises sont prévenues automatiquement. Besoin d'aide ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a> · <a href="/consultants/mon-qr/">Mon espace</a></p>
+</main>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){ return document.getElementById(id); };
+  var ID=/^[a-z0-9]{2,30}$/, JETON=/^[A-Za-z0-9_-]{16,128}$/, CLE='beam-consultant';
+  // Règles du planning (heure de Paris). Les mêmes sont vérifiées côté serveur : ici, elles servent seulement à n'afficher que des créneaux valables.
+  var REGLES={debut:8*60, fin:18*60+45, pas:15, duree:15, delaiMin:2*3600e3, jours:10};
+  var RAISONS={
+    occupe:'Ce créneau vient d’être pris. Choisissez-en un autre.',
+    trop_tot:'Le nouveau créneau doit être au moins 2 heures après maintenant.',
+    trop_loin:'Le nouveau créneau doit être dans les 60 prochains jours.',
+    hors_horaires:'Les rendez-vous ont lieu du lundi au vendredi, de 8 h à 19 h (heure de Paris).',
+    passe:'Ce rendez-vous est déjà passé.',
+    pas_a_vous:'Ce rendez-vous ne fait pas partie de vos entreprises.',
+    introuvable:'Ce rendez-vous n’a pas d’invitation d’agenda : écrivez à l’équipe BEAM.',
+    agenda:'L’agenda n’a pas répondu. Rien n’a été modifié : réessayez dans un instant.',
+    acces:'Votre lien a expiré. Ouvrez le dernier e-mail BEAM reçu ou demandez un nouvel envoi depuis l’espace consultant.'
+  };
+  var a='', t='';
+  try{ var s=JSON.parse(localStorage.getItem(CLE)||'null'); if(s){ a=s.a; t=s.t; } }catch(e){}
+  var cfg=null, tz='Europe/Paris', choix=null, rdvEnCours=null;
+
+  function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+  function msg(id,txt,cls){ var m=$(id); m.textContent=txt||''; m.className='msg'+(cls?' '+cls:''); }
+  function appel(champs){
+    var corps=new URLSearchParams(champs); corps.set('id',a); corps.set('jeton',t);
+    return fetch(cfg.webhook_rdv,{method:'POST',body:corps}).then(function(r){ return r.json(); });
+  }
+  function heure(ms,zone){ return new Date(ms).toLocaleTimeString('fr-FR',{timeZone:zone||tz,hour:'2-digit',minute:'2-digit'}).replace(':',' h '); }
+  function jourTxt(ms,zone){ var s=new Date(ms).toLocaleDateString('fr-FR',{timeZone:zone||tz,weekday:'long',day:'numeric',month:'long'}); return s.charAt(0).toUpperCase()+s.slice(1); }
+  function nomFuseau(z){ return z==='Europe/Paris'?'heure de Paris':(z==='Africa/Abidjan'?'heure d’Abidjan':'heure des Antilles'); }
+
+  // Heure murale de Paris → instant (gère l'heure d'été).
+  function decalage(ms,zone){
+    var p={}; new Intl.DateTimeFormat('en-US',{timeZone:zone,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+      .formatToParts(new Date(ms)).forEach(function(x){ p[x.type]=x.value; });
+    return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-ms;
+  }
+  function paris(y,mo,d,min){ var g=Date.UTC(y,mo,d,0,min); var o=decalage(g,'Europe/Paris'); var r=g-o; var o2=decalage(r,'Europe/Paris'); return o2===o?r:g-o2; }
+  function partsParis(ms){ var p={}; new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(new Date(ms)).forEach(function(x){ p[x.type]=x.value; }); return p; }
+
+  function joursOuvres(){
+    var out=[], ms=Date.now();
+    while(out.length<REGLES.jours){
+      var p=partsParis(ms);
+      if(p.weekday!=='Sat'&&p.weekday!=='Sun') out.push({y:+p.year,m:+p.month-1,d:+p.day,iso:p.year+'-'+p.month+'-'+p.day});
+      ms+=86400e3;
+    }
+    return out;
+  }
+
+  function charger(){
+    msg('m','');
+    $('liste').textContent='';
+    return appel({action:'liste'}).then(function(j){
+      if(!j||j.ok!==true) throw new Error(j&&j.raison||'acces');
+      tz=j.tz||'Europe/Paris';
+      $('fuseau').textContent='Horaires affichés en '+nomFuseau(tz)+'.';
+      var L=$('liste'), rdv=Array.isArray(j.rdv)?j.rdv:[];
+      if(!rdv.length){ L.appendChild(el('p','vide','Aucun rendez-vous à venir pour vos entreprises.')); return; }
+      rdv.forEach(function(r){
+        var c=el('div','rdv');
+        c.appendChild(el('h2',null,r.e||'Entreprise'));
+        c.appendChild(el('p','qui',r.p||''));
+        c.appendChild(el('p','quand',jourTxt(r.d)+' · '+heure(r.d)));
+        if(r.c) c.appendChild(el('p','qui','Visio avec '+r.c));
+        var b=el('button','sec','Reporter'); b.type='button';
+        b.onclick=function(){ ouvrir(r); };
+        c.appendChild(b);
+        L.appendChild(c);
+      });
+    }).catch(function(e){
+      var r=String(e&&e.message||'');
+      msg('m', RAISONS[r]||'Impossible de charger vos rendez-vous. Réessayez dans un instant.', 'err');
+      $('fuseau').textContent='';
+    });
+  }
+
+  function ouvrir(r){
+    rdvEnCours=r; choix=null;
+    $('r-titre').textContent='Reporter '+(r.e||'le rendez-vous');
+    $('r-avant').textContent='Actuellement : '+jourTxt(r.d)+' à '+heure(r.d)+' ('+nomFuseau(tz)+').';
+    var J=$('jours'); J.textContent=''; $('creneaux').textContent=''; $('c-titre').hidden=true; $('c-vide').hidden=true;
+    majBouton(); msg('r-m','');
+    joursOuvres().forEach(function(j){
+      var b=el('button','puce', new Date(paris(j.y,j.m,j.d,12*60)).toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',weekday:'short',day:'numeric',month:'short'}));
+      b.type='button'; b.setAttribute('aria-pressed','false');
+      b.onclick=function(){ [].forEach.call(J.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); creneaux(j); };
+      J.appendChild(b);
+    });
+    $('report').hidden=false; $('report').scrollIntoView({behavior:'smooth'});
+  }
+
+  function creneaux(j){
+    choix=null; majBouton();
+    var C=$('creneaux'); C.textContent=''; $('c-vide').hidden=true; $('c-titre').hidden=false;
+    msg('r-m','Recherche des créneaux libres…');
+    appel({action:'jour',jour:j.iso}).then(function(rep){
+      if(!rep||rep.ok!==true) throw new Error(rep&&rep.raison||'agenda');
+      msg('r-m','');
+      var occ=Array.isArray(rep.busy)?rep.busy:[], limite=Date.now()+REGLES.delaiMin, n=0;
+      for(var m=REGLES.debut;m<=REGLES.fin;m+=REGLES.pas){
+        var deb=paris(j.y,j.m,j.d,m), fin=deb+REGLES.duree*60e3;
+        if(deb<limite) continue;
+        if(rdvEnCours && deb===rdvEnCours.d) continue;
+        if(occ.some(function(o){ return deb<o[1] && fin>o[0]; })) continue;
+        (function(deb){
+          var b=el('button','puce',heure(deb)); b.type='button'; b.setAttribute('aria-pressed','false');
+          b.onclick=function(){ [].forEach.call(C.children,function(x){ x.setAttribute('aria-pressed','false'); }); b.setAttribute('aria-pressed','true'); choix=deb; majBouton(); };
+          C.appendChild(b);
+        })(deb); n++;
+      }
+      if(!n){ $('c-vide').hidden=false; $('c-titre').hidden=true; }
+    }).catch(function(e){ msg('r-m', RAISONS[String(e&&e.message)]||RAISONS.agenda, 'err'); });
+  }
+
+  function majBouton(){
+    var b=$('valider');
+    if(choix){ b.disabled=false; b.textContent='Confirmer le '+jourTxt(choix).toLowerCase()+' à '+heure(choix); }
+    else { b.disabled=true; b.textContent='Choisissez un créneau'; }
+  }
+
+  $('valider').onclick=function(){
+    if(!choix||!rdvEnCours) return;
+    var b=$('valider'); b.disabled=true; b.textContent='Report en cours…'; msg('r-m','');
+    appel({action:'reporter',meeting:rdvEnCours.k,debut:String(choix)}).then(function(rep){
+      if(!rep||rep.ok!==true) throw new Error(rep&&rep.raison||'agenda');
+      msg('r-m','C’est fait : rendez-vous déplacé au '+String(rep.nouveau||'').toLowerCase()+'. L’entreprise et la personne qui mène la visio sont prévenues.','ok');
+      b.textContent='Rendez-vous reporté';
+      setTimeout(function(){ $('report').hidden=true; charger(); },2500);
+    }).catch(function(e){
+      var r=String(e&&e.message||'');
+      msg('r-m', RAISONS[r]||RAISONS.agenda, 'err');
+      if(r==='occupe'){ var p=[].filter.call($('jours').children,function(x){ return x.getAttribute('aria-pressed')==='true'; })[0]; if(p) p.click(); }
+      else majBouton();
+    });
+  };
+  $('annuler').onclick=function(){ $('report').hidden=true; rdvEnCours=null; choix=null; };
+
+  if(!ID.test(a)||!JETON.test(t)){
+    $('fuseau').textContent='';
+    msg('m','Ouvrez d’abord votre espace depuis le bouton de votre dernier e-mail BEAM, puis revenez ici.','err');
+    return;
+  }
+  fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
+    cfg=c; if(!cfg.webhook_rdv) throw new Error('ferme');
+    return charger();
+  }).catch(function(){ msg('m','Le service est momentanément indisponible.','err'); $('fuseau').textContent=''; });
+})();
+</script>
+</body></html>
