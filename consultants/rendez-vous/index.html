@@ -198,8 +198,8 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
       var passes=rdv.filter(function(r){ return r.d<now; }).sort(function(a,b){ return b.d-a.d; });
       function carte(r,passe){
         var c=el('div','rdv'+(passe?' passe':''));
-        var h=el('h2',null,r.e||'Entreprise'); if(passe) h.appendChild(el('span','etat','Passé')); c.appendChild(h);
-        c.appendChild(el('p','qui',r.p||''));
+        var h=el('h2',null,r.e||r.p||'Rendez-vous'); if(passe) h.appendChild(el('span','etat','Passé')); c.appendChild(h);
+        if(r.e&&r.p) c.appendChild(el('p','qui',r.p));
         c.appendChild(el('p','quand',jourTxt(r.d)+' · '+heure(r.d)));
         if(r.c) c.appendChild(el('p','qui','Visio avec '+r.c));
         if(passe) c.appendChild(el('p','aide','Il n’a pas eu lieu ? Appelez la personne, convenez d’une nouvelle date, puis replanifiez.'));
@@ -223,7 +223,7 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
     rdvEnCours=r; choix=null; motif='entreprise'; [].forEach.call(document.querySelectorAll('#motifs .puce'),function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-m')==='entreprise'?'true':'false'); });
     var passe=r.d<Date.now();
     $('bloc-motif').hidden=passe; $('aide-manque').hidden=!passe;
-    $('r-titre').textContent=(passe?'Replanifier ':'Reporter ')+(r.e||'le rendez-vous');
+    $('r-titre').textContent=(passe?'Replanifier ':'Reporter ')+(r.e||r.p||'le rendez-vous');
     $('r-avant').textContent=(passe?'Prévu le ':'Actuellement : ')+jourTxt(r.d)+' à '+heure(r.d)+' ('+nomFuseau(tz)+').';
     var e=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='email'; })[0], w=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='whatsapp'; })[0];
     e.disabled=!r.m; e.textContent=r.m?'Par e-mail, envoyé par BEAM':'Par e-mail (pas d’adresse connue)';
