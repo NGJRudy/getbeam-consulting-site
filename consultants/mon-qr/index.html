@@ -66,6 +66,13 @@ label.ch input,label.ch textarea{margin-top:6px;font-weight:400}
 details.fiche summary{cursor:pointer;list-style:none}
 details.fiche summary::-webkit-details-marker{display:none}
 .wa-sec{background:#fff;color:var(--wa);border:1px solid var(--wa)}
+fieldset{border:0;margin:14px 0 0;padding:0}
+legend{font-size:14px;font-weight:600;padding:0}
+.choix{display:flex;gap:10px;align-items:flex-start;margin:8px 0 0;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:15px;line-height:21px;cursor:pointer}
+.choix input{width:20px;height:20px;min-height:0;margin:1px 0 0;flex:none}
+.choix:has(input:checked){border-color:var(--brand);background:#f3f6ff}
+.msgbox{white-space:pre-wrap;background:var(--surface);border-radius:10px;padding:10px 12px;margin:8px 0 0;font-size:15px}
+.sources{font-size:13px;color:var(--muted);margin:10px 0 0;overflow-wrap:anywhere}
 /* Plein écran : le QR seul, sur blanc, pour le faire scanner en salon */
 #plein{position:fixed;inset:0;z-index:10;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
 #plein canvas{width:min(88vw,70vh);border:0}
@@ -101,11 +108,18 @@ details.fiche summary::-webkit-details-marker{display:none}
 
 <section class="card" id="prep" hidden>
   <h2>Préparer une entreprise</h2>
-  <p class="sub">Avant d’approcher une entreprise, demandez le feu vert de BEAM. Vous recevez en 30 secondes une fiche : ce qu’elle fait, qui viser, les pistes BEAM et quoi dire. La réponse de BEAM arrive par e-mail.</p>
+  <p class="sub">Avant d’approcher une entreprise, demandez le feu vert de BEAM. En 30 secondes, vous recevez une fiche : ce qu’elle fait, qui viser, comment l’atteindre et quoi dire. BEAM répond par e-mail sous 48 heures. Si c’est oui, l’entreprise vous est réservée 90 jours.</p>
   <form id="f-prep" novalidate>
     <label class="ch">Nom de l’entreprise<input id="p-ent" maxlength="100" autocomplete="organization" required></label>
     <label class="ch">Site internet (si vous l’avez)<input id="p-site" maxlength="200" inputmode="url" placeholder="exemple.com"></label>
     <label class="ch">Pays<input id="p-pays" maxlength="60" autocomplete="country-name"></label>
+    <fieldset>
+      <legend>Votre lien avec cette entreprise</legend>
+      <label class="choix"><input type="radio" name="niveau" value="decideur"><span>Je connais un décideur<br><small>direction, DSI, CTO, responsable infrastructure ou data</small></span></label>
+      <label class="choix"><input type="radio" name="niveau" value="interne"><span>Je connais quelqu’un dedans, mais pas le décideur<br><small>par exemple un commercial ou un collègue</small></span></label>
+      <label class="choix"><input type="radio" name="niveau" value="aucun"><span>Je ne connais encore personne</span></label>
+    </fieldset>
+    <label class="ch" id="l-contact" hidden>Votre contact : nom et poste<input id="p-contact" maxlength="150" placeholder="Par exemple : Awa Koné, commerciale"></label>
     <label class="ch">Ce que vous en savez<textarea id="p-note" maxlength="600" placeholder="Par exemple : je connais le DSI, ils ouvrent un bureau à Dakar."></textarea></label>
     <button type="submit" id="p-go">Préparer la fiche et demander le feu vert</button>
     <p class="msg" id="p-m" role="status" aria-live="polite"></p>
@@ -354,14 +368,29 @@ details.fiche summary::-webkit-details-marker{display:none}
   // ---------------------------------------------------------------- fiche entreprise et feu vert
   function txt(v){ return Array.isArray(v)?v.join(', '):String(v==null?'':v); }
   function liste(arr,fn){ var u=el('ul'); (Array.isArray(arr)?arr:[]).forEach(function(x){ u.appendChild(el('li',null,fn?fn(x):txt(x))); }); return u; }
-  function blocFiche(f){
+  function blocFiche(f,prenom){
     var b=document.createDocumentFragment();
     var ligne=function(t,v){ if(!v) return; var p=el('p'); p.appendChild(el('b',null,t+' : ')); p.appendChild(document.createTextNode(txt(v))); b.appendChild(p); };
     ligne('Ce qu’elle fait',f.activite); ligne('Taille',f.taille); ligne('Qui viser',f.interlocuteurs);
+    ligne('Comment atteindre le bon décideur',f.chemin);
+    if(f.message_intro){
+      var t=el('p'); t.appendChild(el('b',null,'Message à envoyer à votre contact')); b.appendChild(t);
+      b.appendChild(el('div','msgbox',txt(f.message_intro)));
+      var d=el('div','duo'), w=el('button','wa-sec','Envoyer sur WhatsApp'), c=el('button','sec','Copier');
+      w.type='button'; c.type='button';
+      w.onclick=function(){ ouvrirWhatsApp('',txt(f.message_intro)); };
+      c.onclick=function(){ try{ navigator.clipboard.writeText(txt(f.message_intro)); c.textContent='Copié'; }catch(e){} };
+      d.appendChild(w); d.appendChild(c); b.appendChild(d);
+    }
     if(Array.isArray(f.cas_usage)&&f.cas_usage.length){ var p=el('p'); p.appendChild(el('b',null,'Pistes BEAM à vérifier avec elle')); b.appendChild(p); b.appendChild(liste(f.cas_usage,function(c){ return txt(c.titre)+(c.produit?' ('+txt(c.produit)+')':''); })); }
     ligne('Pour ouvrir la conversation',f.accroche);
     if(Array.isArray(f.questions)&&f.questions.length){ var q=el('p'); q.appendChild(el('b',null,'Questions à poser')); b.appendChild(q); b.appendChild(liste(f.questions)); }
     ligne('Point de vigilance',f.vigilance);
+    if(Array.isArray(f.sources)&&f.sources.length){
+      var s=el('p','sources','Sources consultées par l’IA, à vérifier : ');
+      f.sources.slice(0,6).forEach(function(u,i){ var l=el('a',null,String(u).replace(/^https?:\/\/(www\.)?/,'').split('/')[0]); if(/^https?:\/\//.test(u)){ l.href=u; l.target='_blank'; l.rel='noopener'; } if(i) s.appendChild(document.createTextNode(', ')); s.appendChild(l); });
+      b.appendChild(s);
+    }
     return b;
   }
   var ETAT={attente:['En attente du feu vert',''],valide:['Feu vert','valide'],refuse:['Pas de feu vert','refuse']};
@@ -375,7 +404,7 @@ details.fiche summary::-webkit-details-marker{display:none}
         L.forEach(function(x){
           var e=ETAT[x.s]||ETAT.attente, d=el('details','fiche'), s=el('summary');
           s.appendChild(el('h3',null,x.e||'Entreprise'));
-          s.appendChild(el('span','etat '+e[1],e[0]+(x.s==='refuse'&&x.r?' : '+x.r:'')));
+          s.appendChild(el('span','etat '+e[1],e[0]+(x.s==='refuse'&&x.r?' : '+x.r:'')+(x.s==='valide'&&x.x?', réservée jusqu’au '+date(Number(x.x)):'')));
           if(x.d) s.appendChild(el('span','qui',' · demandée le '+date(Number(x.d))));
           d.appendChild(s);
           if(x.f&&typeof x.f==='object') d.appendChild(blocFiche(x.f));
@@ -384,28 +413,32 @@ details.fiche summary::-webkit-details-marker{display:none}
         });
       }).catch(function(){});
   }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=niveau]'),function(r){ r.onchange=function(){ $('l-contact').hidden=(r.value==='aucun'&&r.checked); }; });
   $('f-prep').onsubmit=function(ev){
     ev.preventDefault();
     var ent=$('p-ent').value.trim(), m=$('p-m'), go=$('p-go');
     if(ent.length<2){ m.textContent='Indiquez le nom de l’entreprise.'; m.className='msg err'; $('p-ent').focus(); return; }
+    var niv=(document.querySelector('input[name=niveau]:checked')||{}).value||'';
+    if(!niv){ m.textContent='Indiquez votre lien avec cette entreprise.'; m.className='msg err'; return; }
     go.disabled=true; go.textContent='Recherche en cours…'; m.className='msg'; m.textContent='BEAM cherche les informations publiques sur '+ent+'. Comptez 30 secondes à 1 minute.';
     $('p-res').textContent='';
     var ctl=window.AbortController?new AbortController():null, minuteur=setTimeout(function(){ if(ctl) ctl.abort(); },150000);
-    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim()})})
+    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim(),niveau:niv,contact:niv==='aucun'?'':$('p-contact').value.trim()})})
       .then(function(r){ return r.json(); }).then(function(j){
         if(!j||j.ok!==true) throw j||{};
         var f=j.fiche||{}, box=el('div','fiche');
         box.appendChild(el('h3',null,j.entreprise||ent));
         box.appendChild(el('span','etat','En attente du feu vert'));
-        if(j.deja) box.appendChild(el('p','note','Déjà connue de BEAM : '+j.deja+'. BEAM vérifie qui la suit avant de répondre.'));
+        if(j.connue) box.appendChild(el('p','note','BEAM connaît déjà cette entreprise : l’équipe vérifie qui la suit avant de répondre.'));
         box.appendChild(blocFiche(f));
         $('p-res').appendChild(box);
-        m.className='msg ok'; m.textContent='Demande envoyée à BEAM. Vous recevrez le feu vert ou la réponse par e-mail. Attendez-la avant d’approcher l’entreprise.';
-        $('f-prep').reset(); demandes();
+        m.className='msg ok'; m.textContent='Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
+        $('f-prep').reset(); $('l-contact').hidden=true; demandes();
       }).catch(function(j){
         var r=j&&j.raison;
         m.className='msg err';
-        m.textContent=r==='acces'?'Votre accès a expiré : rechargez la page depuis votre dernier e-mail BEAM.':
+        m.textContent=r==='reservee'?(j.statut==='valide'?'Cette entreprise est déjà réservée par un autre consultant BEAM'+(j.jusqu?' jusqu’au '+date(Number(j.jusqu)):'')+'. Proposez-en une autre.':'Un autre consultant BEAM a déjà demandé cette entreprise. BEAM lui répond en premier.'):
+          r==='acces'?'Votre accès a expiré : rechargez la page depuis votre dernier e-mail BEAM.':
           r==='ia'?'La recherche n’a pas abouti. Ajoutez le site internet de l’entreprise et réessayez.':
           'La demande n’a pas pu partir. Réessayez dans un instant.';
       }).then(function(){ clearTimeout(minuteur); go.disabled=false; go.textContent='Préparer la fiche et demander le feu vert'; });
