@@ -17,6 +17,7 @@
         objectifs:'Ce que vous saurez faire',programme:'Au programme',page:'p. ',
         fermer:'Fermer',pageX:function(p,n){ return 'Page '+p+' / '+n; },fin:'Module terminé',
         apres:'Ensuite',retourAcad:'Retour à l’académie',
+        precedente:'Page précédente',suivante:'Page suivante',sommaire:'Sommaire',couverture:'Couverture',
         acces:'Cette page s’ouvre depuis votre espace consultant. Ouvrez-le avec le bouton de votre e-mail BEAM, puis revenez ici.',
         ferme:'L’académie n’est pas disponible pour le moment.',introuvable:'Ce module n’existe pas.'},
     en:{titre:'BEAM Academy',intro:'All BEAM training in one place. Follow the path in order, then keep the toolbox at hand.',
@@ -30,6 +31,7 @@
         objectifs:'What you will be able to do',programme:'What’s inside',page:'p. ',
         fermer:'Close',pageX:function(p,n){ return 'Page '+p+' / '+n; },fin:'Module complete',
         apres:'Next',retourAcad:'Back to the academy',
+        precedente:'Previous page',suivante:'Next page',sommaire:'Contents',couverture:'Cover',
         acces:'This page opens from your consultant space. Open it with the button in your BEAM e-mail, then come back here.',
         ferme:'The academy is not available right now.',introuvable:'This module does not exist.'}
   };
