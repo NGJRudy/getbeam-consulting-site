@@ -1,9 +1,39 @@
 {
   "_aide": "ACADÉMIE BEAM de l'espace consultant (/consultants/academie/). Uniquement des formations BEAM. Ajouter un document = déposer le PDF dans consultants/academie/docs/ puis ajouter (ou compléter) une entrée ici : rien d'autre à coder. Champs : id (unique, sert à mémoriser « lu »), section (demarrer | parcours | outils), titre/resume {fr,en}, minutes, fichier {fr,en} = chemin du PDF ou de la page (vide = « bientôt disponible »), type (pdf | page). Les PDF sont publics pour qui connaît l'adresse : n'y mettre ni prix, ni fiches d'entreprises, ni données personnelles.",
   "sections": [
-    { "id": "demarrer", "titre": { "fr": "Commencer ici", "en": "Start here" }, "resume": { "fr": "5 minutes pour savoir où tout se trouve.", "en": "5 minutes to find your way around." } },
-    { "id": "parcours", "titre": { "fr": "Parcours de formation", "en": "Training path" }, "resume": { "fr": "Dans l’ordre. Un module à la fois.", "en": "In order. One module at a time." } },
-    { "id": "outils", "titre": { "fr": "Boîte à outils", "en": "Toolbox" }, "resume": { "fr": "À ouvrir au moment où vous en avez besoin.", "en": "Open it when you need it." } }
+    {
+      "id": "demarrer",
+      "titre": {
+        "fr": "Commencer ici",
+        "en": "Start here"
+      },
+      "resume": {
+        "fr": "5 minutes pour savoir où tout se trouve.",
+        "en": "5 minutes to find your way around."
+      }
+    },
+    {
+      "id": "parcours",
+      "titre": {
+        "fr": "Parcours de formation",
+        "en": "Training path"
+      },
+      "resume": {
+        "fr": "Dans l’ordre. Un module à la fois.",
+        "en": "In order. One module at a time."
+      }
+    },
+    {
+      "id": "outils",
+      "titre": {
+        "fr": "Boîte à outils",
+        "en": "Toolbox"
+      },
+      "resume": {
+        "fr": "À ouvrir au moment où vous en avez besoin.",
+        "en": "Open it when you need it."
+      }
+    }
   ],
   "documents": [
     {
@@ -11,45 +41,90 @@
       "section": "demarrer",
       "type": "page",
       "minutes": 5,
-      "titre": { "fr": "Se repérer dans son espace", "en": "Finding your way in your space" },
-      "resume": { "fr": "QR code, préparer une entreprise, demandes, rendez-vous, équipe : à quoi sert chaque partie.", "en": "QR code, preparing a company, requests, meetings, team: what each part is for." },
-      "fichier": { "fr": "/consultants/academie/guide/", "en": "/consultants/academie/guide/en/" }
+      "titre": {
+        "fr": "Se repérer dans son espace",
+        "en": "Finding your way in your space"
+      },
+      "resume": {
+        "fr": "QR code, préparer une entreprise, demandes, rendez-vous, équipe : à quoi sert chaque partie.",
+        "en": "QR code, preparing a company, requests, meetings, team: what each part is for."
+      },
+      "fichier": {
+        "fr": "/consultants/academie/guide/",
+        "en": "/consultants/academie/guide/en/"
+      }
     },
     {
       "id": "module-1",
       "section": "parcours",
       "type": "pdf",
-      "minutes": 0,
-      "titre": { "fr": "Module 1", "en": "Module 1" },
-      "resume": { "fr": "", "en": "" },
-      "fichier": { "fr": "", "en": "" }
+      "minutes": 20,
+      "titre": {
+        "fr": "Module 1 · Les bases",
+        "en": "Module 1 · The basics"
+      },
+      "resume": {
+        "fr": "Les données, ça se range et ça voyage : le stockage, le péage à la sortie, le transport par BEAM, les Rooms, repérer un bon client, le lexique.",
+        "en": "Data is stored and it travels: storage, exit fees, transport with BEAM, Rooms, spotting a good customer, glossary."
+      },
+      "fichier": {
+        "fr": "/consultants/academie/docs/module-1-les-bases.pdf",
+        "en": ""
+      }
     },
     {
       "id": "module-2",
       "section": "parcours",
       "type": "pdf",
       "minutes": 0,
-      "titre": { "fr": "Module 2", "en": "Module 2" },
-      "resume": { "fr": "", "en": "" },
-      "fichier": { "fr": "", "en": "" }
+      "titre": {
+        "fr": "Module 2 · Approcher les entreprises",
+        "en": "Module 2 · Approaching companies"
+      },
+      "resume": {
+        "fr": "",
+        "en": ""
+      },
+      "fichier": {
+        "fr": "",
+        "en": ""
+      }
     },
     {
       "id": "module-3",
       "section": "parcours",
       "type": "pdf",
       "minutes": 0,
-      "titre": { "fr": "Module 3", "en": "Module 3" },
-      "resume": { "fr": "", "en": "" },
-      "fichier": { "fr": "", "en": "" }
+      "titre": {
+        "fr": "Module 3 · Le protocole BEAM Network",
+        "en": "Module 3 · The BEAM Network protocol"
+      },
+      "resume": {
+        "fr": "",
+        "en": ""
+      },
+      "fichier": {
+        "fr": "",
+        "en": ""
+      }
     },
     {
       "id": "conditions",
       "section": "outils",
       "type": "page",
       "minutes": 10,
-      "titre": { "fr": "Conditions du programme Consultants", "en": "Consultant program terms" },
-      "resume": { "fr": "Ce que vous pouvez dire et faire, et comment la commission est calculée.", "en": "What you can say and do, and how the commission works. In French (the French version applies)." },
-      "fichier": { "fr": "/consultants/conditions/v1/", "en": "/consultants/conditions/v1/" }
+      "titre": {
+        "fr": "Conditions du programme Consultants",
+        "en": "Consultant program terms"
+      },
+      "resume": {
+        "fr": "Ce que vous pouvez dire et faire, et comment la commission est calculée.",
+        "en": "What you can say and do, and how the commission works. In French (the French version applies)."
+      },
+      "fichier": {
+        "fr": "/consultants/conditions/v1/",
+        "en": "/consultants/conditions/v1/"
+      }
     }
   ]
 }
