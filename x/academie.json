@@ -1,5 +1,5 @@
 {
-  "_aide": "ACADÉMIE BEAM de l'espace consultant (/consultants/academie/). Uniquement des formations BEAM. Ajouter un document = déposer le PDF dans consultants/academie/docs/ puis ajouter (ou compléter) une entrée ici : rien d'autre à coder. Champs : id (unique, sert à mémoriser « lu »), section (demarrer | parcours | outils), titre/resume {fr,en}, minutes, fichier {fr,en} = chemin du PDF ou de la page (vide = « bientôt disponible »), type (pdf | page). Les PDF sont publics pour qui connaît l'adresse : n'y mettre ni prix, ni fiches d'entreprises, ni données personnelles.",
+  "_aide": "ACADÉMIE BEAM de l'espace consultant (/consultants/academie/). Uniquement des formations BEAM. Ajouter un module = déposer le PDF dans consultants/academie/docs/, compléter son entrée ici, puis lancer tools/academie_pages.py (il fabrique la couverture et les pages du lecteur, et remplit « pages ») : rien d'autre à coder. Champs : id (unique, sert à mémoriser « lu » et la page atteinte), section (demarrer | parcours | outils), titre/resume {fr,en}, minutes, fichier {fr,en} = chemin du PDF ou de la page (vide = « bientôt disponible »), type (pdf | page), couleur (couleur du module, #rrggbb), objectifs {fr:[],en:[]} (ce que le consultant saura faire), chapitres [{page, titre{fr,en}}], cadrage_couverture [gauche, haut, droite] en fractions de la page 1 (facultatif), pages et hauteurs (remplis par le script). Les PDF et les images sont publics pour qui connaît l'adresse : n'y mettre ni prix, ni fiches d'entreprises, ni données personnelles.",
   "sections": [
     {
       "id": "demarrer",
@@ -70,7 +70,125 @@
       "fichier": {
         "fr": "/consultants/academie/docs/module-1-les-bases.pdf",
         "en": ""
-      }
+      },
+      "couleur": "#FBBD2C",
+      "objectifs": {
+        "fr": [
+          "Expliquer avec des mots simples où les entreprises rangent leurs données, et pourquoi les ressortir coûte cher.",
+          "Dire en une phrase ce que fait BEAM : on ne stocke rien, on transporte.",
+          "Choisir entre le camion et la salle (les Rooms) selon ce que dit le client.",
+          "Repérer un bon client grâce à 6 phrases qu’on entend sur le terrain."
+        ],
+        "en": [
+          "Explain in plain words where companies keep their data, and why getting it out is expensive.",
+          "Say in one sentence what BEAM does: we store nothing, we transport.",
+          "Choose between the truck and the room (Rooms) based on what the customer says.",
+          "Spot a good customer from 6 sentences you hear in the field."
+        ]
+      },
+      "chapitres": [
+        {
+          "page": 2,
+          "titre": {
+            "fr": "Toutes les entreprises ont des données",
+            "en": "Every company has data"
+          }
+        },
+        {
+          "page": 3,
+          "titre": {
+            "fr": "Le garde-meuble en ligne",
+            "en": "The online storage unit"
+          }
+        },
+        {
+          "page": 4,
+          "titre": {
+            "fr": "Le péage à la sortie",
+            "en": "The exit toll"
+          }
+        },
+        {
+          "page": 5,
+          "titre": {
+            "fr": "Pourquoi les données doivent voyager",
+            "en": "Why data has to travel"
+          }
+        },
+        {
+          "page": 6,
+          "titre": {
+            "fr": "Un seul camion, ou des centaines ?",
+            "en": "One truck, or hundreds?"
+          }
+        },
+        {
+          "page": 7,
+          "titre": {
+            "fr": "Trois façons de s’en servir",
+            "en": "Three ways to use it"
+          }
+        },
+        {
+          "page": 8,
+          "titre": {
+            "fr": "Les Rooms, la salle privée",
+            "en": "Rooms, the private room"
+          }
+        },
+        {
+          "page": 9,
+          "titre": {
+            "fr": "Le camion ou la salle ?",
+            "en": "The truck or the room?"
+          }
+        },
+        {
+          "page": 10,
+          "titre": {
+            "fr": "Repérer un bon client",
+            "en": "Spotting a good customer"
+          }
+        },
+        {
+          "page": 11,
+          "titre": {
+            "fr": "Le petit lexique",
+            "en": "The short glossary"
+          }
+        },
+        {
+          "page": 12,
+          "titre": {
+            "fr": "Un ordinateur, c’est une cuisine",
+            "en": "A computer is a kitchen"
+          }
+        }
+      ],
+      "pages": {
+        "fr": 12
+      },
+      "hauteurs": {
+        "fr": [
+          1064,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1200,
+          1076,
+          1100,
+          1689,
+          1150
+        ]
+      },
+      "cadrage_couverture": [
+        0.025,
+        0.03,
+        0.74
+      ]
     },
     {
       "id": "module-2",
@@ -88,7 +206,15 @@
       "fichier": {
         "fr": "",
         "en": ""
-      }
+      },
+      "couleur": "#E8784A",
+      "objectifs": {
+        "fr": [],
+        "en": []
+      },
+      "chapitres": [],
+      "pages": {},
+      "hauteurs": {}
     },
     {
       "id": "module-3",
@@ -106,7 +232,15 @@
       "fichier": {
         "fr": "",
         "en": ""
-      }
+      },
+      "couleur": "#2350D8",
+      "objectifs": {
+        "fr": [],
+        "en": []
+      },
+      "chapitres": [],
+      "pages": {},
+      "hauteurs": {}
     },
     {
       "id": "conditions",

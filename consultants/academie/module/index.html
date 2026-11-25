@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>BEAM · Académie</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Open+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/consultants/academie/academie.css?v=2">
+<style>
+.tete .couv{margin:0 0 18px}
+.pill{display:inline-block;background:var(--m);color:var(--m-txt);font:600 12px/1 var(--sans);letter-spacing:.12em;padding:7px 10px;border-radius:999px}
+.tete h1{font:400 clamp(38px,9vw,54px)/1.02 var(--serif);margin:12px 0 0}
+.tete .sub{font-size:16px;line-height:24px;margin:10px 0 0}
+.tete .meta{font-size:14px;color:var(--muted);margin:10px 0 0}
+.tete .barre{margin:14px 0 0}
+.tete .ou{font-size:14px;color:var(--muted);margin:6px 0 0}
+.obj{list-style:none;margin:12px 0 0;padding:0}
+.obj li{display:grid;grid-template-columns:24px 1fr;gap:10px;padding:8px 0}
+.obj svg{width:20px;height:20px;color:var(--ok);margin-top:2px}
+.chap{list-style:none;margin:8px 0 0;padding:0;counter-reset:c}
+.chap button{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;width:100%;min-height:52px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;font:400 15px/21px var(--sans);color:var(--ink);text-align:left;cursor:pointer}
+.chap li:first-child button{border-top:0}
+.chap .n{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)}
+.chap .vu .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.chap .p{font-size:13px;color:var(--muted)}
+.chap button:hover .t{text-decoration:underline;text-underline-offset:3px}
+.apres{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;color:var(--ink);text-decoration:none;margin:12px 0 0}
+.apres b{display:block;font:400 22px/1.1 var(--serif)}
+.apres .couv.dessin{padding:8px 10px;gap:6px;border-top-width:4px}
+.apres .couv-pill{font-size:9px;padding:4px 6px}
+.apres .couv-titre{font-size:17px}
+.apres small{display:block;font-size:13px;color:var(--muted);margin:4px 0 0}
+
+/* Lecteur : les pages l'une sous l'autre, zoom natif du téléphone */
+.lect{position:fixed;inset:0;z-index:10;background:#2a2d33;display:flex;flex-direction:column}
+.lect-haut{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 6px;background:var(--ink);color:#fff}
+.lect-haut button,.lect-haut a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:0;background:none;color:#fff;cursor:pointer;border-radius:10px}
+.lect-haut svg{width:22px;height:22px}
+.lect-titre{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lect-num{flex:0 0 auto;font-size:13px;font-variant-numeric:tabular-nums;color:#c9ced8}
+.lect-barre{flex:0 0 auto;height:3px;background:#3b3f47}
+.lect-barre i{display:block;height:100%;width:0;background:var(--m,#fbbd2c);transition:width .2s}
+.lect-pages{position:relative;flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 8px 24px}
+.lect-pages img{display:block;width:100%;max-width:1100px;height:auto;margin:0 auto 10px;background:#fff;border-radius:4px}
+.lect-fin{max-width:1100px;margin:8px auto 0;padding:20px;border-radius:12px;background:#fff;text-align:center}
+.lect-fin b{display:block;font:400 28px/1.1 var(--serif)}
+.lect-fin .actions{justify-content:center}
+body.lit{overflow:hidden}
+</style></head>
+<body><main>
+<div class="haut">
+  <a class="retour-lien" href="/consultants/academie/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span data-t="academie">Académie</span></a>
+  <div class="langue" role="group" aria-label="Langue / Language">
+    <button type="button" data-l="fr" aria-pressed="true">FR</button>
+    <button type="button" data-l="en" aria-pressed="false">EN</button>
+  </div>
+</div>
+<div id="contenu"></div>
+<p class="msg" id="m" role="status"></p>
+<p class="pied"><a href="mailto:team@getbeam-consulting.com" data-t="aide">Une question ? team@getbeam-consulting.com</a></p>
+</main>
+
+<div class="lect" id="lect" hidden role="dialog" aria-modal="true" aria-labelledby="lect-titre">
+  <div class="lect-haut">
+    <button type="button" id="lect-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="vh" id="lect-x-t" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Fermer</span></button>
+    <span class="lect-titre" id="lect-titre"></span>
+    <span class="lect-num" id="lect-num" aria-live="polite"></span>
+    <a id="lect-pdf" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span id="lect-pdf-t" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></span></a>
+  </div>
+  <div class="lect-barre"><i id="lect-b"></i></div>
+  <div class="lect-pages" id="lect-pages" tabindex="0"></div>
+</div>
+
+<script src="/consultants/academie/academie.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var A=window.Academie, el=A.el, $=function(id){ return document.getElementById(id); };
+  var OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var LIRE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 013 3v12a2 2 0 00-2-2H3zM21 5h-6a3 3 0 00-3 3v12a2 2 0 012-2h7z"/></svg>';
+  var DL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+  var q=new URLSearchParams(location.search), id=q.get('d')||'', doc=null, ouvert=false, obs=null, courante=1;
+
+  function pos(){ return A.pos[doc.id]||{p:1,max:1}; }
+  function bouton(cls,html,txt){ var b=el('button','btn '+cls); b.type='button'; b.innerHTML=html; b.appendChild(el('span',null,txt)); return b; }
+
+  function rendre(){
+    A.traduire();
+    var C=$('contenu'); C.textContent='';
+    doc=A.cfg.documents.filter(function(d){ return d.id===id&&d.type==='pdf'; })[0];
+    if(!doc||!A.dispo(doc)){ $('m').textContent=A.t('introuvable'); return; }
+    document.title='BEAM · '+A.tx(doc.titre);
+    var n=A.nbPages(doc), p=pos(), lect=A.lecteur(doc), coul=A.couleur(doc);
+    document.documentElement.style.setProperty('--m',coul); document.documentElement.style.setProperty('--m-txt',A.surCouleur(doc));
+
+    var t=el('section','card tete');
+    t.appendChild(A.couverture(doc,true));
+    var tt=A.tx(doc.titre).split(' · ');
+    t.appendChild(el('span','pill',(tt.length>1?tt[0]:A.t('academie')).toUpperCase()));
+    t.appendChild(el('h1',null,tt.length>1?tt.slice(1).join(' · '):tt[0]));
+    if(A.tx(doc.resume)) t.appendChild(el('p','sub',A.tx(doc.resume)));
+    var m=A.meta(doc); if(m) t.appendChild(el('p','meta',m));
+    if(p.p>1&&!A.lu[doc.id]&&n){ var b=el('div','barre'); var i=el('i'); i.style.width=Math.round(Math.min(p.max,n)/n*100)+'%'; b.appendChild(i); t.appendChild(b); t.appendChild(el('p','ou',A.T[A.L].encours(Math.min(p.p,n),n))); }
+    var act=el('div','actions');
+    if(lect){
+      var lib=A.lu[doc.id]?A.t('relire'):(p.p>1?A.T[A.L].reprendre(Math.min(p.p,n)):A.t('lire'));
+      var bl=bouton('prim',LIRE,lib); bl.onclick=function(){ ouvrir(A.lu[doc.id]?1:p.p); }; act.appendChild(bl);
+    }
+    var dl=el('a','btn'+(lect?'':' prim')); dl.href=A.lien(doc); dl.target='_blank'; dl.rel='noopener'; dl.innerHTML=DL; dl.appendChild(el('span',null,A.t('pdf')));
+    if(!lect) dl.addEventListener('click',function(){ A.lu[doc.id]=1; A.sauve(); });
+    act.appendChild(dl);
+    var lu=bouton(A.lu[doc.id]?'fait':'',A.lu[doc.id]?OK:'',A.lu[doc.id]?A.t('fait'):A.t('lu'));
+    lu.onclick=function(){ if(A.lu[doc.id]) delete A.lu[doc.id]; else A.lu[doc.id]=1; A.sauve(); rendre(); };
+    act.appendChild(lu);
+    t.appendChild(act); C.appendChild(t);
+
+    var ob=(doc.objectifs&&(doc.objectifs[A.L]&&doc.objectifs[A.L].length?doc.objectifs[A.L]:doc.objectifs.fr))||[];
+    if(ob.length){
+      var o=el('section','card'); o.appendChild(el('h2',null,A.t('objectifs')));
+      var ul=el('ul','obj'); ob.forEach(function(x){ var li=el('li'); var s=el('span'); s.innerHTML=OK; li.appendChild(s); li.appendChild(el('span',null,x)); ul.appendChild(li); });
+      o.appendChild(ul); C.appendChild(o);
+    }
+    var ch=(doc.chapitres||[]).filter(function(c){ return c&&c.page>=1&&(!n||c.page<=n); });
+    if(ch.length){
+      var c=el('section','card'); c.appendChild(el('h2',null,A.t('programme')));
+      var ol=el('ol','chap');
+      ch.forEach(function(x,k){
+        var li=el('li',(A.lu[doc.id]||p.max>=x.page)?'vu':''); var bt=el('button'); bt.type='button';
+        bt.appendChild(el('span','n',String(k+1))); bt.appendChild(el('span','t',A.tx(x.titre))); bt.appendChild(el('span','p',A.t('page')+x.page));
+        if(lect) bt.onclick=function(){ ouvrir(x.page); }; else bt.disabled=true;
+        li.appendChild(bt); ol.appendChild(li);
+      });
+      c.appendChild(ol); C.appendChild(c);
+    }
+    var suiv=suivant(); if(suiv){
+      var s=el('section','card'); s.appendChild(el('h2',null,A.t('apres')));
+      var a=el(A.dispo(suiv)?'a':'div','apres'); if(A.dispo(suiv)) a.href=A.pageModule(suiv);
+      a.appendChild(A.couverture(suiv)); var tx=el('span'); tx.appendChild(el('b',null,A.tx(suiv.titre))); tx.appendChild(el('small',null,A.dispo(suiv)?A.meta(suiv):A.t('bientot'))); a.appendChild(tx);
+      s.appendChild(a); C.appendChild(s);
+    }
+    if(q.get('lire')==='1'&&lect&&!ouvert){ q.delete('lire'); history.replaceState(null,'',location.pathname+'?'+q.toString()); ouvrir(A.lu[doc.id]?1:p.p); }
+  }
+  function suivant(){ var l=A.cfg.documents.filter(function(d){ return d.section===doc.section; }); var i=l.indexOf(doc); return i>=0?l[i+1]||null:null; }
+
+  /* ---------- Lecteur ---------- */
+  function ouvrir(page){
+    var n=A.nbPages(doc), v=A.version(doc), H=(doc.hauteurs&&doc.hauteurs[v])||[], P=$('lect-pages');
+    P.textContent='';
+    for(var k=1;k<=n;k++){
+      var im=el('img'); im.src=A.dossier(doc)+'p-'+(k<10?'0':'')+k+'.webp'; im.width=1600; im.height=+H[k-1]||1000;
+      im.alt=A.t('page')+k; im.decoding='async'; if(Math.abs(k-page)>1) im.loading='lazy'; im.dataset.p=k; P.appendChild(im);
+    }
+    var fin=el('div','lect-fin'); fin.appendChild(el('b',null,A.t('fin')));
+    var acts=el('div','actions'), suiv=suivant();
+    if(suiv&&A.dispo(suiv)){ var a=el('a','btn prim',A.t('apres')+' · '+A.tx(suiv.titre)); a.href=A.pageModule(suiv); acts.appendChild(a); }
+    var r=el('a','btn',A.t('retourAcad')); r.href='/consultants/academie/'; acts.appendChild(r);
+    fin.appendChild(acts); P.appendChild(fin);
+    $('lect-titre').textContent=A.tx(doc.titre); $('lect-pdf').href=A.lien(doc); $('lect-pdf-t').textContent=A.t('pdf'); $('lect-x-t').textContent=A.t('fermer');
+    $('lect').hidden=false; document.body.classList.add('lit');
+    if(!ouvert){ history.pushState({lect:1},''); ouvert=true; }
+    courante=Math.max(1,Math.min(page||1,n)); afficher();
+    requestAnimationFrame(function(){ var c=P.querySelector('img[data-p="'+courante+'"]'); P.scrollTop=courante>1&&c?c.offsetTop-12:0; P.focus({preventScroll:true}); suivre(); });
+  }
+  function afficher(){ var n=A.nbPages(doc); $('lect-num').textContent=A.T[A.L].pageX(courante,n); $('lect-b').style.width=Math.round(courante/n*100)+'%'; }
+  /* Page courante = celle qui occupe le haut de l’écran. Tout en bas = dernière page. */
+  var att=0;
+  function mesurer(){
+    var P=$('lect-pages'), n=A.nbPages(doc), ligne=P.scrollTop+40, c=1;
+    [].forEach.call(P.querySelectorAll('img'),function(i){ if(i.offsetTop<=ligne) c=+i.dataset.p; });
+    if(P.scrollTop+P.clientHeight>=P.scrollHeight-4) c=n;
+    if(c===courante&&pos().p===c) return;
+    courante=c; afficher();
+    var p=pos(); p.p=c; p.max=Math.max(p.max||1,c); A.pos[doc.id]=p;
+    if(c>=n) A.lu[doc.id]=1;
+    A.sauve();
+  }
+  function surDefilement(){ if(att) return; att=requestAnimationFrame(function(){ att=0; mesurer(); }); }
+  function suivre(){ var P=$('lect-pages'); P.removeEventListener('scroll',surDefilement); P.addEventListener('scroll',surDefilement,{passive:true}); mesurer(); }
+  function fermer(depuisHistorique){
+    if(!ouvert) return; ouvert=false; $('lect-pages').removeEventListener('scroll',surDefilement);
+    $('lect').hidden=true; document.body.classList.remove('lit');
+    if(!depuisHistorique) history.back();
+    rendre();
+  }
+  $('lect-x').onclick=function(){ fermer(false); };
+  window.addEventListener('popstate',function(){ if(ouvert) fermer(true); });
+  document.addEventListener('keydown',function(e){
+    if(!ouvert) return;
+    if(e.key==='Escape'){ fermer(false); return; }
+    var P=$('lect-pages'), go=0;
+    if(e.key==='ArrowRight'||e.key==='PageDown') go=1; else if(e.key==='ArrowLeft'||e.key==='PageUp') go=-1;
+    if(go){ e.preventDefault(); var c=P.querySelector('img[data-p="'+(courante+go)+'"]'); if(c) P.scrollTop=c.offsetTop-12; }
+  });
+
+  A.traduire();
+  A.boutonsLangue(function(){ rendre(); if(ouvert) ouvrir(courante); });
+  if(!/^[a-z0-9-]{2,40}$/.test(id)){ $('m').textContent=A.t('introuvable'); return; }
+  A.demarrer(rendre,function(msg){ $('m').textContent=msg; });
+})();
+</script>
+</body></html>
