@@ -196,6 +196,12 @@ legend{font-size:14px;font-weight:600;padding:0}
   }
 
   // ---------------------------------------------------------------- accès refusé : renvoi du lien sur place
+  function indisponible(){
+    var m=$('m'); m.className='msg err';
+    m.textContent='Le service BEAM ne répond pas pour le moment. Votre accès et vos entreprises sont intacts : réessayez dans quelques minutes.';
+    var b=document.createElement('button'); b.type='button'; b.className='btn'; b.textContent='Réessayer'; b.style.marginTop='12px';
+    b.onclick=function(){ location.reload(); }; m.parentNode.insertBefore(b,m.nextSibling);
+  }
   function erreur(txt){
     var m=$('m'); m.textContent=txt; m.className='msg err';
     $('renvoi').hidden=false;
@@ -207,9 +213,10 @@ legend{font-size:14px;font-weight:600;padding:0}
     var go=$('r-go'); go.disabled=true; m.textContent='Envoi…'; m.className='msg';
     var envoi=function(c){ return fetch(c.webhook,{method:'POST',body:new URLSearchParams({action:'renvoi',email:mail,turnstile:'',page:location.href.split('?')[0]})}); };
     (cfg?Promise.resolve(cfg):fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }))
-      .then(envoi).then(function(){
+      .then(envoi).then(function(r){ return r.json(); }).then(function(j){
+        if(!j||j.ok!==true) throw new Error('indispo');
         m.textContent='C’est envoyé. Si cette adresse est inscrite, un e-mail avec votre nouveau lien arrive dans quelques minutes. Pensez à regarder les indésirables.'; m.className='msg ok';
-      }).catch(function(){ m.textContent='L’envoi n’a pas marché. Réessayez dans un instant.'; m.className='msg err'; go.disabled=false; });
+      }).catch(function(){ m.textContent='Le service BEAM ne répond pas pour le moment : rien n’est parti. Réessayez dans quelques minutes.'; m.className='msg err'; go.disabled=false; });
   };
 
   // ---------------------------------------------------------------- QR
@@ -463,8 +470,9 @@ legend{font-size:14px;font-weight:600;padding:0}
     cfg=c;
     if(!ID.test(a)||!JETON.test(t)){ erreur('Cette page s’ouvre avec le bouton de votre e-mail BEAM. Vous ne le retrouvez pas ? Recevez un nouveau lien :'); return; }
     if(!cfg.webhook) throw new Error('fermé');
+    // Réponse illisible ou pas de réponse = service BEAM indisponible (pas un lien expiré) : on garde la session.
     return fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'verification',id:a,jeton:t})})
-      .then(function(r){ return r.json(); })
+      .then(function(r){ return r.json().catch(function(){ throw new Error('indispo'); }); },function(){ throw new Error('indispo'); })
       .then(function(j){
         if(!j||j.ok!==true||typeof j.lien!=='string'||j.lien.indexOf(cfg.lien_qr_autorise)!==0) throw new Error('refus');
         // Fiche doublon fusionnée : BEAM répond avec l'identifiant de la vraie fiche, l'espace la suit (entreprises, QR, équipe).
@@ -503,9 +511,10 @@ legend{font-size:14px;font-weight:600;padding:0}
         return Promise.all([fetch(cfg.webhook,{method:'POST',body:new URLSearchParams({action:'tableau',id:a,jeton:t})}).then(function(r){ return r.json(); }),rdvs])
           .then(function(v){ tableau(v[0]); }).catch(function(){});
       });
-  }).catch(function(){
-    try{ localStorage.removeItem(CLE); window.dispatchEvent(new Event('beam-session')); }catch(e){}
-    erreur('Ce lien n’est plus valable : il a expiré (30 jours) ou un e-mail plus récent l’a remplacé. Recevez un nouveau lien :');
+  }).catch(function(e){
+    if(e&&e.message==='indispo'){ indisponible(); return; }
+    try{ localStorage.removeItem(CLE); window.dispatchEvent(new Event('beam-session')); }catch(x){}
+    erreur('Ce lien n’est plus valable : vous ne l’avez pas ouvert depuis plus d’un mois, ou un e-mail plus récent l’a remplacé. Recevez un nouveau lien :');
   });
 })();
 </script>
