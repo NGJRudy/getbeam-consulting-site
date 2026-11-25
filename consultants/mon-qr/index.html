@@ -462,7 +462,8 @@ legend{font-size:14px;font-weight:600;padding:0}
       .then(function(r){ return r.json(); })
       .then(function(j){
         if(!j||j.ok!==true||typeof j.lien!=='string'||j.lien.indexOf(cfg.lien_qr_autorise)!==0) throw new Error('refus');
-        try{ localStorage.setItem(CLE,JSON.stringify({a:a,t:t})); }catch(e){}
+        try{ localStorage.setItem(CLE,JSON.stringify({a:a,t:t,chef:j.chef===true})); }catch(e){}
+        try{ window.dispatchEvent(new Event('beam-session')); }catch(e){}
         var maj=function(x){ return String(x||'').toLowerCase().replace(/(^|[\s-])\S/g,function(c){ return c.toUpperCase(); }); };
         moi={prenom:maj(j.prenom),nom:maj(j.nom)};
         var qui=[moi.prenom,moi.nom].filter(Boolean).join(' ');
@@ -491,9 +492,10 @@ legend{font-size:14px;font-weight:600;padding:0}
           .then(function(r){ return r.json(); }).then(tableau).catch(function(){});
       });
   }).catch(function(){
-    try{ localStorage.removeItem(CLE); }catch(e){}
+    try{ localStorage.removeItem(CLE); window.dispatchEvent(new Event('beam-session')); }catch(e){}
     erreur('Ce lien n’est plus valable : il a expiré (30 jours) ou un e-mail plus récent l’a remplacé. Recevez un nouveau lien :');
   });
 })();
 </script>
+<script src="/consultants/nav.js?v=1" defer></script>
 </body></html>

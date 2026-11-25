@@ -1,0 +1,46 @@
+{
+  "_aide": "Navigation de l'espace consultant (barre en bas sur téléphone, en haut sur ordinateur), affichée par /consultants/nav.js sur chaque page de l'espace. Ajouter un onglet = ajouter une entrée ici, rien d'autre à coder. Champs : id (unique), libelle {fr,en}, lien (chemin du site, avec #section si l'onglet mène à une partie de la page), icone (qr | entreprises | agenda | academie | equipe), pages (débuts d'adresse où l'onglet est allumé), sections (ids des parties de la page qui allument l'onglet quand on y est), chef (true = seulement pour les chefs d'équipe). 5 onglets au maximum pour rester lisible sur téléphone.",
+  "onglets": [
+    {
+      "id": "qr",
+      "libelle": { "fr": "Mon QR", "en": "My QR" },
+      "lien": "/consultants/mon-qr/",
+      "icone": "qr",
+      "pages": ["/consultants/mon-qr/"],
+      "sections": []
+    },
+    {
+      "id": "entreprises",
+      "libelle": { "fr": "Entreprises", "en": "Companies" },
+      "lien": "/consultants/mon-qr/#prep",
+      "icone": "entreprises",
+      "pages": ["/consultants/mon-qr/"],
+      "sections": ["prep", "suivi"]
+    },
+    {
+      "id": "rdv",
+      "libelle": { "fr": "Rendez-vous", "en": "Meetings" },
+      "lien": "/consultants/rendez-vous/",
+      "icone": "agenda",
+      "pages": ["/consultants/rendez-vous/"],
+      "sections": []
+    },
+    {
+      "id": "academie",
+      "libelle": { "fr": "Académie", "en": "Academy" },
+      "lien": "/consultants/academie/",
+      "icone": "academie",
+      "pages": ["/consultants/academie/", "/consultants/conditions/"],
+      "sections": []
+    },
+    {
+      "id": "equipe",
+      "libelle": { "fr": "Équipe", "en": "Team" },
+      "lien": "/consultants/mon-qr/#invit",
+      "icone": "equipe",
+      "pages": ["/consultants/mon-qr/"],
+      "sections": ["invit", "equipe"],
+      "chef": true
+    }
+  ]
+}
