@@ -146,6 +146,12 @@ legend{font-size:14px;font-weight:600;padding:0}
   <a class="btn" href="/consultants/rendez-vous/">Voir et reporter mes rendez-vous</a>
 </section>
 
+<section class="card" id="academie" hidden>
+  <h2>Académie BEAM</h2>
+  <p class="sub">Toutes les formations BEAM au même endroit, en français et en anglais : se repérer dans l’espace, les modules, la boîte à outils.</p>
+  <a class="btn" href="/consultants/academie/">Ouvrir l’académie</a>
+</section>
+
 <section class="card" id="invit" hidden>
   <h2>Inviter des consultants dans mon équipe</h2>
   <p class="sub">Envoyez ce lien aux personnes que vous recrutez. En s’inscrivant avec, elles sont rattachées à votre équipe : vous suivez leurs entreprises ici.</p>
@@ -476,7 +482,7 @@ legend{font-size:14px;font-weight:600;padding:0}
             'Si le sujet vous parle, présentez votre besoin en 1 minute ici, un expert BEAM vous rappelle pour un échange de 15 minutes :\n\n'+j.lien);
         };
         if(cfg.webhook_fiche){ $('prep').hidden=false; demandes(); }
-        $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false;
+        $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false; $('academie').hidden=false;
         if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
           $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
           $('invit-cp').onclick=function(){ partager(j.invitation,'invit-m','Lien d’invitation copié.'); };
