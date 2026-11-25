@@ -215,7 +215,12 @@ legend{font-size:14px;font-weight:600;padding:0}
     (cfg?Promise.resolve(cfg):fetch('/x/consultants.json',{cache:'no-cache'}).then(function(r){ return r.json(); }))
       .then(envoi).then(function(r){ return r.json(); }).then(function(j){
         if(!j||j.ok!==true) throw new Error('indispo');
-        m.textContent='C’est envoyé. Si cette adresse est inscrite, un e-mail avec votre nouveau lien arrive dans quelques minutes. Pensez à regarder les indésirables.'; m.className='msg ok';
+        if(j.etat==='inscription'){
+          m.className='msg err'; m.textContent='Aucun espace consultant avec cette adresse. Vérifiez l’adresse utilisée à votre inscription, ou ';
+          var l=document.createElement('a'); l.href='/consultants/?email='+encodeURIComponent(mail); l.textContent='inscrivez-vous ici'; m.appendChild(l); m.appendChild(document.createTextNode('.'));
+          go.disabled=false; return;
+        }
+        m.textContent='C’est envoyé à '+mail+'. Ouvrez l’e-mail sur ce téléphone dans quelques minutes, et pensez à regarder les indésirables.'; m.className='msg ok';
       }).catch(function(){ m.textContent='Le service BEAM ne répond pas pour le moment : rien n’est parti. Réessayez dans quelques minutes.'; m.className='msg err'; go.disabled=false; });
   };
 

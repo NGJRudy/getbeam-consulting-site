@@ -41,7 +41,24 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
 
-<section class="card">
+<section class="card" id="porte">
+  <h1>Espace consultant BEAM</h1>
+  <p class="sub">Entrez votre adresse e-mail. Déjà consultant : vous recevez votre lien de connexion. Nouveau : vous vous inscrivez en une minute.</p>
+  <form id="f-porte" novalidate>
+    <label for="email0">Adresse e-mail</label>
+    <input id="email0" name="email" type="email" autocomplete="email" inputmode="email" maxlength="160" required>
+    <div id="ts-ren" class="ts"></div>
+    <button id="b-porte" type="submit">Continuer</button>
+    <p id="m-porte" class="msg" role="status" aria-live="polite"></p>
+  </form>
+  <div id="ok-porte" class="ok" hidden>
+    <h2>Votre lien est parti</h2>
+    <p>Nous venons de l’envoyer à <b id="ok-porte-email"></b>, depuis team@getbeam-consulting.com. Ouvrez l’e-mail sur ce téléphone et touchez le bouton : vous restez connecté tant que vous revenez au moins une fois par mois.</p>
+    <p class="small">Rien reçu après 5 minutes ? Regardez dans les indésirables. <a href="#" id="autre-email">Utiliser une autre adresse</a></p>
+  </div>
+</section>
+
+<section class="card" id="pitch">
   <h1>Devenez consultant BEAM</h1>
   <p class="sub">Vous présentez BEAM à des entreprises. Quand l'une d'elles devient cliente et paie, vous touchez une commission.</p>
   <ul class="points">
@@ -54,8 +71,9 @@ button[disabled]{opacity:.45;cursor:not-allowed}
   <p class="small">Ce résumé ne remplace pas les <a id="lien-cond-1" href="/consultants/conditions/v1/" target="_blank" rel="noopener">Conditions du programme</a>, seules applicables.</p>
 </section>
 
-<section class="card" id="inscription">
+<section class="card" id="inscription" hidden>
   <h2>Inscription</h2>
+  <p id="nouveau" class="invite" hidden>Cette adresse n’a pas encore d’espace consultant. Complétez vos informations : votre QR code arrive par e-mail.</p>
   <p id="invite" class="invite" hidden>Vous avez été invité par un chef d'équipe BEAM.</p>
   <p id="activation" class="invite" hidden>Activation de votre compte consultant BEAM : votre équipe et votre QR code sont déjà enregistrés. Complétez vos informations et acceptez les Conditions pour recevoir votre QR code par e-mail.</p>
   <form id="f-ins" novalidate>
@@ -82,18 +100,6 @@ button[disabled]{opacity:.45;cursor:not-allowed}
   </div>
 </section>
 
-<section class="card" id="renvoi">
-  <h2>Déjà consultant ?</h2>
-  <p class="sub">Entrez votre adresse e-mail : nous vous renvoyons votre QR code.</p>
-  <form id="f-ren" novalidate>
-    <label for="email2">Adresse e-mail</label>
-    <input id="email2" name="email" type="email" autocomplete="email" maxlength="160" required>
-    <div id="ts-ren" class="ts"></div>
-    <button id="b-ren" type="submit">Recevoir mon QR code</button>
-    <p id="m-ren" class="msg" role="status" aria-live="polite"></p>
-  </form>
-</section>
-
 <p class="small">Une question ? <a href="mailto:team@getbeam-consulting.com">team@getbeam-consulting.com</a></p>
 </main>
 <script>
@@ -109,13 +115,23 @@ button[disabled]{opacity:.45;cursor:not-allowed}
   var act=(new URLSearchParams(location.search).get('activer')||'').split('.');
   var activerId=(act[0]||'').toLowerCase(), activerCode=act[1]||'';
   if(!ID.test(activerId)||!/^[a-f0-9]{16,64}$/.test(activerCode)){ activerId=''; activerCode=''; }
+  var emailUrl=(new URLSearchParams(location.search).get('email')||'').trim().toLowerCase();
   if(activerId){ parrain=''; $('activation').hidden=false; }
   else if(parrain) $('invite').hidden=false;
+  if(emailUrl&&/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailUrl)) $('email0').value=emailUrl;
+  // Lien d'activation : la personne a déjà une fiche préparée, on va droit au formulaire.
+  function montrerInscription(email,nouveau){
+    $('inscription').hidden=false; $('nouveau').hidden=!nouveau;
+    if(email) $('email').value=email;
+    $('inscription').scrollIntoView({behavior:'smooth',block:'start'});
+    setTimeout(function(){ try{ $(email?'prenom':'email').focus({preventScroll:true}); }catch(e){} },350);
+  }
+  if(activerId){ $('porte').hidden=true; $('inscription').hidden=false; }
 
   function msg(el,t,err){ el.textContent=t||''; el.className='msg'+(err?' err':''); }
   function ferme(raison){
-    ['b-ins','b-ren'].forEach(function(b){ $(b).disabled=true; });
-    msg($('m-ins'),raison,false); msg($('m-ren'),raison,false);
+    ['b-ins','b-porte'].forEach(function(b){ $(b).disabled=true; });
+    msg($('m-ins'),raison,false); msg($('m-porte'),raison,false);
   }
 
   function chargeTurnstile(cle){
@@ -135,7 +151,7 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 
   function envoyer(data){
     return fetch(CFG.webhook,{method:'POST',body:new URLSearchParams(data)}).then(function(r){
-      return r.json().catch(function(){ return null; }).then(function(j){
+      return r.json().catch(function(){ throw new Error('indispo'); }).then(function(j){
         if(!r.ok||!j||j.ok!==true) throw new Error((j&&j.erreur)||('HTTP '+r.status));
         return j;
       });
@@ -178,27 +194,33 @@ button[disabled]{opacity:.45;cursor:not-allowed}
     envoyer(d).then(function(){
       $('f-ins').hidden=true; $('ok-email').textContent=d.email; $('ok-ins').hidden=false;
       $('ok-ins').scrollIntoView({behavior:'smooth',block:'start'});
-    }).catch(function(){
+    }).catch(function(err){
       b.disabled=false; reset('ins');
-      msg(m,'L’envoi n’a pas abouti. Réessayez, ou écrivez à team@getbeam-consulting.com.',true);
+      msg(m,err&&err.message==='indispo'?'Le service BEAM ne répond pas pour le moment : rien n’est parti. Réessayez dans quelques minutes.':'L’envoi n’a pas abouti. Réessayez, ou écrivez à team@getbeam-consulting.com.',true);
     });
   });
 
-  $('f-ren').addEventListener('submit',function(e){
+  // Porte unique : l'adresse a déjà un espace -> BEAM envoie le lien ; sinon -> formulaire d'inscription.
+  $('f-porte').addEventListener('submit',function(e){
     e.preventDefault();
-    var m=$('m-ren'), b=$('b-ren');
+    var m=$('m-porte'), b=$('b-porte');
     if(!CFG||!CFG.webhook) return;
-    var email=$('email2').value.trim().toLowerCase();
+    var email=$('email0').value.trim().toLowerCase();
     if(!EMAIL.test(email)) return msg(m,'Adresse e-mail invalide.',true);
     var t=jeton('ren');
     if(CFG.turnstile_sitekey&&!t) return msg(m,'Merci de valider la vérification anti-robot.',true);
-    b.disabled=true; msg(m,'Envoi…');
-    envoyer({action:'renvoi',email:email,turnstile:t,page:location.href.split('#')[0]}).then(function(){
-      msg(m,'Si cette adresse est inscrite, un e-mail avec votre QR code vient de partir.');
-    }).catch(function(){
+    b.disabled=true; msg(m,'Un instant…');
+    envoyer({action:'renvoi',email:email,turnstile:t,page:location.href.split('#')[0]}).then(function(j){
+      b.disabled=false; msg(m,'');
+      if(j.etat==='lien'){ $('f-porte').hidden=true; $('ok-porte-email').textContent=email; $('ok-porte').hidden=false; return; }
+      montrerInscription(email,true);
+    }).catch(function(err){
       b.disabled=false; reset('ren');
-      msg(m,'L’envoi n’a pas abouti. Réessayez dans un instant.',true);
+      msg(m,err&&err.message==='indispo'?'Le service BEAM ne répond pas pour le moment. Réessayez dans quelques minutes.':'L’envoi n’a pas abouti. Réessayez dans un instant.',true);
     });
+  });
+  $('autre-email').addEventListener('click',function(e){
+    e.preventDefault(); $('ok-porte').hidden=true; $('f-porte').hidden=false; $('email0').value=''; $('email0').focus();
   });
 })();
 </script>
