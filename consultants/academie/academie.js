@@ -109,6 +109,7 @@
       if(!c.webhook||!cfg||!Array.isArray(cfg.documents)) throw new Error('ferme');
       return fetch(c.webhook,{method:'POST',body:new URLSearchParams({action:'verification',id:a,jeton:t})}).then(function(r){ return r.json(); }).then(function(j){
         if(!j||j.ok!==true){ try{ localStorage.removeItem(CLE); }catch(e){} erreur(A.t('acces')); return; }
+        if(typeof j.id==='string'&&ID.test(j.id)&&j.id!==a){ try{ var s2=JSON.parse(localStorage.getItem(CLE)||'{}'); s2.a=j.id; localStorage.setItem(CLE,JSON.stringify(s2)); }catch(e){} }
         A.cfg=cfg; ok(cfg);
       });
     }).catch(function(){ erreur(A.t('ferme')); });
