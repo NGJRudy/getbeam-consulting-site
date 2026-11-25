@@ -79,11 +79,11 @@ a{color:var(--brand)}
   var T={
     fr:{titre:'Académie BEAM',intro:'Toutes les formations BEAM, au même endroit. Lisez-les dans l’ordre, puis revenez à la boîte à outils quand vous en avez besoin.',
         retour:'Retour à mon espace',aide:'Une question ? team@getbeam-consulting.com',ouvrir:'Ouvrir',lire:'Lire',lu:'Marquer comme lu',fait:'Lu',min:' min',bientot:'Bientôt disponible',
-        enfr:' (en français)',suivant:'Votre prochaine étape',bravo:'Vous avez tout lu. Gardez la boîte à outils sous la main.',progres:function(n,t){ return n+' sur '+t+' lus'; },
+        enfr:' (en français)',suivant:'Votre prochaine étape',bravo:'Vous avez tout lu. Gardez la boîte à outils sous la main.',attente:'Les prochains modules arrivent bientôt. En attendant, la boîte à outils est à vous.',progres:function(n,t){ return n+' sur '+t+' lus'; },
         acces:'Cette page s’ouvre depuis votre espace consultant. Ouvrez-le avec le bouton de votre e-mail BEAM, puis revenez ici.',ferme:'L’académie n’est pas disponible pour le moment.'},
     en:{titre:'BEAM Academy',intro:'All BEAM training in one place. Read it in order, then come back to the toolbox whenever you need it.',
         retour:'Back to my space',aide:'Questions? team@getbeam-consulting.com',ouvrir:'Open',lire:'Read',lu:'Mark as read',fait:'Read',min:' min',bientot:'Coming soon',
-        enfr:' (in French)',suivant:'Your next step',bravo:'You have read everything. Keep the toolbox at hand.',progres:function(n,t){ return n+' of '+t+' read'; },
+        enfr:' (in French)',suivant:'Your next step',bravo:'You have read everything. Keep the toolbox at hand.',attente:'The next modules are coming soon. In the meantime, the toolbox is yours.',progres:function(n,t){ return n+' of '+t+' read'; },
         acces:'This page opens from your consultant space. Open it with the button in your BEAM e-mail, then come back here.',ferme:'The academy is not available right now.'}
   };
   var L='fr', cfg=null, lu={};
@@ -106,7 +106,7 @@ a{color:var(--brand)}
     var prochain=dispo.filter(function(d){ return d.section!=='outils'&&!lu[d.id]; })[0];
     var sv=$('suivant');
     if(prochain){ sv.hidden=false; sv.href=lien(prochain); sv.textContent=''; sv.appendChild(el('small',null,T[L].suivant)); sv.appendChild(el('b',null,tx(prochain.titre)+(prochain.minutes?' · '+prochain.minutes+T[L].min:''))); }
-    else { sv.hidden=false; sv.removeAttribute('href'); sv.textContent=''; sv.appendChild(el('b',null,T[L].bravo)); }
+    else { var reste=cfg.documents.some(function(d){ return d.section!=='outils'&&!sur(lien(d)); }); sv.hidden=false; sv.removeAttribute('href'); sv.textContent=''; sv.appendChild(el('b',null,reste?T[L].attente:T[L].bravo)); }
 
     cfg.sections.forEach(function(s){
       var docs=cfg.documents.filter(function(d){ return d.section===s.id; });
