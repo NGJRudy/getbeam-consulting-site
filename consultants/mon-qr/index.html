@@ -129,6 +129,7 @@ legend{font-size:14px;font-weight:600;padding:0}
       <label class="choix"><input type="radio" name="niveau" value="decideur"><span>Je connais un décideur<br><small>direction, DSI, CTO, responsable infrastructure ou data</small></span></label>
       <label class="choix"><input type="radio" name="niveau" value="interne"><span>Je connais quelqu’un dedans, mais pas le décideur<br><small>par exemple un commercial ou un collègue</small></span></label>
       <label class="choix"><input type="radio" name="niveau" value="aucun"><span>Je ne connais encore personne</span></label>
+      <label class="choix"><input type="radio" name="niveau" value="contexte"><span>Je veux seulement voir ses cas d’usage<br><small>ce que BEAM pourrait lui apporter, sans l’approcher pour l’instant : pas de demande de feu vert</small></span></label>
     </fieldset>
     <label class="ch" id="l-contact" hidden>Votre contact : nom et poste<input id="p-contact" maxlength="150" placeholder="Par exemple : Awa Koné, commerciale"></label>
     <fieldset id="rdv-q" hidden>
@@ -144,6 +145,8 @@ legend{font-size:14px;font-weight:600;padding:0}
       <label class="ch">Poste<input id="r-poste" maxlength="80" placeholder="Par exemple : DSI" autocomplete="off"></label>
       <label class="ch">E-mail professionnel<input id="r-email" type="email" maxlength="120" inputmode="email" autocomplete="off" placeholder="prenom.nom@entreprise.com"></label>
       <label class="ch">Téléphone<input id="r-tel" type="tel" maxlength="30" inputmode="tel" autocomplete="off" placeholder="+225 07 00 00 00 00"></label>
+      <label class="ch">Autres personnes à inviter (facultatif)<input id="r-invites" maxlength="400" inputmode="email" autocomplete="off" placeholder="adresses e-mail séparées par une virgule"></label>
+      <p class="tz" style="margin-top:4px">Jusqu’à 5 personnes : collègues de l’entreprise ou de votre équipe. Chacune reçoit l’invitation au rendez-vous.</p>
       <label class="ch">Ce qu’elle attend de l’échange (facultatif)<input id="r-besoin" maxlength="300" placeholder="Par exemple : transférer ses sauvegardes vers un autre site"></label>
       <p class="ch" style="margin:16px 0 0;font-size:14px;font-weight:600">Date et heure du rendez-vous (15 minutes en visio avec un expert BEAM)</p>
       <div class="jours" id="r-jours" role="group" aria-label="Jour"></div>
@@ -447,7 +450,7 @@ legend{font-size:14px;font-weight:600;padding:0}
     }
     return b;
   }
-  var ETAT={attente:['En attente du feu vert',''],valide:['Feu vert','valide'],refuse:['Pas de feu vert','refuse']};
+  var ETAT={contexte:['Pour information',''],attente:['En attente du feu vert',''],valide:['Feu vert','valide'],refuse:['Pas de feu vert','refuse']};
   function demandes(){
     if(!cfg.webhook_fiche) return;
     fetch(cfg.webhook_fiche,{method:'POST',body:new URLSearchParams({action:'mes',id:a,jeton:t})})
@@ -468,7 +471,7 @@ legend{font-size:14px;font-weight:600;padding:0}
         });
       }).catch(function(){});
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name=niveau]'),function(r){ r.onchange=function(){ $('l-contact').hidden=(r.value==='aucun'&&r.checked); majRdv(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=niveau]'),function(r){ r.onchange=function(){ $('l-contact').hidden=((r.value==='aucun'||r.value==='contexte')&&r.checked); majRdv(); }; });
 
   // ------------------------------------------------ rendez-vous calé par le consultant (l'entreprise a déjà dit oui)
   var RDV={slots:[],jour:'',choix:0,charge:false,cfg:null};
@@ -480,7 +483,7 @@ legend{font-size:14px;font-weight:600;padding:0}
     var n=(document.querySelector('input[name=niveau]:checked')||{}).value;
     $('rdv-q').hidden=!(n==='decideur'||n==='interne');
     var v=rdvVoulu(); $('rdv-zone').hidden=!v;
-    $('p-go').textContent=v?'Caler le rendez-vous et préparer la fiche':'Préparer la fiche et demander le feu vert';
+    $('p-go').textContent=v?'Caler le rendez-vous et préparer la fiche':n==='contexte'?'Voir les cas d’usage':'Préparer la fiche et demander le feu vert';
     if(v&&!RDV.charge) chargerCreneaux();
   }
   Array.prototype.forEach.call(document.querySelectorAll('input[name=rdvq]'),function(r){ r.onchange=majRdv; });
@@ -518,30 +521,35 @@ legend{font-size:14px;font-weight:600;padding:0}
     var niv=(document.querySelector('input[name=niveau]:checked')||{}).value||'';
     if(!niv){ m.textContent='Indiquez votre lien avec cette entreprise.'; m.className='msg err'; return; }
     var ct=$('p-contact').value.trim().toLowerCase(), moiNom=((moi&&moi.prenom)||'').trim().toLowerCase();
-    if(niv!=='aucun'&&ct.length<3&&!rdvVoulu()){ m.textContent='Indiquez le nom et le poste de votre contact dans cette entreprise.'; m.className='msg err'; $('p-contact').focus(); return; }
-    if(niv!=='aucun'&&moiNom&&ct.indexOf(moiNom)===0){ m.textContent='Indiquez le nom de votre contact dans l’entreprise, pas le vôtre.'; m.className='msg err'; $('p-contact').focus(); return; }
+    if(niv!=='aucun'&&niv!=='contexte'&&ct.length<3&&!rdvVoulu()){ m.textContent='Indiquez le nom et le poste de votre contact dans cette entreprise.'; m.className='msg err'; $('p-contact').focus(); return; }
+    if(niv!=='aucun'&&niv!=='contexte'&&moiNom&&ct.indexOf(moiNom)===0){ m.textContent='Indiquez le nom de votre contact dans l’entreprise, pas le vôtre.'; m.className='msg err'; $('p-contact').focus(); return; }
     var R=rdvVoulu(), rd={};
     if(R){
       rd={rdv:'1',c_prenom:$('r-prenom').value.trim(),c_nom:$('r-nom').value.trim(),c_poste:$('r-poste').value.trim(),c_email:$('r-email').value.trim().toLowerCase(),c_tel:$('r-tel').value.trim(),besoin:$('r-besoin').value.trim(),rdv_ms:String(RDV.choix||'')};
       var manque=!rd.c_prenom?'r-prenom':!rd.c_nom?'r-nom':!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rd.c_email)?'r-email':rd.c_tel.replace(/\D/g,'').length<8?'r-tel':'';
       if(manque){ m.textContent=manque==='r-email'?'Indiquez une adresse e-mail valide pour votre contact.':manque==='r-tel'?'Indiquez le numéro de téléphone de votre contact.':'Indiquez le prénom et le nom de votre contact.'; m.className='msg err'; $(manque).focus(); return; }
+      var inv=$('r-invites').value.toLowerCase().split(/[\s,;]+/).filter(Boolean), vus={}, mauvais='';
+      inv=inv.filter(function(e){ if(!/^[^\s@"\\]+@[^\s@"\\]+\.[^\s@"\\]{2,}$/.test(e)){ mauvais=mauvais||e; return false; } if(vus[e]||e===rd.c_email) return false; vus[e]=1; return true; });
+      if(mauvais){ m.textContent='Cette adresse n’est pas valide : '+mauvais+'.'; m.className='msg err'; $('r-invites').focus(); return; }
+      if(inv.length>5){ m.textContent='Invitez 5 personnes au maximum.'; m.className='msg err'; $('r-invites').focus(); return; }
+      rd.invites=inv.join(',');
       if(!RDV.choix){ m.textContent='Choisissez la date et l’heure du rendez-vous.'; m.className='msg err'; $('r-jours').scrollIntoView({block:'center'}); return; }
       if(!ct) $('p-contact').value=(rd.c_prenom+' '+rd.c_nom).trim()+(rd.c_poste?', '+rd.c_poste:'');
     }
     go.disabled=true; go.textContent=R?'Réservation et recherche en cours…':'Recherche en cours…'; m.className='msg'; m.textContent='BEAM cherche les informations publiques sur '+ent+'. Comptez 30 secondes à 1 minute.';
     $('p-res').textContent='';
     var ctl=window.AbortController?new AbortController():null, minuteur=setTimeout(function(){ if(ctl) ctl.abort(); },150000);
-    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams(Object.assign({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim(),niveau:niv,contact:niv==='aucun'?'':$('p-contact').value.trim()},rd))})
+    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams(Object.assign({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim(),niveau:niv,contact:(niv==='aucun'||niv==='contexte')?'':$('p-contact').value.trim()},rd))})
       .then(function(r){ return r.json(); }).then(function(j){
         if(!j||j.ok!==true) throw j||{};
         var f=j.fiche||{}, box=el('div','fiche');
         box.appendChild(el('h3',null,j.entreprise||ent));
-        box.appendChild(el('span','etat','En attente du feu vert'));
+        box.appendChild(el('span','etat',j.contexte?'Pour information : pas de demande de feu vert':'En attente du feu vert'));
         if(j.rdv) box.appendChild(el('p','rdv-ok','Rendez-vous calé : '+j.rdv+(rd.c_prenom?' avec '+rd.c_prenom+' '+rd.c_nom:'')+'. L’entreprise reçoit l’invitation par e-mail.'));
-        if(j.connue) box.appendChild(el('p','note','BEAM connaît déjà cette entreprise : l’équipe vérifie qui la suit avant de répondre.'));
+        if(j.connue) box.appendChild(el('p','note',j.contexte?'BEAM connaît déjà cette entreprise : avant de l’approcher, demandez le feu vert.':'BEAM connaît déjà cette entreprise : l’équipe vérifie qui la suit avant de répondre.'));
         box.appendChild(blocFiche(f));
         $('p-res').appendChild(box);
-        m.className='msg ok'; m.textContent=j.rdv?'Rendez-vous calé et demande de feu vert envoyée à BEAM. Réponse par e-mail sous 48 heures.':'Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
+        m.className='msg ok'; m.textContent=j.contexte?'Voici ce que BEAM pourrait apporter à cette entreprise. Rien n’a été envoyé à l’équipe : pour l’approcher, refaites une demande en choisissant votre lien avec elle.':j.rdv?'Rendez-vous calé et demande de feu vert envoyée à BEAM. Réponse par e-mail sous 48 heures.':'Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
         $('f-prep').reset(); $('l-contact').hidden=true; RDV.charge=false; RDV.choix=0; majRdv(); demandes();
       }).catch(function(j){
         var r=j&&j.raison;
