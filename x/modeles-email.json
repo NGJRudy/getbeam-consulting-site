@@ -1,0 +1,37 @@
+{
+  "_aide": "Modèles des e-mails que le consultant prépare depuis « Préparer une entreprise ». Lu par la page mon-qr (texte pré-rempli, modifiable par le consultant) ET par Make au feu vert d'Astrid (bloc fixe ajouté sous le texte). Ajouter un contexte = ajouter une entrée dans « contextes » (l'ordre ici = l'ordre affiché). Variables du texte : {prenom} (contact), {entreprise}, {consultant} (prénom + nom), {date} (rendez-vous, contexte rdv seulement). Variables du bloc fixe : {date}. Jamais de prix dans ces modèles.",
+  "version": 1,
+  "objet_max": 140,
+  "texte_max": 2000,
+  "contextes": [
+    {
+      "id": "rdv",
+      "titre": "Rendez-vous convenu",
+      "aide": "Vous avez fixé une date ensemble. Vous choisissez le créneau, l’e-mail confirme le rendez-vous.",
+      "creneau": true,
+      "objet": "Découverte BEAM : notre rendez-vous du {date}",
+      "texte": "Bonjour {prenom},\n\nComme convenu avec {consultant}, je vous confirme notre rendez-vous du {date} : un échange de 15 minutes en visio avec un expert BEAM, pour voir ensemble ce que BEAM peut apporter à {entreprise}.\n\nL’invitation est arrivée dans votre agenda : le lien de la visio s’y trouve.\n\nPour préparer l’échange, vous pouvez déjà parcourir la documentation ci-dessous.",
+      "bloc": "<p style='margin:0 0 12px'><b>Votre rendez-vous</b> : {date}, 15 minutes en visio (lien dans l’invitation de votre agenda).</p>"
+    },
+    {
+      "id": "decouverte",
+      "titre": "Découverte : envoyer la documentation",
+      "aide": "La personne veut en savoir plus. Elle reçoit la documentation et l’accès à la console pour tester.",
+      "creneau": false,
+      "objet": "Découverte BEAM : la documentation pour {entreprise}",
+      "texte": "Bonjour {prenom},\n\nSuite à votre échange avec {consultant}, voici de quoi découvrir BEAM : la documentation, et l’accès à la console pour créer votre clé API et tester par vous-même.\n\nSi vous le souhaitez, un expert BEAM peut vous montrer en 15 minutes ce que BEAM peut apporter à {entreprise}.",
+      "bloc": "<p style='margin:0 0 6px'><b>Démarrer en 3 étapes</b></p><ol style='margin:0 0 12px;padding-left:22px'><li>Créez votre compte et votre organisation : <a href='https://console.b1m.ai' style='color:#1a56db'>console.b1m.ai</a></li><li>Dans la console, ouvrez « API Keys » et créez votre clé (elle ne s’affiche qu’une fois : copiez-la tout de suite).</li><li>Suivez le guide jusqu’au premier transfert : <a href='https://docs.b1m.ai/docs/developer-quickstart' style='color:#1a56db'>guide de démarrage</a></li></ol><p style='margin:0 0 12px'><b>Échanger 15 minutes avec un expert</b> : <a href='https://getbeam-consulting.com/rendez-vous/' style='color:#1a56db'>choisir un créneau</a></p>"
+    },
+    {
+      "id": "relation",
+      "titre": "Mise en relation avec le décideur",
+      "aide": "Votre contact n’est pas le décideur. L’e-mail lui demande de vous présenter à la bonne personne.",
+      "creneau": false,
+      "objet": "Découverte BEAM : présentation pour {entreprise}",
+      "texte": "Bonjour {prenom},\n\nMerci pour votre échange avec {consultant}. Comme évoqué, BEAM peut intéresser {entreprise} : déplacer et diffuser des données entre stockages, serveurs et agents IA, plus vite et pour moins cher.\n\nPourriez-vous nous mettre en relation avec la personne qui s’occupe de l’infrastructure ou des données (DSI, CTO, responsable technique) ? Vous pouvez simplement lui transférer cet e-mail.\n\nLa documentation ci-dessous lui donnera tout le contexte.",
+      "bloc": "<p style='margin:0 0 12px'><b>Pour la personne concernée</b> : elle peut réserver directement 15 minutes avec un expert BEAM ici : <a href='https://getbeam-consulting.com/rendez-vous/' style='color:#1a56db'>choisir un créneau</a></p>"
+    }
+  ],
+  "bloc_commun": "<p style='margin:0 0 6px'><b>La documentation BEAM</b></p><ul style='margin:0 0 12px;padding-left:22px'><li>Transferts de données (S3, R2, GCS, vos serveurs) : <a href='https://docs.b1m.ai/docs/transfers' style='color:#1a56db'>Transferts</a></li><li>Rooms et agents IA : <a href='https://docs.b1m.ai/docs/agent' style='color:#1a56db'>Beam for Agents</a></li><li>Studio, installé chez vous : <a href='https://docs.b1m.ai/docs/studio' style='color:#1a56db'>Studio</a></li><li>Toute la documentation : <a href='https://docs.b1m.ai' style='color:#1a56db'>docs.b1m.ai</a></li></ul>",
+  "signature": "<p style='margin:16px 0 0'>L’équipe BEAM<br><a href='mailto:team@getbeam-consulting.com' style='color:#1a56db'>team@getbeam-consulting.com</a></p>"
+}

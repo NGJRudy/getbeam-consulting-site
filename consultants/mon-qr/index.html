@@ -89,6 +89,21 @@ legend{font-size:14px;font-weight:600;padding:0}
 .jours button[aria-pressed="true"] small{color:#dfe6ff}
 .tz{font-size:13px;color:var(--muted);margin:6px 0 0}
 .rdv-ok{font-size:15px;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#e6f4ec;color:var(--ok);font-weight:600}
+/* Contact, choix de l'étape et e-mail préparé (étapes de la fiche) */
+.bloc{border-top:1px solid var(--line);margin:20px 0 0;padding:16px 0 0}
+.bt{font-size:16px;line-height:22px;margin:0;font-weight:700}
+.aide{font-size:14px;line-height:20px;color:var(--muted);margin:4px 0 0}
+.autre{border:1px solid var(--line);border-radius:12px;padding:2px 12px 12px;margin:12px 0 0}
+.autre .duo2 input{margin-top:6px}
+.autre .retirer{width:auto;min-height:40px;margin:8px 0 0;padding:6px 12px;font-size:14px;background:#fff;color:var(--danger);border:1px solid var(--line)}
+.petit{min-height:44px;font-size:15px}
+.choix.accord{background:#fffbf2;border-color:#f0c36a}
+.apercu{border:1px solid var(--line);border-radius:12px;margin:12px 0 0;background:#fff}
+.apercu summary{cursor:pointer;padding:12px 14px;font-size:15px;font-weight:600;color:var(--brand)}
+.apercu .tete{font-size:13px;line-height:20px;color:var(--muted);padding:0 14px 10px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.apercu .corps{padding:12px 14px;font:400 15px/24px Arial,Helvetica,sans-serif;overflow-wrap:anywhere}
+.apercu .corps .txt{white-space:pre-wrap;margin:0 0 12px}
+@media (max-width:380px){.duo2{grid-template-columns:1fr}}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
@@ -131,28 +146,43 @@ legend{font-size:14px;font-weight:600;padding:0}
       <label class="choix"><input type="radio" name="niveau" value="aucun"><span>Je ne connais encore personne</span></label>
       <label class="choix"><input type="radio" name="niveau" value="contexte"><span>Je veux seulement voir ses cas d’usage<br><small>ce que BEAM pourrait lui apporter, sans l’approcher pour l’instant : pas de demande de feu vert</small></span></label>
     </fieldset>
-    <label class="ch" id="l-contact" hidden>Votre contact : nom et poste<input id="p-contact" maxlength="150" placeholder="Par exemple : Awa Koné, commerciale"></label>
-    <fieldset id="rdv-q" hidden>
-      <legend>L’entreprise a-t-elle déjà accepté un rendez-vous avec BEAM ?</legend>
-      <label class="choix"><input type="radio" name="rdvq" value="oui"><span>Oui, on a fixé une date ensemble<br><small>vous calez le rendez-vous maintenant, l’entreprise reçoit l’invitation</small></span></label>
-      <label class="choix"><input type="radio" name="rdvq" value="non" checked><span>Pas encore</span></label>
-    </fieldset>
-    <div class="rdv-zone" id="rdv-zone" hidden>
+    <input type="hidden" id="p-contact">
+    <div class="bloc" id="z-ct" hidden>
+      <p class="bt">Votre contact dans l’entreprise</p>
+      <p class="aide">BEAM s’en sert pour le rappeler et lui écrire. Rien ne lui est envoyé avant le feu vert d’Astrid.</p>
       <div class="duo2">
-        <label class="ch">Prénom<input id="r-prenom" maxlength="60" autocomplete="off"></label>
-        <label class="ch">Nom<input id="r-nom" maxlength="60" autocomplete="off"></label>
+        <label class="ch">Prénom<input id="r-prenom" maxlength="60" autocomplete="off" autocapitalize="words"></label>
+        <label class="ch">Nom<input id="r-nom" maxlength="60" autocomplete="off" autocapitalize="words"></label>
       </div>
-      <label class="ch">Poste<input id="r-poste" maxlength="80" placeholder="Par exemple : DSI" autocomplete="off"></label>
-      <label class="ch">E-mail professionnel<input id="r-email" type="email" maxlength="120" inputmode="email" autocomplete="off" placeholder="prenom.nom@entreprise.com"></label>
+      <label class="ch">Poste<input id="r-poste" maxlength="80" placeholder="Par exemple : DSI, commerciale" autocomplete="off"></label>
+      <label class="ch">E-mail professionnel<input id="r-email" type="email" maxlength="120" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="prenom.nom@entreprise.com"></label>
       <label class="ch">Téléphone<input id="r-tel" type="tel" maxlength="30" inputmode="tel" autocomplete="off" placeholder="+225 07 00 00 00 00"></label>
-      <label class="ch">Autres personnes à inviter (facultatif)<input id="r-invites" maxlength="400" inputmode="email" autocomplete="off" placeholder="adresses e-mail séparées par une virgule"></label>
-      <p class="tz" style="margin-top:4px">Jusqu’à 5 personnes : collègues de l’entreprise ou de votre équipe. Chacune reçoit l’invitation au rendez-vous.</p>
-      <label class="ch">Ce qu’elle attend de l’échange (facultatif)<input id="r-besoin" maxlength="300" placeholder="Par exemple : transférer ses sauvegardes vers un autre site"></label>
-      <p class="ch" style="margin:16px 0 0;font-size:14px;font-weight:600">Date et heure du rendez-vous (15 minutes en visio avec un expert BEAM)</p>
+      <div id="autres"></div>
+      <button type="button" class="sec petit" id="aj-autre">Ajouter une autre personne (collègue, décideur)</button>
+      <p class="aide" id="aj-aide">Jusqu’à 5 personnes. Elles seront en copie de l’e-mail ou invitées au rendez-vous.</p>
+      <label class="ch">Ce qu’elle attend de BEAM (facultatif)<input id="r-besoin" maxlength="300" placeholder="Par exemple : transférer ses sauvegardes vers un autre site"></label>
+      <label class="choix accord"><input type="checkbox" id="r-ok"><span>Ces personnes sont d’accord pour être contactées par BEAM<br><small>obligatoire : vous l’avez vérifié avec elles</small></span></label>
+    </div>
+    <fieldset class="bloc" id="z-act" hidden>
+      <legend class="bt">Ce que vous voulez faire</legend>
+      <div id="acts"></div>
+    </fieldset>
+    <div class="bloc" id="z-cr" hidden>
+      <p class="bt">Date et heure du rendez-vous</p>
+      <p class="aide">15 minutes en visio avec un expert BEAM. Le créneau est réservé tout de suite : l’invitation part dans l’agenda des personnes.</p>
       <div class="jours" id="r-jours" role="group" aria-label="Jour"></div>
       <div class="heures" id="r-heures" role="group" aria-label="Heure"></div>
       <p class="tz" id="r-tz"></p>
       <p class="msg" id="r-m" role="status"></p>
+    </div>
+    <div class="bloc" id="z-mail" hidden>
+      <p class="bt">L’e-mail que recevra l’entreprise</p>
+      <p class="aide">Déjà rempli : relisez-le et modifiez-le si besoin. Il partira de team@getbeam-consulting.com dès le feu vert d’Astrid, avec vous en copie.</p>
+      <label class="ch">Objet<input id="m-objet" maxlength="140" autocomplete="off"></label>
+      <label class="ch">Message<textarea id="m-texte" maxlength="2000" rows="10"></textarea></label>
+      <p class="tz" id="m-cpt"></p>
+      <p class="aide">Ajouté automatiquement sous votre message, sans modification possible : la documentation BEAM, les liens utiles et la signature.</p>
+      <details class="apercu" id="m-ap"><summary>Voir l’e-mail tel qu’il partira</summary><div class="tete" id="m-tete"></div><div class="corps" id="m-corps"></div></details>
     </div>
     <label class="ch">Ce que vous en savez<textarea id="p-note" maxlength="600" placeholder="Par exemple : je connais le DSI, ils ouvrent un bureau à Dakar."></textarea></label>
     <button type="submit" id="p-go">Préparer la fiche et demander le feu vert</button>
@@ -464,6 +494,7 @@ legend{font-size:14px;font-weight:600;padding:0}
           s.appendChild(el('span','etat '+e[1],e[0]+(x.s==='refuse'&&x.r?' : '+x.r:'')+(x.s==='valide'&&x.x?', réservée jusqu’au '+date(Number(x.x)):'')));
           if(x.d) s.appendChild(el('span','qui',' · demandée le '+date(Number(x.d))));
           if(x.rv) s.appendChild(el('p','rdv-ok','Rendez-vous calé : '+x.rv+(x.ra?' avec '+x.ra:'')));
+          if(x.mn==='1'&&x.mo) s.appendChild(el('p','note','E-mail préparé « '+x.mo+' » : '+(x.s==='valide'?(x.mr==='ok'?'envoyé.':'pas encore parti, BEAM s’en occupe.'):x.s==='refuse'?'non envoyé.':'partira au feu vert.')));
           d.appendChild(s);
           if(x.f&&typeof x.f==='object') d.appendChild(blocFiche(x.f));
           if(x.s==='valide') d.appendChild(el('p','note','Quand vous la rencontrez, faites-lui scanner votre QR code : elle sera rattachée à vous. Ne donnez pas de prix, l’expert BEAM s’en charge.'));
@@ -471,97 +502,193 @@ legend{font-size:14px;font-weight:600;padding:0}
         });
       }).catch(function(){});
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name=niveau]'),function(r){ r.onchange=function(){ $('l-contact').hidden=((r.value==='aucun'||r.value==='contexte')&&r.checked); majRdv(); }; });
 
-  // ------------------------------------------------ rendez-vous calé par le consultant (l'entreprise a déjà dit oui)
-  var RDV={slots:[],jour:'',choix:0,charge:false,cfg:null};
+
+  // ------------------------------------------------ contact, étape choisie, créneau et e-mail préparé
+  // Les contextes d'e-mail (texte de base, bloc fixe) viennent de /x/modeles-email.json : ajouter un contexte = ajouter une entrée.
+  var MOD=null, CR={slots:[],jour:'',choix:0,charge:false,cfg:null}, BROUILLONS={}, MAILV={};
   var TZC=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'Europe/Paris';
+  // Fuseau écrit dans l'e-mail envoyé à l'entreprise : celui du consultant, sauf les Amériques (heure de Paris par défaut).
+  var TZM=/^America\//.test(TZC)?'Europe/Paris':TZC, VILLE=TZM.split('/').pop().replace(/_/g,' ');
   var fJour=new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short',timeZone:TZC}), fCle=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:TZC}),
-      fHeure=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:TZC}), fLong=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:TZC});
-  function rdvVoulu(){ var n=(document.querySelector('input[name=niveau]:checked')||{}).value, q=(document.querySelector('input[name=rdvq]:checked')||{}).value; return (n==='decideur'||n==='interne')&&q==='oui'; }
-  function majRdv(){
-    var n=(document.querySelector('input[name=niveau]:checked')||{}).value;
-    $('rdv-q').hidden=!(n==='decideur'||n==='interne');
-    var v=rdvVoulu(); $('rdv-zone').hidden=!v;
-    $('p-go').textContent=v?'Caler le rendez-vous et préparer la fiche':n==='contexte'?'Voir les cas d’usage':'Préparer la fiche et demander le feu vert';
-    if(v&&!RDV.charge) chargerCreneaux();
+      fHeure=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:TZC}), fLong=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:TZC}),
+      fMail=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:TZM});
+  var MAILRE=/^[^\s@"\\<>,;]+@[^\s@"\\<>,;]+\.[^\s@"\\<>,;]{2,}$/;
+  function val(id){ return $(id).value.trim(); }
+  function niveau(){ return (document.querySelector('input[name=niveau]:checked')||{}).value||''; }
+  function etape(){ return (document.querySelector('input[name=etape]:checked')||{}).value||''; }
+  function ctx(id){ return MOD&&MOD.contextes.filter(function(c){ return c.id===id; })[0]||null; }
+  function connait(){ var n=niveau(); return n==='decideur'||n==='interne'; }
+  function chargerModeles(){
+    fetch('/x/modeles-email.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(m){
+      if(!m||!Array.isArray(m.contextes)) throw 0; MOD=m; dessinerEtapes(); majForm();
+    }).catch(function(){ MOD={contextes:[]}; dessinerEtapes(); majForm(); });
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name=rdvq]'),function(r){ r.onchange=majRdv; });
+  function dessinerEtapes(){
+    var Z=$('acts'); Z.textContent='';
+    MOD.contextes.concat([{id:'aucun',titre:'Rien à envoyer pour l’instant',aide:'Vous demandez seulement le feu vert et la fiche.'}]).forEach(function(c){
+      var l=el('label','choix'), i=el('input'), sp=el('span');
+      i.type='radio'; i.name='etape'; i.value=c.id; i.onchange=function(){ choisirEtape(); };
+      sp.appendChild(document.createTextNode(c.titre)); sp.appendChild(el('br')); sp.appendChild(el('small',null,c.aide||''));
+      l.appendChild(i); l.appendChild(sp); Z.appendChild(l);
+    });
+  }
+  // ---- autres personnes
+  function ajouterAutre(e,t){
+    var Z=$('autres'); if(Z.children.length>=5) return;
+    var d=el('div','autre'), g=el('div','duo2'), le=el('label','ch','E-mail'), lt=el('label','ch','Téléphone (facultatif)'), ie=el('input'), it=el('input'), x=el('button','retirer','Retirer cette personne');
+    ie.type='email'; ie.maxLength=120; ie.inputMode='email'; ie.autocomplete='off'; ie.setAttribute('autocapitalize','none'); ie.spellcheck=false; ie.className='a-email'; ie.value=e||'';
+    it.type='tel'; it.maxLength=30; it.inputMode='tel'; it.autocomplete='off'; it.className='a-tel'; it.value=t||'';
+    x.type='button'; x.onclick=function(){ d.remove(); majAutres(); apercu(); };
+    ie.oninput=apercu; le.appendChild(ie); lt.appendChild(it); g.appendChild(le); g.appendChild(lt);
+    d.appendChild(el('p','aide','Personne '+(Z.children.length+2))); d.appendChild(g); d.appendChild(x); Z.appendChild(d);
+    majAutres(); ie.focus();
+  }
+  function majAutres(){
+    var n=$('autres').children.length;
+    Array.prototype.forEach.call($('autres').children,function(d,k){ d.firstChild.textContent='Personne '+(k+2); });
+    $('aj-autre').hidden=n>=5; $('aj-aide').textContent=n>=5?'5 personnes au maximum.':'Jusqu’à 5 personnes. Elles seront en copie de l’e-mail ou invitées au rendez-vous.';
+  }
+  $('aj-autre').onclick=function(){ ajouterAutre(); };
+  function autres(){
+    var L=[], vus={}, err='', princ=val('r-email').toLowerCase();
+    Array.prototype.forEach.call($('autres').children,function(d){
+      var e=d.querySelector('.a-email').value.trim().toLowerCase(), t=d.querySelector('.a-tel').value.trim();
+      if(!e&&!t) return;
+      if(!MAILRE.test(e)){ err=err||e||'(vide)'; return; }
+      if(t&&t.replace(/\D/g,'').length<8){ err=err||t; return; }
+      if(vus[e]||e===princ) return; vus[e]=1; L.push({e:e,t:t.replace(/[^\d+]/g,'')});
+    });
+    return {liste:L,err:err};
+  }
+  // ---- valeurs de l'e-mail
+  function dateMail(){ return CR.choix?fMail.format(CR.choix)+' (heure '+(/^[AEIOUYÉH]/i.test(VILLE)?'d’':'de ')+VILLE+')':'[date à choisir ci-dessus]'; }
+  function valeurs(){
+    var pr=val('r-prenom'); pr=pr?pr.charAt(0).toUpperCase()+pr.slice(1):'';
+    return {prenom:pr,entreprise:val('p-ent')||'votre entreprise',consultant:[moi.prenom,moi.nom].filter(Boolean).join(' ')||'notre consultant',date:dateMail()};
+  }
+  function remplir(s,v){ if(!v.prenom) s=s.replace('Bonjour {prenom},','Bonjour,'); return s.replace(/\{(\w+)\}/g,function(m,k){ return v[k]!=null?v[k]:m; }); }
+  // Texte de base, ou brouillon modifié : les valeurs (prénom, date, entreprise) suivent sans écraser les retouches du consultant.
+  function majMail(){
+    var c=ctx(etape()); if(!c) return;
+    var v=valeurs(), b=BROUILLONS[c.id];
+    if(!b||!b.touche){ $('m-objet').value=remplir(c.objet,v); $('m-texte').value=remplir(c.texte,v); }
+    else ['prenom','entreprise','date'].forEach(function(k){ var avant=MAILV[k]; if(avant&&avant!==v[k]){ $('m-objet').value=$('m-objet').value.split(avant).join(v[k]); $('m-texte').value=$('m-texte').value.split(avant).join(v[k]); } });
+    MAILV=v; garder(); apercu();
+  }
+  function garder(){ var c=etape(); if(!ctx(c)) return; var b=BROUILLONS[c]||{}; b.objet=$('m-objet').value; b.texte=$('m-texte').value; BROUILLONS[c]=b; }
+  $('m-objet').oninput=$('m-texte').oninput=function(){ var b=BROUILLONS[etape()]=BROUILLONS[etape()]||{}; b.touche=true; garder(); apercu(); };
+  ['r-prenom','p-ent'].forEach(function(id){ $(id).addEventListener('input',function(){ if(ctx(etape())) majMail(); }); });
+  $('r-email').addEventListener('input',apercu);
+  function apercu(){
+    var c=ctx(etape()); if(!c) return;
+    var A=autres(), cc=A.liste.map(function(x){ return x.e; }).concat(cfg&&moi?['vous']:[]);
+    $('m-cpt').textContent=$('m-texte').value.length+' / 2000 caractères';
+    var T=$('m-tete'); T.textContent='';
+    [['De','L’équipe BEAM <team@getbeam-consulting.com>'],['À',val('r-email')||'(e-mail du contact)'],['Copie',cc.join(', ')],['Objet',$('m-objet').value]].forEach(function(x){ var l=el('div'); l.appendChild(el('b',null,x[0]+' : ')); l.appendChild(document.createTextNode(x[1])); T.appendChild(l); });
+    var C=$('m-corps'); C.textContent=''; C.appendChild(el('p','txt',$('m-texte').value));
+    var f=el('div'); f.innerHTML=(c.bloc||'')+(MOD.bloc_commun||'')+(MOD.signature||''); C.appendChild(f); // HTML de notre propre fichier de réglages
+  }
+  function choisirEtape(){
+    var c=ctx(etape());
+    if(c){ var b=BROUILLONS[c.id]; if(b&&b.touche){ $('m-objet').value=b.objet; $('m-texte').value=b.texte; } majMail(); }
+    majForm();
+  }
+  // ---- affichage selon le lien et l'étape
+  function majForm(){
+    var n=niveau(), k=connait(), e=etape(), c=ctx(e);
+    $('z-ct').hidden=!k; $('z-act').hidden=!k;
+    var cr=k&&c&&c.creneau; $('z-cr').hidden=!cr; $('z-mail').hidden=!(k&&c);
+    if(cr&&!CR.charge) chargerCreneaux();
+    $('p-go').textContent=n==='contexte'?'Voir les cas d’usage':!k?'Préparer la fiche et demander le feu vert':cr?'Caler le rendez-vous et demander le feu vert':c?'Demander le feu vert':'Préparer la fiche et demander le feu vert';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=niveau]'),function(r){ r.onchange=majForm; });
+  // ---- créneaux (agenda HubSpot de l'équipe)
   function chargerCreneaux(){
-    RDV.charge=true; RDV.choix=0; $('r-m').className='msg'; $('r-m').textContent='Chargement des créneaux libres…'; $('r-jours').textContent=''; $('r-heures').textContent='';
+    CR.charge=true; CR.choix=0; $('r-m').className='msg'; $('r-m').textContent='Chargement des créneaux libres…'; $('r-jours').textContent=''; $('r-heures').textContent='';
     fetch('/x/rdv.json',{cache:'no-cache'}).then(function(r){ return r.json(); }).then(function(c){
       var ag=c&&c.agendas&&c.agendas.equipe; if(!ag||ag.type!=='hubspot'||!/^[a-z0-9-]{2,60}$/.test(ag.slug)) throw 0;
-      RDV.cfg=ag; var now=Date.now(), fin=now+(c.jours_affiches||28)*864e5, min=now+(ag.preavis_jours||0)*864e5+2*36e5, d0=new Date(now), d1=new Date(fin), mois=[];
+      CR.cfg=ag; var now=Date.now(), fin=now+(c.jours_affiches||28)*864e5, min=now+(ag.preavis_jours||0)*864e5+2*36e5, d0=new Date(now), d1=new Date(fin), mois=[];
       for(var o=0;o<=(d1.getFullYear()-d0.getFullYear())*12+d1.getMonth()-d0.getMonth();o++) mois.push(o);
       return Promise.all(mois.map(function(o){
         return fetch('https://app.hubspot.com/api/meetings-public/v3/book/availability-page?slug='+encodeURIComponent(ag.slug)+'&monthOffset='+o+'&timezone='+encodeURIComponent(TZC)+'&hs_static_app=MeetingsPublic&hs_static_app_version=1.61508')
           .then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ var by=(j.linkAvailability||{}).linkAvailabilityByDuration||{}, d=by[String(ag.duree_min*60000)]||by[Object.keys(by)[0]]||{}; return (d.availabilities||[]).map(function(x){ return x.startMillisUtc; }); });
-      })).then(function(x){ var vu={}; RDV.slots=[].concat.apply([],x).filter(function(t){ if(t<min||t>fin||vu[t]) return false; vu[t]=1; return true; }).sort(function(a,b){ return a-b; }); dessinerCreneaux(); });
-    }).catch(function(){ RDV.charge=false; $('r-m').className='msg err'; $('r-m').textContent='Les créneaux ne s’affichent pas pour le moment. Réessayez dans un instant.'; });
+      })).then(function(x){ var vu={}; CR.slots=[].concat.apply([],x).filter(function(t){ if(t<min||t>fin||vu[t]) return false; vu[t]=1; return true; }).sort(function(a,b){ return a-b; }); dessinerCreneaux(); });
+    }).catch(function(){ CR.charge=false; $('r-m').className='msg err'; $('r-m').textContent='Les créneaux ne s’affichent pas pour le moment. Réessayez dans un instant.'; });
   }
   function dessinerCreneaux(){
     var J=$('r-jours'), H=$('r-heures'), par={}; J.textContent=''; H.textContent='';
-    RDV.slots.forEach(function(t){ var k=fCle.format(t); (par[k]=par[k]||[]).push(t); });
+    CR.slots.forEach(function(t){ var k=fCle.format(t); (par[k]=par[k]||[]).push(t); });
     var cles=Object.keys(par).sort();
     $('r-tz').textContent='Heures affichées dans votre fuseau horaire : '+TZC.replace(/_/g,' ')+'.';
     if(!cles.length){ $('r-m').className='msg err'; $('r-m').textContent='Aucun créneau libre pour le moment. Écrivez à team@getbeam-consulting.com.'; return; }
     $('r-m').className='msg'; $('r-m').textContent='';
-    if(!RDV.jour||!par[RDV.jour]) RDV.jour=cles[0];
+    if(!CR.jour||!par[CR.jour]) CR.jour=cles[0];
     cles.forEach(function(k){ var b=el('button'), t=par[k][0], parts=fJour.format(t).replace('.','').split(' ');
-      b.type='button'; b.setAttribute('aria-pressed',k===RDV.jour?'true':'false'); b.appendChild(el('small',null,parts.shift())); b.appendChild(document.createTextNode(parts.join(' ')));
-      b.onclick=function(){ RDV.jour=k; dessinerCreneaux(); }; J.appendChild(b); });
-    par[RDV.jour].forEach(function(t){ var b=el('button',null,fHeure.format(t)); b.type='button'; b.setAttribute('aria-pressed',t===RDV.choix?'true':'false');
-      b.onclick=function(){ RDV.choix=t; dessinerCreneaux(); $('r-m').className='msg ok'; $('r-m').textContent='Créneau choisi : '+fLong.format(t)+'.'; }; H.appendChild(b); });
-    if(RDV.choix&&RDV.slots.indexOf(RDV.choix)>=0){ $('r-m').className='msg ok'; $('r-m').textContent='Créneau choisi : '+fLong.format(RDV.choix)+'.'; }
+      b.type='button'; b.setAttribute('aria-pressed',k===CR.jour?'true':'false'); b.appendChild(el('small',null,parts.shift())); b.appendChild(document.createTextNode(parts.join(' ')));
+      b.onclick=function(){ CR.jour=k; dessinerCreneaux(); }; J.appendChild(b); });
+    par[CR.jour].forEach(function(t){ var b=el('button',null,fHeure.format(t)); b.type='button'; b.setAttribute('aria-pressed',t===CR.choix?'true':'false');
+      b.onclick=function(){ CR.choix=t; dessinerCreneaux(); majMail(); }; H.appendChild(b); });
+    if(CR.choix&&CR.slots.indexOf(CR.choix)>=0){ $('r-m').className='msg ok'; $('r-m').textContent='Créneau choisi : '+fLong.format(CR.choix)+'.'; }
   }
+  // ---- envoi
+  function stop(m,txt,id){ m.textContent=txt; m.className='msg err'; if(id&&$(id)){ $(id).focus(); try{ $(id).scrollIntoView({block:'center'}); }catch(e){} } return true; }
   $('f-prep').onsubmit=function(ev){
     ev.preventDefault();
-    var ent=$('p-ent').value.trim(), m=$('p-m'), go=$('p-go');
-    if(ent.length<2){ m.textContent='Indiquez le nom de l’entreprise.'; m.className='msg err'; $('p-ent').focus(); return; }
-    var niv=(document.querySelector('input[name=niveau]:checked')||{}).value||'';
-    if(!niv){ m.textContent='Indiquez votre lien avec cette entreprise.'; m.className='msg err'; return; }
-    var ct=$('p-contact').value.trim().toLowerCase(), moiNom=((moi&&moi.prenom)||'').trim().toLowerCase();
-    if(niv!=='aucun'&&niv!=='contexte'&&ct.length<3&&!rdvVoulu()){ m.textContent='Indiquez le nom et le poste de votre contact dans cette entreprise.'; m.className='msg err'; $('p-contact').focus(); return; }
-    if(niv!=='aucun'&&niv!=='contexte'&&moiNom&&ct.indexOf(moiNom)===0){ m.textContent='Indiquez le nom de votre contact dans l’entreprise, pas le vôtre.'; m.className='msg err'; $('p-contact').focus(); return; }
-    var R=rdvVoulu(), rd={};
-    if(R){
-      rd={rdv:'1',c_prenom:$('r-prenom').value.trim(),c_nom:$('r-nom').value.trim(),c_poste:$('r-poste').value.trim(),c_email:$('r-email').value.trim().toLowerCase(),c_tel:$('r-tel').value.trim(),besoin:$('r-besoin').value.trim(),rdv_ms:String(RDV.choix||'')};
-      var manque=!rd.c_prenom?'r-prenom':!rd.c_nom?'r-nom':!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rd.c_email)?'r-email':rd.c_tel.replace(/\D/g,'').length<8?'r-tel':'';
-      if(manque){ m.textContent=manque==='r-email'?'Indiquez une adresse e-mail valide pour votre contact.':manque==='r-tel'?'Indiquez le numéro de téléphone de votre contact.':'Indiquez le prénom et le nom de votre contact.'; m.className='msg err'; $(manque).focus(); return; }
-      var inv=$('r-invites').value.toLowerCase().split(/[\s,;]+/).filter(Boolean), vus={}, mauvais='';
-      inv=inv.filter(function(e){ if(!/^[^\s@"\\]+@[^\s@"\\]+\.[^\s@"\\]{2,}$/.test(e)){ mauvais=mauvais||e; return false; } if(vus[e]||e===rd.c_email) return false; vus[e]=1; return true; });
-      if(mauvais){ m.textContent='Cette adresse n’est pas valide : '+mauvais+'.'; m.className='msg err'; $('r-invites').focus(); return; }
-      if(inv.length>5){ m.textContent='Invitez 5 personnes au maximum.'; m.className='msg err'; $('r-invites').focus(); return; }
-      rd.invites=inv.join(',');
-      if(!RDV.choix){ m.textContent='Choisissez la date et l’heure du rendez-vous.'; m.className='msg err'; $('r-jours').scrollIntoView({block:'center'}); return; }
-      if(!ct) $('p-contact').value=(rd.c_prenom+' '+rd.c_nom).trim()+(rd.c_poste?', '+rd.c_poste:'');
+    var ent=val('p-ent'), m=$('p-m'), go=$('p-go'), niv=niveau(), rd={};
+    if(ent.length<2) return stop(m,'Indiquez le nom de l’entreprise.','p-ent');
+    if(!niv) return stop(m,'Indiquez votre lien avec cette entreprise.');
+    var K=connait(), E=etape(), C=ctx(E), R=!!(C&&C.creneau);
+    if(K){
+      rd={c_prenom:val('r-prenom'),c_nom:val('r-nom'),c_poste:val('r-poste'),c_email:val('r-email').toLowerCase(),c_tel:val('r-tel'),besoin:val('r-besoin')};
+      if(!rd.c_prenom) return stop(m,'Indiquez le prénom de votre contact.','r-prenom');
+      if(!rd.c_nom) return stop(m,'Indiquez le nom de votre contact.','r-nom');
+      if((moi.prenom+' '+moi.nom).trim().toLowerCase()===(rd.c_prenom+' '+rd.c_nom).toLowerCase()) return stop(m,'Indiquez votre contact dans l’entreprise, pas vous-même.','r-prenom');
+      if(!rd.c_poste) return stop(m,'Indiquez le poste de votre contact (même approximatif).','r-poste');
+      if(!MAILRE.test(rd.c_email)) return stop(m,'Indiquez une adresse e-mail valide pour votre contact.','r-email');
+      if(rd.c_tel.replace(/\D/g,'').length<8) return stop(m,'Indiquez le numéro de téléphone de votre contact, avec l’indicatif.','r-tel');
+      var A=autres(); if(A.err) return stop(m,'Vérifiez cette personne supplémentaire : « '+A.err+' » n’est pas valide.');
+      if(!$('r-ok').checked) return stop(m,'Cochez la case : ces personnes sont d’accord pour être contactées par BEAM.','r-ok');
+      if(!E) return stop(m,'Choisissez ce que vous voulez faire.','acts');
+      rd.consent='1'; rd.mail_action=E; rd.invites=A.liste.map(function(x){ return x.e; }).join(','); rd.autres=A.liste.map(function(x){ return x.e+'|'+x.t; }).join(';');
+      $('p-contact').value=(rd.c_prenom+' '+rd.c_nom).trim()+(rd.c_poste?', '+rd.c_poste:'');
+      if(R){ if(!CR.choix) return stop(m,'Choisissez la date et l’heure du rendez-vous.','r-jours'); rd.rdv='1'; rd.rdv_ms=String(CR.choix); }
+      if(C){
+        rd.mail_objet=val('m-objet'); rd.mail_texte=$('m-texte').value.trim();
+        if(rd.mail_objet.length<4) return stop(m,'Écrivez l’objet de l’e-mail.','m-objet');
+        if(rd.mail_texte.length<11) return stop(m,'Écrivez le message de l’e-mail.','m-texte');
+        if(/\[date à choisir/.test(rd.mail_texte+rd.mail_objet)) return stop(m,'Choisissez le créneau : la date s’ajoutera dans l’e-mail.','r-jours');
+      }
     }
     go.disabled=true; go.textContent=R?'Réservation et recherche en cours…':'Recherche en cours…'; m.className='msg'; m.textContent='BEAM cherche les informations publiques sur '+ent+'. Comptez 30 secondes à 1 minute.';
     $('p-res').textContent='';
     var ctl=window.AbortController?new AbortController():null, minuteur=setTimeout(function(){ if(ctl) ctl.abort(); },150000);
-    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams(Object.assign({action:'fiche',id:a,jeton:t,entreprise:ent,site:$('p-site').value.trim(),pays:$('p-pays').value.trim(),note:$('p-note').value.trim(),niveau:niv,contact:(niv==='aucun'||niv==='contexte')?'':$('p-contact').value.trim()},rd))})
+    fetch(cfg.webhook_fiche,{method:'POST',signal:ctl?ctl.signal:undefined,body:new URLSearchParams(Object.assign({action:'fiche',id:a,jeton:t,entreprise:ent,site:val('p-site'),pays:val('p-pays'),note:val('p-note'),niveau:niv,contact:K?$('p-contact').value:''},rd))})
       .then(function(r){ return r.json(); }).then(function(j){
         if(!j||j.ok!==true) throw j||{};
         var f=j.fiche||{}, box=el('div','fiche');
         box.appendChild(el('h3',null,j.entreprise||ent));
         box.appendChild(el('span','etat',j.contexte?'Pour information : pas de demande de feu vert':'En attente du feu vert'));
-        if(j.rdv) box.appendChild(el('p','rdv-ok','Rendez-vous calé : '+j.rdv+(rd.c_prenom?' avec '+rd.c_prenom+' '+rd.c_nom:'')+'. L’entreprise reçoit l’invitation par e-mail.'));
+        if(j.rdv) box.appendChild(el('p','rdv-ok','Rendez-vous calé : '+j.rdv+' avec '+rd.c_prenom+' '+rd.c_nom+'. L’invitation est partie dans son agenda.'));
+        if(j.mail) box.appendChild(el('p','note','E-mail préparé « '+rd.mail_objet+' » : il partira à '+rd.c_email+' dès le feu vert d’Astrid, avec vous en copie.'));
         if(j.connue) box.appendChild(el('p','note',j.contexte?'BEAM connaît déjà cette entreprise : avant de l’approcher, demandez le feu vert.':'BEAM connaît déjà cette entreprise : l’équipe vérifie qui la suit avant de répondre.'));
         box.appendChild(blocFiche(f));
         $('p-res').appendChild(box);
-        m.className='msg ok'; m.textContent=j.contexte?'Voici ce que BEAM pourrait apporter à cette entreprise. Rien n’a été envoyé à l’équipe : pour l’approcher, refaites une demande en choisissant votre lien avec elle.':j.rdv?'Rendez-vous calé et demande de feu vert envoyée à BEAM. Réponse par e-mail sous 48 heures.':'Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
-        $('f-prep').reset(); $('l-contact').hidden=true; RDV.charge=false; RDV.choix=0; majRdv(); demandes();
+        m.className='msg ok'; m.textContent=j.contexte?'Voici ce que BEAM pourrait apporter à cette entreprise. Rien n’a été envoyé à l’équipe : pour l’approcher, refaites une demande en choisissant votre lien avec elle.':
+          j.mail?'Demande envoyée à Astrid. L’e-mail partira dès son feu vert : réponse sous 48 heures.':j.rdv?'Rendez-vous calé et demande de feu vert envoyée à BEAM. Réponse par e-mail sous 48 heures.':'Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
+        $('f-prep').reset(); $('autres').textContent=''; majAutres(); BROUILLONS={}; MAILV={}; CR.charge=false; CR.choix=0; majForm(); demandes();
+        try{ box.scrollIntoView({block:'start'}); }catch(e){}
       }).catch(function(j){
         var r=j&&j.raison;
         m.className='msg err';
-        if(r==='creneau'){ RDV.charge=false; RDV.choix=0; chargerCreneaux(); }
+        if(r==='creneau'){ CR.charge=false; CR.choix=0; chargerCreneaux(); }
         m.textContent=r==='creneau'?'Ce créneau vient d’être pris. Choisissez-en un autre : rien n’a été envoyé.':
           r==='reservee_rdv'?'Cette entreprise ou ce contact est déjà suivi par un autre consultant BEAM. Le rendez-vous n’a pas été calé. Écrivez à team@getbeam-consulting.com si besoin.':
           r==='reservee'?(j.statut==='valide'?'Cette entreprise est déjà réservée par un autre consultant BEAM'+(j.jusqu?' jusqu’au '+date(Number(j.jusqu)):'')+'. Proposez-en une autre.':'Un autre consultant BEAM a déjà demandé cette entreprise. BEAM lui répond en premier.'):
           r==='acces'?'Votre accès a expiré : rechargez la page depuis votre dernier e-mail BEAM.':
           r==='ia'?'La recherche n’a pas abouti. Ajoutez le site internet de l’entreprise et réessayez.':
           'La demande n’a pas pu partir. Réessayez dans un instant.';
-      }).then(function(){ clearTimeout(minuteur); go.disabled=false; majRdv(); });
+      }).then(function(){ clearTimeout(minuteur); go.disabled=false; majForm(); });
   };
 
   // ---------------------------------------------------------------- démarrage
@@ -596,7 +723,7 @@ legend{font-size:14px;font-weight:600;padding:0}
           ouvrirWhatsApp('','Bonjour, c’est '+(moi.prenom||'moi')+'. Je travaille avec BEAM, qui aide les entreprises à transférer et partager de gros volumes de données entre leurs sites et leurs clouds. '+
             'Si le sujet vous parle, présentez votre besoin en 1 minute ici, un expert BEAM vous rappelle pour un échange de 15 minutes :\n\n'+j.lien);
         };
-        if(cfg.webhook_fiche){ $('prep').hidden=false; demandes(); }
+        if(cfg.webhook_fiche){ $('prep').hidden=false; demandes(); chargerModeles(); }
         $('attente').hidden=true; $('pret').hidden=false; $('rdv-lien').hidden=false; $('academie').hidden=false;
         if(j.chef===true && typeof j.invitation==='string' && j.invitation.indexOf('https://getbeam-consulting.com/consultants/?parrain=')===0){
           $('invit-lien').textContent=j.invitation; $('invit').hidden=false;
