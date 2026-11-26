@@ -1,5 +1,5 @@
 {
-  "_aide": "Modèles des e-mails que le consultant prépare depuis « Préparer une entreprise ». Lu par la page mon-qr (texte pré-rempli, modifiable par le consultant) ET par Make au feu vert d'Astrid (bloc fixe ajouté sous le texte). Ajouter un contexte = ajouter une entrée dans « contextes » (l'ordre ici = l'ordre affiché). Variables du texte : {prenom} (contact), {entreprise}, {consultant} (prénom + nom), {date} (rendez-vous, contexte rdv seulement). Variables du bloc fixe : {date}. Jamais de prix dans ces modèles.",
+  "_aide": "Modèles des e-mails que le consultant prépare depuis « Préparer une entreprise ». Lu par la page mon-qr (texte pré-rempli, modifiable par le consultant) ET par Make au feu vert d'Astrid (bloc fixe ajouté sous le texte). Ajouter un contexte = ajouter une entrée dans « contextes » (l'ordre ici = l'ordre affiché). Variables du texte : {prenom} (contact), {entreprise}, {consultant} (prénom + nom), {date} (rendez-vous, contexte rdv seulement). Variable du bloc fixe : {lien_visio} (lien Google Meet lu dans l'agenda au feu vert ; s'il est introuvable, Make utilise « bloc_sans_lien »). Jamais de prix dans ces modèles.",
   "version": 1,
   "objet_max": 140,
   "texte_max": 2000,
@@ -11,7 +11,8 @@
       "creneau": true,
       "objet": "Découverte BEAM : notre rendez-vous du {date}",
       "texte": "Bonjour {prenom},\n\nComme convenu avec {consultant}, je vous confirme notre rendez-vous du {date} : un échange de 15 minutes en visio avec un expert BEAM, pour voir ensemble ce que BEAM peut apporter à {entreprise}.\n\nL’invitation est arrivée dans votre agenda : le lien de la visio s’y trouve.\n\nPour préparer l’échange, vous pouvez déjà parcourir la documentation ci-dessous.",
-      "bloc": "<p style='margin:0 0 12px'><b>Votre rendez-vous</b> : {date}, 15 minutes en visio (lien dans l’invitation de votre agenda).</p>"
+      "bloc": "<p style='margin:0 0 12px'><b>Rejoindre la visio</b> (15 minutes) : <a href='{lien_visio}' style='color:#1a56db;font-weight:700'>{lien_visio}</a><br><span style='color:#5b6270;font-size:14px'>Ce lien se trouve aussi dans l’invitation arrivée dans votre agenda.</span></p>",
+      "bloc_sans_lien": "<p style='margin:0 0 12px'><b>Rejoindre la visio</b> (15 minutes) : ouvrez l’invitation « BEAM × » arrivée dans votre agenda et cliquez sur le lien Google Meet.</p>"
     },
     {
       "id": "decouverte",
