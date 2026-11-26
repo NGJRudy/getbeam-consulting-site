@@ -640,7 +640,8 @@ legend{font-size:14px;font-weight:600;padding:0}
     if(!niv) return stop(m,'Indiquez votre lien avec cette entreprise.');
     var K=connait(), E=etape(), C=ctx(E), R=!!(C&&C.creneau);
     if(K){
-      rd={c_prenom:val('r-prenom'),c_nom:val('r-nom'),c_poste:val('r-poste'),c_email:val('r-email').toLowerCase(),c_tel:val('r-tel'),besoin:val('r-besoin')};
+      var maj1=function(x){ return x?x.charAt(0).toUpperCase()+x.slice(1):x; };
+      rd={c_prenom:maj1(val('r-prenom')),c_nom:maj1(val('r-nom')),c_poste:val('r-poste'),c_email:val('r-email').toLowerCase(),c_tel:val('r-tel'),besoin:val('r-besoin')};
       if(!rd.c_prenom) return stop(m,'Indiquez le prénom de votre contact.','r-prenom');
       if(!rd.c_nom) return stop(m,'Indiquez le nom de votre contact.','r-nom');
       if((moi.prenom+' '+moi.nom).trim().toLowerCase()===(rd.c_prenom+' '+rd.c_nom).toLowerCase()) return stop(m,'Indiquez votre contact dans l’entreprise, pas vous-même.','r-prenom');
