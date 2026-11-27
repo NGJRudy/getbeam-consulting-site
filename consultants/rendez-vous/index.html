@@ -47,6 +47,10 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
 .apercu{white-space:pre-wrap;font-size:14px;line-height:21px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 0}
 .apercu mark{background:#fff3c4;color:inherit;border-radius:4px;padding:0 2px}
 .puce[disabled]{opacity:.45;cursor:default}
+.inv{display:flex;gap:8px;margin:8px 0 0}
+.inv input{flex:1;min-width:0;min-height:48px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 16px/22px 'Open Sans',Arial,sans-serif;color:var(--ink)}
+.inv input[aria-invalid="true"]{border-color:var(--danger)}
+.inv .retirer{flex:none;width:auto;min-height:48px;margin:0;padding:0 14px;border:1px solid var(--line);background:#fff;color:var(--danger)}
 .wa{display:block;width:100%;min-height:48px;margin:10px 0 0;padding:11px 16px;border:1px solid #128c4b;background:#fff;color:#128c4b}
 </style></head>
 <body><main>
@@ -76,6 +80,11 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
   <div class="creneaux" id="creneaux"></div>
   <p class="vide" id="c-vide" hidden>Plus aucun créneau libre ce jour-là. Choisissez un autre jour.</p>
   <div id="bloc-msg" hidden>
+    <p class="etiquette">Ajouter des personnes (facultatif)</p>
+    <p class="aide">Elles reçoivent l’invitation d’agenda. Si vous prévenez par e-mail, elles sont aussi en copie. Jusqu’à 5 adresses.</p>
+    <div id="invites"></div>
+    <button class="sec" id="aj-inv" type="button">Ajouter une adresse e-mail</button>
+    <p class="msg" id="inv-m" role="status" aria-live="polite"></p>
     <p class="etiquette">Comment prévenir la personne ?</p>
     <div class="motifs" id="canaux">
       <button class="puce" type="button" data-c="email" aria-pressed="true">Par e-mail, envoyé par BEAM</button>
@@ -148,6 +157,37 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
       ? 'BEAM l’envoie depuis team@getbeam-consulting.com, signé « L’équipe BEAM ».'
       : 'WhatsApp s’ouvre avec le message prêt'+(numero(r)?'':' (choisissez le contact)')+'. Vous n’avez plus qu’à appuyer sur Envoyer.';
   }
+  // Personnes ajoutées : contrôlées ici, puis revérifiées par Make (format, doublons, déjà invitées).
+  var MAXINV=5, MAILRE=/^[^\s@"<>:\\,;()]+@[^\s@"<>:\\,;()]+\.[^\s@"<>:\\,;()]{2,}$/;
+  function champsInv(){ return [].slice.call(document.querySelectorAll('#invites input')); }
+  function invites(){ // {ok, liste} : liste sans doublon, en minuscules
+    var vu={}, liste=[], ok=true;
+    champsInv().forEach(function(i){
+      var v=i.value.trim().toLowerCase(); i.setAttribute('aria-invalid','false');
+      if(!v) return;
+      if(!MAILRE.test(v)||v.length>119){ ok=false; i.setAttribute('aria-invalid','true'); return; }
+      if(!vu[v]){ vu[v]=1; liste.push(v); }
+    });
+    return {ok:ok, liste:liste};
+  }
+  function majCanalEmail(){
+    var r=rdvEnCours||{}, e=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='email'; })[0];
+    var peut=!!r.m||invites().liste.length>0;
+    e.disabled=!peut; e.textContent=peut?'Par e-mail, envoyé par BEAM':'Par e-mail (pas d’adresse connue)';
+    if(!peut&&canal==='email'){ canal='whatsapp'; presser($('canaux'),[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='whatsapp'; })[0]); aideCanal(); majBouton(); }
+  }
+  function ajouterInvite(val){
+    if(champsInv().length>=MAXINV) return;
+    var l=el('div','inv'), i=el('input'), x=el('button','retirer','Retirer');
+    i.type='email'; i.inputMode='email'; i.autocomplete='off'; i.autocapitalize='none'; i.spellcheck=false; i.maxLength=119;
+    i.placeholder='prenom.nom@entreprise.com'; i.setAttribute('aria-label','Adresse e-mail à ajouter'); i.value=val||'';
+    i.oninput=function(){ i.setAttribute('aria-invalid','false'); msg('inv-m',''); majCanalEmail(); };
+    x.type='button'; x.onclick=function(){ l.remove(); majInv(); majCanalEmail(); };
+    l.appendChild(i); l.appendChild(x); $('invites').appendChild(l); majInv(); i.focus();
+  }
+  function majInv(){ var n=champsInv().length; $('aj-inv').hidden=n>=MAXINV; $('aj-inv').textContent=n?'Ajouter une autre adresse':'Ajouter une adresse e-mail'; }
+  $('aj-inv').onclick=function(){ ajouterInvite(''); };
+
   function numero(r){ var t=String(r&&r.t||''); return t.charAt(0)==='+'? t.slice(1) : ''; }
   function ouvrirWhatsApp(num,txt){
     var t=encodeURIComponent(txt);
@@ -228,6 +268,7 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
     var e=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='email'; })[0], w=[].filter.call($('canaux').children,function(x){ return x.getAttribute('data-c')==='whatsapp'; })[0];
     e.disabled=!r.m; e.textContent=r.m?'Par e-mail, envoyé par BEAM':'Par e-mail (pas d’adresse connue)';
     canal=r.m?'email':'whatsapp'; presser($('canaux'), canal==='email'?e:w);
+    $('invites').textContent=''; majInv(); msg('inv-m','');
     $('note').value=''; $('compte').textContent='0 / '+$('note').maxLength; $('bloc-msg').hidden=true; aideCanal();
     var J=$('jours'); J.textContent=''; $('creneaux').textContent=''; $('c-titre').hidden=true; $('c-vide').hidden=true;
     majBouton(); msg('r-m','');
@@ -271,12 +312,15 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
 
   $('valider').onclick=function(){
     if(!choix||!rdvEnCours) return;
+    var I=invites();
+    if(!I.ok){ msg('inv-m','Une adresse e-mail n’est pas valable : corrigez-la ou retirez-la.','err'); var f=document.querySelector('#invites input[aria-invalid="true"]'); if(f) f.focus(); return; }
     var b=$('valider'); b.disabled=true; b.textContent='Report en cours…'; msg('r-m','');
     var r=rdvEnCours, c=canal;
-    appel({action:'reporter',meeting:r.k,debut:String(choix),motif:modeleCle(),canal:c,note:noteTxt()}).then(function(rep){
+    appel({action:'reporter',meeting:r.k,debut:String(choix),motif:modeleCle(),canal:c,note:noteTxt(),invites:I.liste.join(',')}).then(function(rep){
       if(!rep||rep.ok!==true) throw new Error(rep&&rep.raison||'agenda');
       b.textContent='Rendez-vous replanifié';
-      var base='C’est fait : rendez-vous placé au '+String(rep.nouveau||'').toLowerCase()+'. Son invitation d’agenda est à jour et l’expert BEAM est prévenu.';
+      var aj=String(rep.ajoutes||'').split(',').filter(Boolean);
+      var base='C’est fait : rendez-vous placé au '+String(rep.nouveau||'').toLowerCase()+'. Son invitation d’agenda est à jour et l’expert BEAM est prévenu.'+(aj.length?' '+(aj.length>1?aj.length+' personnes ajoutées':'1 personne ajoutée')+' à l’invitation : '+aj.join(', ')+'.':'');
       if(c==='whatsapp'){
         var t=texte(rep.lien||''), num=numero(r);
         msg('r-m',base+' Envoyez maintenant le message WhatsApp.','ok');
@@ -285,7 +329,7 @@ textarea{display:block;width:100%;min-height:76px;margin:8px 0 0;padding:12px 14
         ouvrirWhatsApp(num,t);
         setTimeout(charger,1500);
       } else {
-        msg('r-m',base+' BEAM lui a envoyé le message par e-mail.','ok');
+        msg('r-m',base+(r.m?' BEAM lui a envoyé le message par e-mail'+(aj.length?', avec les personnes ajoutées en copie.':'.'):' BEAM a envoyé le message par e-mail aux personnes ajoutées.'),'ok');
         setTimeout(function(){ $('report').hidden=true; charger(); },3000);
       }
     }).catch(function(e){
