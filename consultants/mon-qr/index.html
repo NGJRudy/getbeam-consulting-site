@@ -524,7 +524,7 @@ legend{font-size:14px;font-weight:600;padding:0}
   }
 
   // ------------------------------------------------ vidéo de chaque entreprise (générateur BEAM, via Make)
-  // Une fiche sans vidéo la demande toute seule ; « en préparation » se met à jour toutes les 30 s ; prête : aperçu, lecture, partage.
+  // Une fiche « décideur » sans vidéo la demande toute seule ; « en préparation » se met à jour toutes les 30 s ; prête : aperçu, lecture, partage.
   // Les liens ne sont acceptés que s'ils commencent par cfg.video_prefixe (protection contre un lien piégé).
   var CLEVID=/^[A-Za-z0-9-]{1,64}$/, VID={demandees:{},minuteur:null,tours:0};
   function lienSur(u){ return typeof u==='string'&&!!cfg.video_prefixe&&u.indexOf(cfg.video_prefixe)===0; }
@@ -540,7 +540,14 @@ legend{font-size:14px;font-weight:600;padding:0}
         var z=document.querySelector('.video[data-k="'+x.k+'"]'); if(!z) return;
         var v=M[x.k]||{vs:''};
         var aFiche=x.s!=='refuse'&&x.f&&typeof x.f==='object'&&Object.keys(x.f).length>0; // pas de vidéo pour une entreprise refusée
-        if(!v.vs&&aFiche&&!VID.demandees[x.k]){ VID.demandees[x.k]=1; appelVideo({action:'demander',k:x.k}).catch(function(){}); v={vs:'preparation'}; }
+        // Règle BEAM : une vidéo seulement quand le consultant connaît un décideur (v.ev === '1', décidé et revérifié par Make).
+        if(!v.vs&&v.ev==='1'&&aFiche&&!VID.demandees[x.k]){
+          VID.demandees[x.k]=1;
+          (function(zz,kk,ee){ appelVideo({action:'demander',k:kk}).then(function(r){
+            if(!r||r.ok!==true||!r.vs) return; dessinerVideo(zz,{vs:r.vs},ee);
+            if(r.vs==='preparation'){ clearTimeout(VID.minuteur); VID.minuteur=setTimeout(function(){ videos(L); },30000); }
+          }).catch(function(){}); })(z,x.k,x.e||'');
+        }
         if(v.vs==='preparation') attente=true;
         dessinerVideo(z,v,x.e||'');
       });
