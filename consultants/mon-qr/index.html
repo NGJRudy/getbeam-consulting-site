@@ -121,10 +121,30 @@ legend{font-size:14px;font-weight:600;padding:0}
 @keyframes fil{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
 @media (prefers-reduced-motion:reduce){.video .fil i{animation:none;width:100%;opacity:.35}}
 .video .info{font-size:14px;color:var(--muted);margin:0}
+details.plus{margin:12px 0 0;border-top:1px solid var(--line)}
+details.plus>summary{cursor:pointer;padding:12px 0 0;font-size:15px;font-weight:600;color:var(--brand)}
+details.plus[open]>summary{padding-bottom:4px}
+/* Annonce de la vidéo : anneau = temps écoulé, texte = minutes restantes */
+.annonce{display:flex;gap:12px;align-items:center;border:1px solid #cfd9fb;background:#f3f6ff;border-radius:12px;padding:12px 14px}
+.annonce svg.anneau{flex:none;width:44px;height:44px}
+.anneau .fond{fill:none;stroke:#dbe3fd;stroke-width:4}
+.anneau .plein{fill:none;stroke:var(--brand);stroke-width:4;stroke-linecap:round;transform:rotate(-90deg);transform-origin:22px 22px;transition:stroke-dashoffset .6s}
+.anneau .tri{fill:var(--brand)}
+.annonce b{display:block;font-size:15px;line-height:21px}
+.annonce span{display:block;font-size:14px;line-height:20px;color:var(--muted);margin:2px 0 0}
+.annonce.prete{border-color:#bfe3cd;background:#eef8f2}
+.annonce.prete .tri{fill:var(--ok)}
+.annonce .voir{width:auto;min-height:40px;margin:0 0 0 auto;padding:6px 14px;font-size:14px;flex:none}
+@media (prefers-reduced-motion:reduce){.anneau .plein{transition:none}}
+#vbandeau{margin:0 0 14px}
+#vbandeau .annonce{margin:8px 0 0;background:#fff}
+#vbandeau .annonce.prete{background:#fff}
 @media (max-width:380px){.duo2{grid-template-columns:1fr}}
 </style></head>
 <body><main>
 <a class="brand" href="/" target="_blank" rel="noopener"><img src="/assets/email/beam-logo-96.png" width="32" height="32" alt="">BEAM</a>
+
+<div id="vbandeau" role="status" aria-live="polite" hidden></div>
 
 <section class="card centre">
   <div id="attente"><h1>Mon espace consultant</h1><p class="msg" id="m" role="status">Vérification…</p>
@@ -507,16 +527,17 @@ legend{font-size:14px;font-weight:600;padding:0}
         var L=(j&&j.ok===true&&Array.isArray(j.demandes)?j.demandes:[]).filter(function(x){ return x&&x.k; });
         $('dem-titre').hidden=!L.length;
         L.forEach(function(x){
-          var e=ETAT[x.s]||ETAT.attente, d=el('details','fiche'), s=el('summary');
+          var e=ETAT[x.s]||ETAT.attente, d=el('div','fiche'), s=d; // en-tête et vidéo toujours visibles
           s.appendChild(el('h3',null,x.e||'Entreprise'));
           s.appendChild(el('span','etat '+e[1],e[0]+(x.s==='refuse'&&x.r?' : '+x.r:'')+(x.s==='valide'&&x.x?', réservée jusqu’au '+date(Number(x.x)):'')));
           if(x.d) s.appendChild(el('span','qui',' · demandée le '+date(Number(x.d))));
           if(x.rv) s.appendChild(el('p','rdv-ok','Rendez-vous calé : '+x.rv+(x.ra?' avec '+x.ra:'')));
           if(x.mn==='1'&&x.mo) s.appendChild(el('p','note','E-mail préparé « '+x.mo+' » : '+(x.s==='valide'?(x.mr==='ok'?'envoyé.':'pas encore parti, BEAM s’en occupe.'):x.s==='refuse'?'non envoyé.':'partira au feu vert.')));
-          d.appendChild(s);
-          if(typeof x.k==='string'&&CLEVID.test(x.k)){ var vz=el('div','video'); vz.setAttribute('data-k',x.k); d.appendChild(vz); }
-          if(x.f&&typeof x.f==='object') d.appendChild(blocFiche(x.f));
-          if(x.s==='valide') d.appendChild(el('p','note','Quand vous la rencontrez, faites-lui scanner votre QR code : elle sera rattachée à vous. Ne donnez pas de prix, l’expert BEAM s’en charge.'));
+          if(typeof x.k==='string'&&CLEVID.test(x.k)){ d.id='f-'+x.k; var vz=el('div','video'); vz.setAttribute('data-k',x.k); d.appendChild(vz); }
+          var pl=el('details','plus'); pl.appendChild(el('summary',null,'Voir la fiche complète'));
+          if(x.f&&typeof x.f==='object') pl.appendChild(blocFiche(x.f));
+          if(x.s==='valide') pl.appendChild(el('p','note','Quand vous la rencontrez, faites-lui scanner votre QR code : elle sera rattachée à vous. Ne donnez pas de prix, l’expert BEAM s’en charge.'));
+          d.appendChild(pl);
           D.appendChild(d);
         });
         videos(L);
@@ -524,65 +545,115 @@ legend{font-size:14px;font-weight:600;padding:0}
   }
 
   // ------------------------------------------------ vidéo de chaque entreprise (générateur BEAM, via Make)
-  // Une fiche « décideur » sans vidéo la demande toute seule ; « en préparation » se met à jour toutes les 30 s ; prête : aperçu, lecture, partage.
+  // Règle BEAM : une vidéo seulement quand le consultant connaît un décideur (v.ev === '1', décidé et revérifié par Make), jamais pour une fiche refusée.
+  // La fiche « décideur » sans vidéo la demande toute seule. Pendant la préparation : anneau + minutes restantes (estimation prudente),
+  // bandeau en haut de page, mise à jour toutes les 30 s tant que la page est affichée, et dès qu'on y revient.
   // Les liens ne sont acceptés que s'ils commencent par cfg.video_prefixe (protection contre un lien piégé).
-  var CLEVID=/^[A-Za-z0-9-]{1,64}$/, VID={demandees:{},minuteur:null,tours:0};
+  var CLEVID=/^[A-Za-z0-9-]{1,64}$/, VID={demandees:{},minuteur:null,horloge:null,L:[],M:{},ent:{}};
+  var ESTIME=7*60000, LONG=25*60000; // mesuré : 3 à 8 min de bout en bout ; au-delà de 25 min, on le dit
   function lienSur(u){ return typeof u==='string'&&!!cfg.video_prefixe&&u.indexOf(cfg.video_prefixe)===0; }
   function duree(s){ s=Math.round(Number(s)||0); if(!s) return ''; var m=Math.floor(s/60), r=s%60; return m?(m+' min'+(r?' '+(r<10?'0':'')+r:'')):(r+' s'); }
   function appelVideo(champs){ return fetch(cfg.webhook_video,{method:'POST',body:new URLSearchParams(Object.assign({id:a,jeton:t},champs))}).then(function(r){ return r.json(); }); }
+  function vue_(k){ try{ return localStorage.getItem('beam-vu-'+k)==='1'; }catch(e){ return false; } }
+  function marquerVue(k){ try{ localStorage.setItem('beam-vu-'+k,'1'); }catch(e){} majBandeau(); }
+  // temps restant affiché : jamais « 0 », jamais faux à la seconde (NN/g : estimation approximative, avec marge)
+  function restant(vm){
+    var ecoule=Date.now()-(Number(vm)||Date.now());
+    if(ecoule>LONG) return {f:1,b:'Préparation plus longue que prévu',s:'Elle continue toute seule et s’affichera ici dès qu’elle sera prête.'};
+    var r=ESTIME-ecoule, f=Math.min(.95,Math.max(.04,ecoule/ESTIME));
+    if(r<=60000) return {f:f,b:'Vidéo prête dans un instant',s:null};
+    return {f:f,b:'Vidéo prête dans environ '+Math.ceil(r/60000)+' min',s:null};
+  }
+  function anneau(f,prete){
+    var ns='http://www.w3.org/2000/svg', g=document.createElementNS(ns,'svg'); g.setAttribute('viewBox','0 0 44 44'); g.setAttribute('class','anneau'); g.setAttribute('aria-hidden','true');
+    var c=2*Math.PI*19;
+    [['fond',0],['plein',1]].forEach(function(x){ var o=document.createElementNS(ns,'circle'); o.setAttribute('cx','22'); o.setAttribute('cy','22'); o.setAttribute('r','19'); o.setAttribute('class',x[0]);
+      if(x[1]){ o.setAttribute('stroke-dasharray',String(c)); o.setAttribute('stroke-dashoffset',String(c*(1-(prete?1:f)))); if(prete) o.style.stroke='var(--ok)'; } g.appendChild(o); });
+    var p=document.createElementNS(ns,'path'); p.setAttribute('d','M18 14.5v15l12-7.5z'); p.setAttribute('class','tri'); g.appendChild(p);
+    return g;
+  }
+  function annonce(v,ent,bandeau){
+    var prete=v.vs==='prete', r=prete?null:restant(v.vm), box=el('div','annonce'+(prete?' prete':''));
+    box.appendChild(anneau(r?r.f:1,prete));
+    var tx=el('div');
+    var titre=prete?'Votre vidéo est prête':r.b;
+    tx.appendChild(el('b',null,bandeau?ent+' : '+titre.charAt(0).toLowerCase()+titre.slice(1):titre));
+    if(!bandeau||prete) tx.appendChild(el('span',null,bandeau?'Elle montre ce que BEAM peut apporter à '+ent+'.':prete?'Elle montre en '+(duree(v.vd)||'1 min')+' ce que BEAM peut apporter à '+ent+'.':(r.s||'Elle montrera ce que BEAM peut apporter à '+ent+'. Elle s’affichera ici toute seule, même si vous fermez la page.')));
+    box.appendChild(tx);
+    if(bandeau){
+      var b=el('button','sec voir',prete?'Regarder':'Voir'); b.type='button';
+      b.onclick=function(){ var c=$('f-'+v.k); if(!c) return; try{ c.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){ c.scrollIntoView(); }
+        if(prete){ var bt=c.querySelector('.video .cadre'); if(bt) setTimeout(function(){ bt.click(); },400); } };
+      box.appendChild(b);
+    }
+    return box;
+  }
+  function majBandeau(){
+    var B=$('vbandeau'); if(!B) return; B.textContent='';
+    VID.L.forEach(function(x){ var v=VID.M[x.k]; if(!v) return;
+      if(v.vs==='preparation'||(v.vs==='prete'&&!vue_(x.k)&&lienSur(v.vu))) B.appendChild(annonce(v,x.e||'l’entreprise',true)); });
+    B.hidden=!B.childNodes.length;
+  }
+  // l'horloge locale rafraîchit les minutes toutes les 15 s, sans appel réseau
+  function horloge(){
+    clearInterval(VID.horloge);
+    VID.horloge=setInterval(function(){
+      var n=0; VID.L.forEach(function(x){ var v=VID.M[x.k]; if(v&&v.vs==='preparation'){ n++; var z=document.querySelector('.video[data-k="'+x.k+'"]'); if(z){ z.removeAttribute('data-vs'); dessinerVideo(z,v,x.e||''); } } });
+      majBandeau(); if(!n) clearInterval(VID.horloge);
+    },15000);
+  }
+  function relancer(ms){ clearTimeout(VID.minuteur); VID.minuteur=setTimeout(function(){ if(document.visibilityState!=='hidden') videos(VID.L); },ms); }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&VID.L.length) videos(VID.L); });
   function videos(L){
     if(!cfg.webhook_video||!L.length) return;
+    VID.L=L;
     appelVideo({action:'etat'}).then(function(j){
-      if(!j||j.ok!==true||!Array.isArray(j.videos)) return;
+      if(!j||j.ok!==true||!Array.isArray(j.videos)) return relancer(60000);
       var M={}, attente=false; j.videos.forEach(function(v){ if(v&&v.k) M[v.k]=v; });
       L.forEach(function(x){
         if(typeof x.k!=='string'||!CLEVID.test(x.k)) return;
         var z=document.querySelector('.video[data-k="'+x.k+'"]'); if(!z) return;
-        var v=M[x.k]||{vs:''};
-        var aFiche=x.s!=='refuse'&&x.f&&typeof x.f==='object'&&Object.keys(x.f).length>0; // pas de vidéo pour une entreprise refusée
-        // Règle BEAM : une vidéo seulement quand le consultant connaît un décideur (v.ev === '1', décidé et revérifié par Make).
-        if(!v.vs&&v.ev==='1'&&aFiche&&!VID.demandees[x.k]){
-          VID.demandees[x.k]=1;
-          (function(zz,kk,ee){ appelVideo({action:'demander',k:kk}).then(function(r){
-            if(!r||r.ok!==true||!r.vs) return; dessinerVideo(zz,{vs:r.vs},ee);
-            if(r.vs==='preparation'){ clearTimeout(VID.minuteur); VID.minuteur=setTimeout(function(){ videos(L); },30000); }
-          }).catch(function(){}); })(z,x.k,x.e||'');
-        }
+        var v=M[x.k]||{k:x.k,vs:''}; v.k=x.k;
+        var aFiche=x.s!=='refuse'&&x.f&&typeof x.f==='object'&&Object.keys(x.f).length>0;
+        var dem=VID.demandees[x.k];
+        if(!v.vs&&v.ev==='1'&&aFiche&&(!dem||Date.now()-dem>120000)){ // une demande sans réponse est retentée après 2 min
+          VID.demandees[x.k]=Date.now();
+          v={k:x.k,vs:'preparation',vm:Date.now(),ev:'1'}; // affiché tout de suite : la demande part en même temps
+          (function(kk){ appelVideo({action:'demander',k:kk}).then(function(r){ if(r&&r.ok===true&&r.vs==='') delete VID.demandees[kk]; }).catch(function(){}); })(x.k);
+        } else if(!v.vs&&dem&&v.ev==='1'&&aFiche) v={k:x.k,vs:'preparation',vm:dem,ev:'1'};
+        M[x.k]=v;
         if(v.vs==='preparation') attente=true;
         dessinerVideo(z,v,x.e||'');
       });
-      clearTimeout(VID.minuteur);
-      if(attente&&VID.tours++<40) VID.minuteur=setTimeout(function(){ videos(L); },30000);
-    }).catch(function(){});
+      VID.M=M; majBandeau();
+      if(attente){ horloge(); relancer(30000); }
+    }).catch(function(){ relancer(60000); });
   }
   function dessinerVideo(z,v,ent){
-    var etat=v.vs||''; if(z.getAttribute('data-vs')===etat&&etat!=='preparation') return; // ne jamais couper une vidéo en lecture
+    var etat=v.vs||''; if(z.getAttribute('data-vs')===etat) return; // ne jamais couper une vidéo en lecture
     z.setAttribute('data-vs',etat); z.textContent='';
     if(etat==='prete'&&lienSur(v.vu)&&lienSur(v.vp)){
-      z.appendChild(el('p','vt','Vidéo de l’entreprise'));
+      z.appendChild(el('p','vt','La vidéo pour '+ent));
       var c=el('button','cadre'); c.type='button'; c.setAttribute('aria-label','Lire la vidéo de '+ent);
       if(lienSur(v.va)){ var im=el('img'); im.src=v.va; im.alt=''; im.decoding='async'; c.appendChild(im); }
       var l=el('span','lire'); l.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>'; l.appendChild(document.createTextNode('Regarder'+(duree(v.vd)?' · '+duree(v.vd):''))); c.appendChild(l);
       c.onclick=function(){
         var vid=el('video'); vid.controls=true; vid.playsInline=true; vid.setAttribute('playsinline',''); vid.preload='auto'; if(lienSur(v.va)) vid.poster=v.va; vid.src=v.vu;
-        c.replaceWith(vid); var p=vid.play(); if(p&&p.catch) p.catch(function(){});
+        c.replaceWith(vid); var p=vid.play(); if(p&&p.catch) p.catch(function(){}); marquerVue(v.k);
       };
       z.appendChild(c);
       var msg='Bonjour, voici la carte de vos données préparée par l’équipe BEAM : où elles sont et comment elles pourraient circuler.\n\n'+v.vp;
       var dd=el('div','duo'), w=el('button','wa-sec','WhatsApp'), cp=el('button','sec','Copier le lien'); w.type='button'; cp.type='button';
-      w.onclick=function(){ ouvrirWhatsApp('',msg); };
-      cp.onclick=function(){ try{ navigator.clipboard.writeText(v.vp).then(function(){ cp.textContent='Lien copié'; },function(){}); }catch(e){} };
+      w.onclick=function(){ ouvrirWhatsApp('',msg); marquerVue(v.k); };
+      cp.onclick=function(){ try{ navigator.clipboard.writeText(v.vp).then(function(){ cp.textContent='Lien copié'; },function(){}); }catch(e){} marquerVue(v.k); };
       dd.appendChild(w); dd.appendChild(cp); z.appendChild(dd);
       z.appendChild(el('p','aide','Le lien ouvre une page BEAM avec la vidéo, sans inscription.'));
     } else if(etat==='preparation'){
-      var pr=el('div','prep'); pr.setAttribute('role','status');
-      pr.appendChild(el('b',null,'Vidéo en préparation'));
-      pr.appendChild(el('span',null,'Environ 6 minutes. Elle apparaîtra ici toute seule, vous pouvez continuer.'));
-      var f=el('div','fil'); f.appendChild(el('i')); pr.appendChild(f); z.appendChild(pr);
+      z.appendChild(annonce(v,ent,false));
     } else if(etat==='refusee'){
-      z.appendChild(el('p','info','Pas de vidéo pour cette entreprise : les informations trouvées ne suffisent pas pour une carte fiable.'));
+      z.appendChild(el('p','info','Pas de vidéo pour cette entreprise : les informations publiques trouvées ne suffisent pas pour une carte fiable.'));
     } else if(etat==='echec'){
-      z.appendChild(el('p','info','La vidéo n’a pas pu être préparée. L’équipe BEAM peut la relancer.'));
+      z.appendChild(el('p','info','La vidéo n’a pas pu être préparée, même après une deuxième tentative automatique.'));
     }
   }
 
@@ -756,7 +827,8 @@ legend{font-size:14px;font-weight:600;padding:0}
         if(j.rdv) box.appendChild(el('p','rdv-ok','Rendez-vous calé : '+j.rdv+' avec '+rd.c_prenom+' '+rd.c_nom+'. L’invitation est partie dans son agenda.'));
         if(j.mail) box.appendChild(el('p','note','E-mail préparé « '+rd.mail_objet+' » : il partira à '+rd.c_email+' dès le feu vert d’Astrid, avec vous en copie.'));
         if(j.connue) box.appendChild(el('p','note',j.contexte?'BEAM connaît déjà cette entreprise : avant de l’approcher, demandez le feu vert.':'BEAM connaît déjà cette entreprise : l’équipe vérifie qui la suit avant de répondre.'));
-        box.appendChild(blocFiche(f));
+        if(niv==='decideur'&&!j.contexte&&f&&Object.keys(f).length) box.appendChild(el('p','rdv-ok','Vous connaissez un décideur : BEAM prépare maintenant la vidéo de '+(j.entreprise||ent)+'. Le décompte s’affiche en haut de la page et dans « Mes demandes », juste en dessous.'));
+        var pl=el('details','plus'); pl.appendChild(el('summary',null,'Voir la fiche complète')); pl.appendChild(blocFiche(f)); pl.open=true; box.appendChild(pl);
         $('p-res').appendChild(box);
         m.className='msg ok'; m.textContent=j.contexte?'Voici ce que BEAM pourrait apporter à cette entreprise. Rien n’a été envoyé à l’équipe : pour l’approcher, refaites une demande en choisissant votre lien avec elle.':
           j.mail?'Demande envoyée à Astrid. L’e-mail partira dès son feu vert : réponse sous 48 heures.':j.rdv?'Rendez-vous calé et demande de feu vert envoyée à BEAM. Réponse par e-mail sous 48 heures.':'Demande envoyée à BEAM. Réponse par e-mail sous 48 heures. Attendez le feu vert avant d’approcher l’entreprise.';
