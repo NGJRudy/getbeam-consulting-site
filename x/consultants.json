@@ -64,5 +64,9 @@
     "verification": "action=verification, id, jeton. Réponse : {ok:true, prenom, nom, id, lien} ou {ok:false}. Make note alors « e-mail vérifié »."
   },
   "webhook_fiche": "https://hook.eu1.make.com/2io7zrdjsycrrfo3hmzkn0w84k5voar6",
-  "_aide_webhook_fiche": "Make 8786975 : fiche entreprise (recherche IA) et feu vert d’Astrid dans Slack. action=fiche ou mes."
+  "_aide_webhook_fiche": "Make 8786975 : fiche entreprise (recherche IA) et feu vert d’Astrid dans Slack. action=fiche ou mes.",
+  "webhook_video": "https://hook.eu1.make.com/up5go9hk9ser8gn0pgbfnfmtff6hio8j",
+  "_webhook_video": "Make 8847677 « BEAM vidéo — espace consultant (état et demande) ». action=etat (vidéos des fiches du consultant) ou demander (k = clé de la fiche). Même authentification que l’espace (id + jeton, 30 jours). Le rappel du générateur arrive sur le scénario 8847655, qui met à jour la fiche (magasin 272272).",
+  "video_prefixe": "https://live.getbeam-consulting.com/video/",
+  "_video_prefixe": "La page n’affiche une vidéo que si ses liens commencent par ceci (protection contre un lien piégé)."
 }
